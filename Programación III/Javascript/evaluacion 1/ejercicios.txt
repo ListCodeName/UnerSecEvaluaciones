@@ -1,0 +1,5 @@
+Evaluación de Html + Css + JavaScript
+----------------------------------------
+1- Los tags html se han movido y ahora el código está desordenado. Vuelva al lugar los tags para formar la gráfica de la siguiente imagen.
+2- El css ha sido borrado, solo hemos podido rescatar algunos pocos fragmentos. Completa el archivo css para lograr algo similar a la imagen.
+3- El código JavaScript estaba funcionando hasta hace un momento, pero ya no. Completa las sentencias según lo que indican los comentarios.

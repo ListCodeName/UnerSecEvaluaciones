@@ -1,0 +1,56 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: monospace;
+}
+
+body{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+
+
+.menu-estadisticas{
+    background: #11172e;
+    color: #FAFAFA;
+    width: 500px;
+    padding: 25px 50px;
+
+}
+
+.puntos-adicionales{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #3282b5;
+    border-left: 3px solid #3ff3f6; 
+    color: #3ff3f6;
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+    padding: 5px 15px;
+}
+
+.puntos-adicionales h1{
+    font-size: 20px;
+}
+
+.puntos-adicionales p{
+    font-size: 20px;
+}
+
+
+
+
+.estadisticas{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
