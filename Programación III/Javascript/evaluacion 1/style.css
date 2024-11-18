@@ -25,13 +25,7 @@ body{
 }
 
 .puntos-adicionales{
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #3282b5;
     border-left: 3px solid #3ff3f6; 
-    color: #3ff3f6;
     text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
     padding: 5px 15px;
 }
@@ -48,9 +42,47 @@ body{
 
 
 .estadisticas{
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+    
+}
+
+.atributo{
+    margin: 5px 0px;
+    box-shadow: 0px 2px 3px rgba(255,255,255,0.75);
+}
+
+.atrib-tipo{
+    
+}
+
+.atrib-tipo span{
+    padding: 5px;
+    font-size: 20px;
+}
+
+.atrib-tipo p{
+    font-size: 18px;
+}
+
+
+
+
+.atrib-botones{
     justify-content: center;
     align-items: center;
+}
+
+.atrib-botones span{
+    text-shadow: 2px 2px 0px #11172e;
+    cursor: pointer;
+}
+
+.atrib-botones span:hover{
+    background: #3ff3f6;
+}
+
+.atrib-botones p{
+    font-size: 18px;
+    padding: 5px 15px;
+
+
 }
