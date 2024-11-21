@@ -1,0 +1,27 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+Se desea crear una base de datos llamada "Literato", donde se guardará información referente a la venta de libros.
+La misma contará con la siguiente estructura:
+    • Tablas:
+        ◦ libros (idLibro, titulo, autor, genero, precio, stock)
+        ◦ autores (nombre, apellido, nacionalidad)
+        ◦ ventas (codigo, idLibro, fecha_venta, cantidad)
+
+Deberá insertar al menos 100 libros, 50 autores, y 50 ventas, con la ayuda de CHATGPT para formular registros aleatorios.
+
+    • Ejercicios en SQL:
+        ◦ Lista el nombre y el precio de los libros de género policial.
+        ◦ ¿Cuántos libros hay en stock de un autor en particular, por ejemplo Ray Bradbury?
+        ◦ Muestra listado de las ventas realizadas entre el 1/1/2023 al 1/1/2024. (Formato de fecha 'Y-m-d').
+        ◦ Lista todos los libros cuyo stock esté por agotarse (menos de 5 ejemplares).
+        ◦ Liste todos los autores ordenados alfabéticamente por apellido, que hayan nacido en España. Por cuestiones protocolares
+        el apellido debe figurar primero (en la primera columna) y luego el nombre (en la segunda columna).
+        ◦ Se han escrito muchos libros de matemática pero algunos autores han decidido abreviar en algunos casos la palabra a Mat.
+        Por esta razón se dificulta buscar directamente los libros de matemáticas. ¿Cuántos libros hay en total?
+
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT COUNT(*) AS 'Libros de Julio Verne' FROM libros WHERE autor = 'Julio Verne';
+SELECT titulo, genero, precio FROM libros WHERE stock < 10 ORDER BY idLibro DESC;
+SELECT * FROM autores WHERE nacionalidad = 'Argentina' AND nombre = 'Manuel';
