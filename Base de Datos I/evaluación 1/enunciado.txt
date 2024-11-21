@@ -7,7 +7,7 @@ La misma contará con la siguiente estructura:
         ◦ autores (nombre, apellido, nacionalidad)
         ◦ ventas (codigo, idLibro, fecha_venta, cantidad)
 
-Deberá insertar al menos 100 libros, 50 autores, y 50 ventas, con la ayuda de CHATGPT para formular registros aleatorios.
+Deberá insertar al menos 50 autores, y 50 ventas, con la ayuda de CHATGPT para formular registros aleatorios.
 
     • Ejercicios en SQL:
         ◦ Lista el nombre y el precio de los libros de género policial.
