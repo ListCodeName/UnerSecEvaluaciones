@@ -15,6 +15,9 @@ correspondiente.  (PUNTOS 3)
 
 Act. 2 - Mostrar todos los registros de la base de datos con el formato aplicado, ordenados por su nombre (A - Z). (PUNTOS 2)
 
-Act. 3 - Mostrar solo 10 registros la base de datos, ordenados por su nombre (A - Z). (PUNTOS 2)
+Act. 3 - Mostrar solo 10 registros la base de datos, ordenados por su nombre (A - Z). (PUNTOS 1)
 
-Act. 4 - Configurar la barra de búsqueda para que traiga los elementos cuyo nombre coincidan con el especificado. (PUNTOS 3)
+Act. 4 - Si tiene descuento mostrar los elementos correspondientes y aplicar el descuento al precio del producto 
+para que se vea reflejado en el contenedor del producto. (PUNTOS 1)
+
+Act. 5 - Configurar la barra de búsqueda para que traiga los elementos cuyo nombre coincidan con el especificado. (PUNTOS 3)
