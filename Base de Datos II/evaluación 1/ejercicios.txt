@@ -1,0 +1,20 @@
+Evaluación de PHP + SQL - Base de Datos 2
+----------------------------------------
+
+Para la realización del siguiente práctico evaluatorio podran hacer uso de los recursos brindados por la cátedra, google, chatgpt, entre otros.
+
+El plazo de entrega serán 3 días (una semana completa de clases) yendo del 26/11 al 30/11. 
+
+Deberán crear un archivo único .php que contenga los elementos necesarios para conectar a la base de datos y mostrar los registros por pantalla
+en el formato establecido en la página 'index.html'.
+
+El criterio de evaluación será una suma de puntos por cada actividad realizada:
+
+Act. 1 - Conformar el archivo index.php con el formato especificado, reflejando una consulta la base de datos y colocando los datos en su lugar 
+correspondiente.  (PUNTOS 3)
+
+Act. 2 - Mostrar todos los registros de la base de datos con el formato aplicado, ordenados por su nombre (A - Z). (PUNTOS 2)
+
+Act. 3 - Mostrar solo 10 registros la base de datos, ordenados por su nombre (A - Z). (PUNTOS 2)
+
+Act. 4 - Configurar la barra de búsqueda para que traiga los elementos cuyo nombre coincidan con el especificado. (PUNTOS 3)

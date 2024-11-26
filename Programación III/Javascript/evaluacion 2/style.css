@@ -1,0 +1,79 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: monospace;
+}
+
+body{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.contenedor{
+    width: 300px;
+    height: 300px;
+}
+
+.titulo{
+    border: 2px solid #fbfaf4;
+    background: #0a123f;
+    box-shadow: 0px 0px 2px #090bac;
+}
+
+
+
+.display{
+    border: 2px solid #fbfaf4;
+    background: radial-gradient(#1e339a,#0a123f) ;
+    box-shadow: 0px 0px 2px #090bac;
+    position: relative;
+}
+
+.mapa{
+    width: 100%;
+    position: relative;
+}
+
+.mapa .pixel{
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    background: coral;
+    top: 0px;
+    left: 0px;
+    z-index: 10;
+    transition: all 0.25s linear;
+}
+
+.mapa .salida{
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+}
+
+
+.botonera{
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 0px;
+    right: -50px;
+}
+
+.botonera span{
+    width: 40px;
+    border-radius: 50%;
+    margin-top: 5px;
+    border: 2px solid #fbfaf4;
+    box-shadow: 0px 0px 2px #090bac;
+    transition: all 0.35s ease;
+    cursor: pointer;
+}
+
+.botonera span:hover{
+    background: #1e339a;
+}

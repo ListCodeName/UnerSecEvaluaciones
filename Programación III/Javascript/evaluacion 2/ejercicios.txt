@@ -1,0 +1,9 @@
+Evaluación de Html + Css + JavaScript
+----------------------------------------
+1- Los tags html se han movido y ahora el código está desordenado. Vuelva al lugar los tags para formar la gráfica de la siguiente imagen.
+2- El css ha sido borrado, solo hemos podido rescatar algunos pocos fragmentos. Completa el archivo css para lograr algo similar a la imagen.
+3- El código JavaScript estaba funcionando hasta hace un momento, pero ya no. Completa las sentencias según lo que indican los comentarios.
+    3-1- Al hacer click en un botón este debe mover el div por el mapa, usando una localización de coordenadas (x,y) positivas.
+    El punto (0,0) es la esquina superior izquierda. >> En esta comienza el div.
+    El punto (maxX, maxY) es la esquina inferior izquierda. >> En esta termina el juego, mostrando un mensaje por pantalla.
+    3-2- El div no puede salirse en su totalidad del marco del mapa.
