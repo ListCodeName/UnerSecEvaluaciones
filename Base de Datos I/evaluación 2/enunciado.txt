@@ -1,0 +1,27 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+Se desea crear una base de datos llamada "deportivoasturia", donde se guardará información referente a los partidos disputados en la ciudad.
+La misma contará con la siguiente estructura:
+    • Tablas:
+        ◦ partidos (idPartido, local, visitante, cancha, resultado, fecha)
+        ◦ equipo (idEquipo, nombre, DT, liga, fechaCreacion)
+
+Deberá insertar al menos 25 equipos con la ayuda de CHATGPT para formular registros aleatorios.
+
+    • Ejercicios en SQL:
+        ◦ Liste todos los nombres de los equipos sin repetir, que fueron locales durante la temporada 2024, 
+        ordenados alfabeticamente inverso (Z - A). (SELECT DISTINCT)
+        ◦ Cuantos partidos jugó de visitante el equipo 'Tigres Azules'. (COUNT)
+        ◦ ¿Quiénes fueron los equipos que jugaron contra 'Fénix de Fuego'? (SELECT DISTINCT)
+        ◦ ¿Cuántos partidos terminaron empatados 1 a 1?
+        ◦ Necesitamos listar los partidos donde el equipo local hizo 2 goles.
+        ◦ Liste todos los partidos donde el visitante haya recibido 10 goles.
+
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT DISTINCT COUNT(*) AS 'Peliculas de Silvester Stallone' FROM libros WHERE actorPrincipal = 'Silvester Stallone';
+
+SELECT titulo, genero, precio FROM libros WHERE stock < 10 ORDER BY idLibro DESC;
+
+SELECT SUM(precio) AS 'precio total' FROM productos WHERE nombre LIKE '%azucar%';
