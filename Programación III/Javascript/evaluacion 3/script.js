@@ -18,49 +18,17 @@ descrip.addEventListener("click", (event)=>{
     worker.postMessage("start");
 });
 
-plus.addEventListener("click", ()=>{
-    if(hambre < 100){
-        hambre++;
-        ham.innerHTML = hambre + "%";
-    }
-});
-
+// message.data obtiene un 1 y la función se ejecuta por cada segundo como un bucle
 worker.onmessage = function(message){
-
-    if (vida > 0){
-        tiempo += message.data;
-    
-        if(tiempo == 30){
-            monstruo.src = "scripts/tamagochi-l2.gif";
-            nivel++;
-        }
-
-        if(tiempo == 60){
-            monstruo.src = "scripts/tamagochi-l3.gif";
-            nivel++;
-        }
-
-        if(tiempo % 2 == 1){
-            bajarHambre();
-        }
-    }
     
 }
 
+//Función para bajar el % de hambre
 function bajarHambre(){
-    let coeficiente = ((Math.floor(Math.random() * 10)) % nivel) + 1;
-    if(hambre > 0){
-        hambre -= coeficiente;
-        ham.innerHTML = hambre + "%";
-    }else{
-        vida--;
-        if(vida == 0){
-            document.write("GAME OVER");
-        }else{
-            life.innerHTML = vida + "%";
-        }
-    }
-
+    let coeficiente = (((Math.floor(Math.random() * 10)) % nivel) + 1) * 2;
+    
 
 
 }
+
+//Evento botón sumar

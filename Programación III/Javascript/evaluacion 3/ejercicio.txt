@@ -1,0 +1,27 @@
+Evaluación de JavaScript
+----------------------------------------
+1- El código JavaScript estaba funcionando hasta hace un momento, pero ya no.
+    a. La función del 'worker' se ejecuta cada 1 segundo y el parámetro message, envía un 1
+    cada segundo que pasa.
+    << Para visualizar su funcionamiento puede poner un console.log(message.data) dentro
+    del cuerpo del método y visualizar en el explorador en la sección 'console' del
+    inspeccionador de elementos >>
+    Debe contabilizar los segundos que pasan para poder realizar los siguientes eventos.
+    * Cada 2 segundos el indicador de hambre debe bajar. (Llamada a función bajarHambre)
+    * Cuando hayan transcurrido 30 segundos, el tamagochi subirá su nivel y cambiará a la
+    próxima imagen (tamagochi-l1.gif >> tamagochi-l2.gif).
+    * Cuando hayan transcurrido 60 segundos, el tamagochi subirá su nivel y cambiará a la 
+    próxima imagen (tamagochi-l2.gif >> tamagochi-l3.gif).
+
+    b. La bajada del indicador de hambre está manejada por la variable coeficiente.
+    Es un número entero que se genera cada vez que se llama a la función, calculado
+    en base al nivel para que aumente la dificultad progresivamente.
+    * Mientras el hambre se va reduciendo hasta llegar a 0 debe aplicarse el descuento del
+    coeficiente e ir actualizando la información en su lugar correspondiente para visualizar
+    los cambios.
+    * Cuando el hambre llega a 0, se empieza a drenar 1 de vida (el corazón) por segundo.
+    * Cuando la vida llega a 0, debe salir un mensaje de 'GAME OVER'. Pueden usar 
+    document.write()
+
+    c. Deben configurar el botón de suma, para que vaya reponiendo de a 1 por cada click
+    el hambre del tamagochi.
