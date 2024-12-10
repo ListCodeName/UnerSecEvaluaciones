@@ -1,0 +1,37 @@
+Evaluación de PHP + SQL - Base de Datos 2
+----------------------------------------
+
+1- Deben armar la base de datos en xampp llamada 'repositorio_proyectos'.
+2- Usando el archivo tablas.sql de esta carpeta, en la pestaña SQL, crean las tablas y registros necesarios.
+3- Armen el archivo index.php que haga la conexión a la base de datos, busque la información y la imprima en pantalla.
+
+Objetivos:
+>>> Armar la consulta SQL que permita listar todos los proyectos con sus respectivos propietario (único) y colaboradores.
+
+>>> Reflejar la información traida de la base de datos, mostrando todos los elementos en la página web.
+
+>>> Mostrar solamente los proyectos que tengan al propietario y al menos un colaborador.
+
+
+
+
+* Ayuda para la búsqueda *:
+-----------------------------------
+
+// Guardan la información útil
+$id_proyecto = 0;
+$titulo_proyecto = "";
+$propietario = "";
+$colaboradores = [];
+
+// Recorrer los resultados
+for ($i = 0; $i < $result->num_rows; $i++) {
+    $result->data_seek($i); // Mover el puntero a la fila deseada
+    $row = $result->fetch_assoc();
+    
+    // Mientras sea del mismo proyecto ir guardando la información en sus variables.
+    // Los colaboradores guardan de esta forma:       $colaboradores[] = "";
+    
+}
+
+------------------------------------
