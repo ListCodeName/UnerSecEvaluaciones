@@ -6,7 +6,7 @@ Evaluación de PHP + SQL - Base de Datos 2
 3- Armen el archivo index.php que haga la conexión a la base de datos, busque la información y la imprima en pantalla.
 
 Objetivos:
->>> Armar la consulta SQL que permita listar todos los proyectos con sus respectivos propietario (único) y colaboradores.
+>>> Armar la consulta SQL que permita listar todos los proyectos con sus respectivos propietario (único) y colaboradores ordenados alfabéticamente (A-Z) por su titulo.
 
 >>> Reflejar la información traida de la base de datos, mostrando todos los elementos en la página web.
 
