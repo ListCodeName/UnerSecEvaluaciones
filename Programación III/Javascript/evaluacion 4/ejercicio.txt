@@ -1,0 +1,21 @@
+Evaluación de JavaScript
+----------------------------------------
+1- El código JavaScript estaba funcionando hasta hace un momento, pero ya no.
+    a. Transformar los segundos en el visor al formato indicado para visualizar bien la hora.
+    
+    b. Configurar el botón de modo 24hrs, para que la hora vaya de las 00:00:00 hasta las 23:59:59. 
+       (Deberá mostrar en el display la leyenda '24hs').
+    
+    c. Configurar el botón de modo AM/PM, para que la hora vaya de las 00:00:00 hasta las 11:59:59,
+       distinguiendo entre AM o PM. (Deberá mostrar en el display la leyenda 'AM' o 'PM').
+    
+    d. Configurar los botones:
+       <- : Selecciona a la izquierda (Si está en minutos y se aprieta <- se debería modificar la hora)
+       -> : Selecciona a la derecha (Si está en hora y se aprieta -> se debería modificar los minutos)
+       + : Añade de a 1, horas, minutos, segundos dependiendo cual esté seleccionado. No puede sumar mas de 12, 24, 59 según corresponda.
+       - : Resta de a 1, horas, minutos, segundos dependiendo cual esté seleccionado. No puede restar menos de 0.
+       
+
+
+
+    

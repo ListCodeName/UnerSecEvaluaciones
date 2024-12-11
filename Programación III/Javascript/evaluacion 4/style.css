@@ -1,0 +1,83 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: monospace;
+}
+
+body{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.reloj-digital{
+    width: 450px;
+    height: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(#161c45, #1c2f88);
+    border-radius: 100px;
+    position: relative;
+    padding: 100px;
+}
+
+.visor{
+    width: 100%;
+    padding: 25px;
+    border: 1px solid #161c45;
+    background: #a6c296;
+    border-radius: 10px;
+    box-shadow: inset 0px 0px 15px rgba(255,255,255,0.25);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.tiempo{
+    font-size: 35px;
+}
+
+.formato{
+    font-size: 15px;
+    font-weight: bolder;
+}
+
+
+.botonera{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 50px;
+}
+
+.mod{
+    width: 100%;
+    display: flex;
+    justify-content: space-evenly;
+    padding: 15px;
+}
+
+.mod span{
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(#EEE, #777);
+    display: flex;
+    justify-content: center;
+    align-items: center;   
+    box-shadow: inset 0px 0px 7px rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mod span:hover{
+    box-shadow: inset 0px 0px 10px rgba(0,0,0,0.85);
+}
