@@ -1,0 +1,40 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+1- Realice el siguiente modelo de entidad relación.
+
+La empresa "TechSolutions S.A." se dedica al desarrollo de software y servicios tecnológicos. 
+La compañía tiene varios proyectos en desarrollo, y cada uno está asociado a un equipo de trabajo que se encarga de llevarlo a cabo. 
+Cada empleado de la empresa puede estar trabajando en varios proyectos a la vez, y cada proyecto tiene un cliente asignado.
+
+    Empleado
+        ID_Empleado, nombre, fecha de nacimiento, salario y rol es el cargo del empleado en la empresa (Ej. Desarrollador, Diseñador, etc.).
+
+    Proyecto
+        ID_Proyecto, nombre del proyecto, fecha de inicio, presupuesto
+
+    Cliente
+        ID_Cliente, nombre completo, direccion, fecha en que el cliente fue registrado en la base de datos.
+
+Además se requiere saber la fecha de asignación del proyecto a los empleados y las horas semanales que dedica al proyecto.
+
+Un cliente puede tener varios proyectos, pero cada proyecto solo está asignado a un cliente.
+
+Un proyecto puede tener múltiples empleados asignados, pero cada asignación está vinculada a un único proyecto.
+
+Un empleado puede trabajar en varios proyectos, y cada proyecto puede tener múltiples empleados.
+
+
+2- Realice las siguientes actividades SQL
+
+    Cree una base de datos nueva con el nombre 'TechSolutions'
+    Cree la tabla Empleados con sus respectivos campos.
+    Cargue la tabla Empleado con al menos 200 registros usando CHATGPT.
+        > Deben especificar que se trata de una empresa de desarrollo de software.
+        > Deben especificar que el salario no tiene que ser superior a los $100000.
+        > Pidan de a 50 registros por vez.
+
+    • Ejercicios en SQL:
+        ◦ Cuente los empleados desarrolladores que tiene la empresa, haciendo figurar la etiqueta del campo de tabla 'Desarrolladores'. (COUNT)
+        ◦ El jefe quiere saber quienes son los empleados nacidos el día de la Independencia Argentina.
+        ◦ Quieren saber el nombre ordenado alfabéticamente de los trabajadores que ganan entre $2500 a $12500.
+        ◦ La empresa quiere darle un presente a todos los empleados que tengan nombre con dos 'a' o más.
