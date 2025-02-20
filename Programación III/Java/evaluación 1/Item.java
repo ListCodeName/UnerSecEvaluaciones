@@ -4,10 +4,10 @@ public class Item{
 
 /**
  * La clase Item cuenta con los siguientes atributos:
- * - Nombre
- * - Descripción
- * - Peso
- * - Cantidad
+ * - nombre
+ * - descripción
+ * - peso
+ * - cantidad
  * 
  * Los métodos de la clase son:
  * 
@@ -22,6 +22,8 @@ public class Item{
  * un mensaje diciendo "Capacidad máxima alcanzada para este Item"
  * 
  * getCantidad(), devuelve la cantidad.
+ * 
+ * pesoTotal(), devuelve el peso total de la cantidad de este item.
  * 
  * equals(), recibe otro item por parámetro y los compara para saber si son iguales o no.
  * El criterio para que sean iguales es que subombre y peso coincidan.

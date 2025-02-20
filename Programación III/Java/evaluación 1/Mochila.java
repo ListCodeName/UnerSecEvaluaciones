@@ -21,9 +21,11 @@ public class Mochila{
  * la mochila en la que se encuentra.
  * Enviaremos -1 en el caso de que no se encuentre en algún lugar de la mochila.
  * 
- * agregarItem(), recibe por parámetro un item. Debido a políticas del juego, no pueden
- * almacenarse items duplicados, por lo que se acumulan en esa misma posición alterando
- * su cantidad.
+ * agregarItem(), recibe por parámetro un item. 
+ * Debemos verificar primero si el peso de la cantidad de items que se le ingresarán no 
+ * sobrepasen el peso que puede admitir la mochila.
+ * Debido a políticas del juego, no pueden almacenarse items duplicados, por lo que se 
+ * acumulan en esa misma posición alterando su cantidad.
  * En el caso de que no se haya agregado anteriormente este item, deberá guardarlo en la 
  * primera posición libre que encuentre de la mochila.
  * En caso de que no haya espacio dentro de la mochila (esté llena) deberá advertir esto
