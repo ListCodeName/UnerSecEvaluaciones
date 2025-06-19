@@ -1,0 +1,44 @@
+////////////////////   EVALUACION DE BASE DE DATOS SQL ///////////////////////////
+
+(1) En el siguiente código sql nombrar ¿para qué sirven las siguientes líneas?
+(Sean lo más específicos posibles, utilizando el lenguaje técnico aprendido.)
+
+CREATE TABLE cliente (
+  idCliente int(11) NOT NULL,
+  nombre varchar(100) NOT NULL,
+  apellido varchar(100) NOT NULL,
+  edad int(11) NOT NULL,
+  tipoCliente varchar(20) NOT NULL
+)
+
+(2) En el caso de necesitar modificar la tabla cliente para que el idCliente sea la clave primaria.
+¿cómo puedo hacer ese cambio?
+
+(3) ¿Cómo haría para agregar un nuevo cliente a la tabla? Realice un ejemplo para el cliente Juan Perez.
+
+(4) Si me equivoqué en escribir el nombre del cliente, era Pedro y no Juan, ¿qué instrucción debería usar?
+Escriba la sentencia completa para hacerlo.
+
+(5) El cliente Pedro Perez ya no es más cliente de las empresas, por lo que debemos eliminar su registro.
+Escriba la sentencia para hacerlo, teniendo en cuenta que lo que sabemos de este cliente es su nombre y apellido.
+
+
+--------------------------------------                   ----------------------------------------------------
+
+(6) Liste toda la información de los empleados de la empresa que se llamen Carlos, Luis o Juan, ordenados 
+por su apellido.
+
+(7) La canasta básica por individuo ascendió a $150000, ¿cuántos empleados están por debajo de ese indicador?
+
+(8) ¿Cuál es el nombre completo de los empleados que se desempeñan como Jefes de recursos humanos?
+
+(9) Necesito toda la información de los empleados que trabajan para Industria Textil S.A., ordenados
+por edad de manera tal que los mayores esten al principio.
+
+(10) ¿Cómo se llama y que edad tiene el Presidente de la empresa Supermercados Juanita?
+
+(11) ¿Cuánto ganan en bruto los Gerentes Generales de todas las empresas de tipo Sociedad Anónima y/o
+Sociedades de Responsabilidad Limitada? Ordenenlo de menor a mayor.
+
+(12) ¿Existe algún empleado contenga las vocales A , E y O en su apellido? ¿Quienes son? 
+Recuerde que pueden aparecer en cualquier forma, ej: A primera, O segunda y la E tercera.
