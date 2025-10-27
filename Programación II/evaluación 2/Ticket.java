@@ -9,6 +9,7 @@ public class Ticket{
 * - Lista de productos (Hasta 10 productos Max.)
 *
 * Los métodos serán:
+* - Constructor(), recibirá por parámetro solamente la fecha de emisión
 * - agregarProducto(), se le envía por parámetro el producto en cuestión
 * - eliminarProducto(), se le envía el producto en cuestión y lo elimina del ticket
 * - calcularTotal(), devuelve el precio total de todos los productos que hay en el ticket
