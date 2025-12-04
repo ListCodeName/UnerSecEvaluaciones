@@ -1,0 +1,15 @@
+1- Queremos ver una lista con los nombres de los estudiantes y los nombres de los cursos en los que están inscritos.
+
+2- Queremos obtener una lista de los estudiantes que no están inscritos en ningún curso.
+
+3- Queremos una lista con los cursos que tienen fecha de inicio después del 1 de junio de 2025.
+
+4- Queremos ver los nombres de los estudiantes y las fechas de inscripción de aquellos que se han inscrito en el curso "Matemáticas 101".
+
+5- Queremos listar todos los estudiantes junto con el curso que están tomando, ordenado por el apellido del estudiante.
+
+6- Queremos obtener el nombre del curso, el nombre del estudiante y la fecha de inscripción de aquellos estudiantes que están inscritos en un curso cuya fecha de inicio es posterior al 1 de julio de 2025.
+
+7- Queremos obtener una lista de los estudiantes cuyo nombre comienza con la letra "A" y los cursos en los que están inscritos.
+
+8- Queremos ver una lista de los cursos que comienzan entre el 1 de junio de 2025 y el 1 de septiembre de 2025, junto con los estudiantes inscritos en cada curso.
