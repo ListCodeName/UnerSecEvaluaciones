@@ -1,0 +1,22 @@
+-- Ejercicio 1 -- 
+
+Se desea diseñar la base de datos bibliográfica de un grupo de investigación de la universidad. En
+concreto, se quiere almacenar toda la información relativa a los artículos científicos sobre los temas en los
+que trabaja el grupo y de los cuales puede poseer alguna copia. Si se posee alguna copia, esta puede estar
+en las estanterías del laboratorio, o bien, en el despacho de alguno de los investigadores del grupo.
+De cada uno de estos artículos se desea saber el título, los autores, las palabras clave, la dirección de
+correo electrónico de contacto (si la hay), si se tiene copia en el grupo y donde se guarda. Los artículos
+pueden haber sido publicados como informes técnicos, o bien en las actas de algún congreso o en una
+revista científica. De los informes técnicos se debe guardar el número y el centro en que se ha publicado,
+junto con el mes y año de publicación. Cuando el artículo aparece en las actas de un congreso, se debe
+guardar el nombre del congreso, la edición del mismo en la que se presentó el artículo, ciudad en que se
+celebró y fechas de inicio y finalización. Además se debe guardar el tipo de congreso que es (nacional o
+internacional) y la frecuencia con que se celebra (anual, etc.). Si el congreso es de tipo internacional, se debe
+guardar también el país en que tuvo lugar cuando se presentó el artículo. Además, se guardará el año en que
+el congreso se celebró por primera vez. Por último, si el artículo ha aparecido publicado en una revista
+científica, se quiere saber el nombre de la revista, el nombre del editor, el año en que empezó a publicarse, la
+frecuencia con que aparece (mensual, trimestral, etc.), los temas que trata la revista, el número de la revista
+en que apareció el artículo, las páginas ocupadas (por ejemplo 512-519) y el año.
+También se quiere guardar información adicional sobre los autores de los artículos y, en general, sobre
+otros investigadores, como el centro en el que trabajan y su dirección de correo electrónico. Además, si es
+posible, también se desea conocer los temas concretos en que trabajan
