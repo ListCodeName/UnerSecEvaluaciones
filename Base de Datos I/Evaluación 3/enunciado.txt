@@ -1,0 +1,41 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+1- Realice el siguiente modelo de entidad relación.
+
+Se desea informatizar la gestión de una clínica médica llamada "SaludVida".
+La clínica cuenta con un equipo de médicos de diversas especialidades y atiende a numerosos pacientes diariamente.
+
+    Pacientes
+        ID_Paciente, nombre, apellido, fecha_nacimiento, obra_social, telefono.
+
+    Medicos
+        ID_Medico, nombre, apellido, especialidad (Ej. Cardiología, Pediatría), matricula.
+
+    Turnos
+        ID_Turno, fecha_hora, motivo_consulta.
+
+Un paciente puede solicitar varios turnos, pero un turno es para un único paciente.
+Un médico atiende varios turnos, pero un turno es atendido por un único médico.
+
+2- Realice las siguientes actividades SQL
+
+    Cree una base de datos nueva con el nombre 'SaludVida'
+    Cree las tablas correspondientes con sus claves primarias y foráneas.
+    Cargue la tabla Pacientes y Medicos con al menos 20 registros cada una usando CHATGPT.
+        > Para los médicos, varíe las especialidades.
+        > Pidan datos realistas.
+
+    • Ejercicios en SQL:
+        ◦ Liste todos los médicos que sean de la especialidad 'Cardiología'. (WHERE)
+        ◦ La administración necesita saber cuántos pacientes tienen la obra social 'OSDE'. (COUNT)
+        ◦ Muestre los turnos que se dieron entre el '2024-01-01' y el '2024-06-30'. (BETWEEN)
+        ◦ Busque a los pacientes cuyo apellido comience con la letra 'G'. (LIKE)
+        ◦ Liste los médicos ordenados alfabéticamente por apellido. (ORDER BY)
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT * FROM pacientes WHERE obra_social IS NULL;
+
+SELECT especialidad, COUNT(*) FROM medicos GROUP BY especialidad;
+
+SELECT nombre, apellido FROM pacientes WHERE fecha_nacimiento < '2000-01-01';

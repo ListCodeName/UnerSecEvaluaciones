@@ -1,0 +1,41 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+1- Realice el siguiente modelo de entidad relación.
+
+La tienda de electrónica "ElectroMundo" necesita un sistema para registrar sus ventas.
+Venden productos tecnológicos y quieren llevar un control de sus clientes y las compras que realizan.
+
+    Productos
+        ID_Producto, nombre, marca, precio, stock, categoria (Ej. Celulares, Notebooks).
+
+    Clientes
+        ID_Cliente, nombre, apellido, email, direccion.
+
+    Ventas
+        ID_Venta, fecha, cantidad, metodo_pago.
+
+Un cliente puede realizar muchas compras (ventas), pero una venta pertenece a un solo cliente.
+Una venta puede incluir un producto (para simplificar este nivel), y un producto puede estar en muchas ventas.
+
+2- Realice las siguientes actividades SQL
+
+    Cree una base de datos nueva con el nombre 'ElectroMundo'
+    Cree las tablas con sus tipos de datos adecuados.
+    Cargue 50 productos y 50 clientes usando CHATGPT.
+        > Los precios de los productos deben variar entre $10000 y $1500000.
+        > Incluya marcas conocidas como Samsung, Apple, Motorola, Lenovo.
+
+    • Ejercicios en SQL:
+        ◦ Liste los productos de la marca 'Samsung' que tengan un precio menor a $500000. (WHERE y AND)
+        ◦ El gerente quiere saber de cuánto es el stock total de todos los productos en la tienda. (SUM)
+        ◦ Busque los clientes que tengan un correo electrónico de 'gmail.com'. (LIKE)
+        ◦ Muestre los productos cuyo precio esté entre $100000 y $300000. (BETWEEN)
+        ◦ Liste las ventas realizadas con el método de pago 'Tarjeta de Crédito'.
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT nombre, precio FROM productos WHERE stock = 0;
+
+SELECT AVG(precio) AS 'Precio Promedio' FROM productos WHERE categoria = 'Notebooks';
+
+UPDATE productos SET precio = precio * 1.10 WHERE marca = 'Apple';
