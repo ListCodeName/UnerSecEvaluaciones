@@ -1,0 +1,17 @@
+////////////////////   EVALUACION DE BASE DE DATOS II (JOINS) ///////////////////////////
+
+Instrucciones: Responda las siguientes preguntas utilizando sentencias SQL con INNER JOIN.
+
+1. Liste el nombre de los productos junto con el nombre de su categoría. (Productos - Categorias)
+
+2. Muestre el nombre y apellido de los clientes junto con la fecha de sus compras (ventas). (Clientes - Ventas)
+
+3. Obtenga una lista de los productos vendidos en cada venta, mostrando el ID de la venta, el nombre del producto y la cantidad vendida. (Ventas - DetalleVentas - Productos)
+
+4. Liste las ventas realizadas por el cliente 'Juan Perez', mostrando la fecha y el total de la venta. (Clientes - Ventas)
+
+5. Muestre el nombre de los productos comprados por el cliente 'Maria Gomez'. (Clientes - Ventas - DetalleVentas - Productos)
+
+6. Liste todas las categorías de productos que se han vendido alguna vez. (Categorias - Productos - DetalleVentas)
+
+7. Muestre el detalle de la venta con ID 1, incluyendo el nombre del cliente, el nombre del producto, la cantidad y el precio unitario. (Clientes - Ventas - DetalleVentas - Productos)

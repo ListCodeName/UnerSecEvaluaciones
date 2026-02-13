@@ -1,0 +1,17 @@
+////////////////////   EVALUACION DE BASE DE DATOS II (JOINS) ///////////////////////////
+
+Instrucciones: Responda las siguientes preguntas utilizando sentencias SQL con INNER JOIN.
+
+1. Liste el nombre de las bandas y el festival en el que tocan. (Bandas - Programacion - Festivales)
+
+2. Muestre qué bandas tocan en el 'Escenario Principal'. (Bandas - Programacion - Escenarios)
+
+3. Obtenga la programación completa del festival 'Rock Fest', mostrando el nombre de la banda, el escenario y la hora de inicio. (Festivales - Programacion - Bandas - Escenarios)
+
+4. Liste las ciudades donde tocará la banda 'The Rockers'. (Bandas - Programacion - Festivales)
+
+5. Muestre los escenarios utilizados en el festival 'Summer Vibes' junto con su capacidad. (Festivales - Programacion - Escenarios)
+
+6. Liste todas las bandas de género 'Rock' y el nombre del festival donde se presentan. (Bandas - Programacion - Festivales)
+
+7. ¿En qué escenario y a qué hora toca la banda 'Jazz Vibes'? (Bandas - Programacion - Escenarios)

@@ -1,0 +1,40 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+1- Realice el siguiente modelo de entidad relación.
+
+La inmobiliaria "TuHogar" desea llevar un registro de las propiedades que tiene disponibles y los agentes encargados de las mismas.
+
+    Propiedades
+        ID_Propiedad, direccion, ciudad, precio, operacion (Venta o Alquiler), tipo (Casa, Departamento).
+
+    Agentes
+        ID_Agente, nombre, apellido, telefono, fecha_ingreso.
+
+    Clientes
+        ID_Cliente, nombre, apellido, presupuesto_maximo.
+
+Un agente puede gestionar muchas propiedades.
+Una propiedad puede ser visitada por muchos clientes interesados (aunque para simplificar, no modelaremos las visitas en detalle, sino la relación básica).
+
+2- Realice las siguientes actividades SQL
+
+    Cree una base de datos nueva con el nombre 'Inmobiliaria'
+    Defina las tablas con los campos sugeridos.
+    Cargue 30 propiedades y 20 agentes usando CHATGPT.
+        > Asegúrese de tener propiedades en 'Venta' y en 'Alquiler'.
+        > Las ciudades deben variar (Ej. Paraná, Santa Fe, Rosario).
+
+    • Ejercicios en SQL:
+        ◦ Liste las propiedades que estén en 'Alquiler' y cuyo precio sea menor a $500000. (WHERE y AND)
+        ◦ Muestre los agentes que ingresaron a la empresa entre el año 2020 y 2023. (BETWEEN)
+        ◦ Busque las propiedades ubicadas en la ciudad de 'Paraná'. (WHERE)
+        ◦ La empresa quiere contactar a los clientes de apellido 'Pérez'. (LIKE)
+        ◦ Ordene las propiedades por precio de mayor a menor. (ORDER BY DESC)
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT operacion, COUNT(*) FROM propiedades GROUP BY operacion;
+
+SELECT * FROM propiedades WHERE tipo = 'Departamento' AND precio > 100000 USD;
+
+DELETE FROM agentes WHERE apellido = 'Gonzalez';

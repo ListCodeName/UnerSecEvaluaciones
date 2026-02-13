@@ -1,0 +1,40 @@
+<<<< EVALUACIÓN BASE DE DATOS I >>>>
+
+1- Realice el siguiente modelo de entidad relación.
+
+La plataforma de streaming "StreamFlix" necesita gestionar su catálogo de contenido y sus usuarios.
+
+    Peliculas
+        ID_Pelicula, titulo, genero (Acción, Comedia, Drama), duracion_minutos, año_lanzamiento.
+
+    Usuarios
+        ID_Usuario, nombre, email, plan (Básico, Estándar, Premium), pais.
+
+    Visualizaciones
+        ID_Visualizacion, fecha, dispositivo (TV, Celular, PC).
+
+Un usuario puede ver muchas películas.
+Una película es vista por muchos usuarios.
+
+2- Realice las siguientes actividades SQL
+
+    Cree una base de datos nueva con el nombre 'StreamFlix'
+    Cree las tablas correspondientes.
+    Genere datos de prueba con CHATGPT: 50 películas y 50 usuarios.
+        > Incluya clásicos y películas nuevas (2024).
+        > Variedad de géneros.
+
+    • Ejercicios en SQL:
+        ◦ Liste todas las películas del género 'Ciencia Ficción'. (WHERE)
+        ◦ Muestre los usuarios que tienen el plan 'Premium'. (WHERE)
+        ◦ Busque las películas lanzadas entre el año 1990 y el 2000. (BETWEEN)
+        ◦ Encuentre las películas cuyo título contenga la palabra 'Amor'. (LIKE)
+        ◦ ¿Cuántos usuarios hay registrados en 'Argentina'? (COUNT)
+
+Ahora al revés, qué resuelven las siguientes consultas:
+
+SELECT genero, COUNT(*) FROM peliculas GROUP BY genero;
+
+SELECT titulo FROM peliculas WHERE duracion_minutos > 120 ORDER BY duracion_minutos ASC;
+
+INSERT INTO usuarios (nombre, email, plan) VALUES ('Nuevo Usuario', 'nuevo@email.com', 'Básico');
