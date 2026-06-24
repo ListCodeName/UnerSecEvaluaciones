@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación 1 - Nuevas Tecnologías</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos modernos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --primary-gradient: linear-gradient(135deg, #ff007f, #7f00ff, #00f0ff);
+            --font-sans: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(127, 0, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 240, 255, 0.1) 0px, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(127, 0, 255, 0.15);
+            border: 1px solid rgba(127, 0, 255, 0.3);
+            color: #d8b4fe;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge i {
+            font-size: 0.9rem;
+        }
+
+        .title-gradient {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .intro {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        /* Estructura simple de lista */
+        .task-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-list li {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.25s ease;
+        }
+
+        .task-list li:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(127, 0, 255, 0.2);
+            transform: translateX(4px);
+        }
+
+        .task-list li i {
+            font-size: 1.2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            flex-shrink: 0;
+        }
+
+        .task-list li span {
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            .title-gradient {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+        <div class="badge">
+            <i class="fa-solid fa-code"></i> Primer Cuatrimestre
+        </div>
+
+        <h1 class="title-gradient">Evaluación 1 de Nuevas Tecnologías</h1>
+
+        <p class="intro">A continuación se pedirá que creen una web para un entorno educativo, que permita llevar los
+            temas
+            dados por los profesores en una determinada materia. Se deberá poder crear una materia, asignar un profesor
+            o varios profesores a la misma,
+            y luego poder guardar día a día los temas, pudiendo repetir los temas mediante un botón de ayuda.
+            Deben poder modificarse los campos en caso de cometer algún error de carga. En caso de haber feriados estos
+            se mostrarán en la lista de otro color para identificarlos mejor visualmente.</p>
+
+        <ul class="task-list">
+            <!-- Items de la consigna (Agregar aquí los puntos del ejercicio) -->
+            <li>
+                <i class="fa-solid fa-circle-chevron-right"></i>
+                <span>Crear un diseño web en chatgpt (html y css) que permita maquetar el formato, estilos y los
+                    elementos necesarios para la web</span>
+            </li>
+            <li>
+                <i class="fa-solid fa-circle-chevron-right"></i>
+                <span>Llevar el todo el código generado y utilizar antigravity para darle las funcionalidades
+                    necesarias.</span>
+            </li>
+            <li>
+                <i class="fa-solid fa-circle-chevron-right"></i>
+                <span>Realizar la base de datos mediante un archivo JSON, y las interacciones con la página mediante
+                    Javascript.</span>
+            </li>
+            <li>
+                <i class="fa-solid fa-circle-chevron-right"></i>
+                <span>Realizar las pruebas y corrección de errores de ser necesario para mostrar una implementación
+                    completa y funcional</span>
+            </li>
+        </ul>
+    </main>
+
+</body>
+
+</html>
