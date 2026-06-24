@@ -1,0 +1,2944 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Armado de PC - Laboratorio de Informática</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-app: #080b11;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-sidebar: rgba(15, 23, 42, 0.9);
+            --border-glass: rgba(255, 255, 255, 0.06);
+            --border-focus: rgba(99, 102, 241, 0.4);
+            
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --color-primary: #6366f1;         /* Indigo */
+            --color-primary-hover: #4f46e5;
+            --color-success: #10b981;         /* Emerald */
+            --color-danger: #ef4444;          /* Rose */
+            --color-warning: #f59e0b;         /* Amber */
+            --color-info: #06b6d4;            /* Cyan */
+            
+            --font-sans: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --shadow-premium: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.04) 0px, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            line-height: 1.5;
+        }
+
+        /* Header Style */
+        .app-header {
+            background-color: rgba(17, 24, 39, 0.85);
+            border-bottom: 1px solid var(--border-glass);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .logo .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .subject-badge {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--color-primary);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Main Workspace & Sidebar layout */
+        .main-container {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1100px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tabs Selection (Disabled manually via CSS pointer-events) */
+        .tabs-container {
+            display: flex;
+            background-color: rgba(17, 24, 39, 0.5);
+            padding: 0.35rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+            margin-bottom: 1.5rem;
+            gap: 0.25rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: not-allowed;
+            pointer-events: none; /* Inhabilitado para evitar navegación manual */
+            user-select: none;
+            transition: var(--transition-smooth);
+        }
+
+        .tab-btn.active {
+            background-color: var(--color-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Client Scenario Card */
+        .scenario-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
+            border: 1px solid var(--border-glass);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-premium);
+        }
+
+        .scenario-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scenario-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .scenario-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--text-muted);
+        }
+
+        .meta-item strong {
+            color: var(--text-secondary);
+        }
+
+        /* Catalog Layout */
+        .catalog-section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.5rem;
+        }
+
+        .category-group {
+            margin-bottom: 2.5rem;
+        }
+
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .category-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--color-info);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: rgba(255, 255, 255, 0.03);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .category-status.selected {
+            color: var(--color-success);
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Component Card Design */
+        .component-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 190px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+
+        .component-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .component-card.selected {
+            border-color: var(--color-primary);
+            background-color: rgba(99, 102, 241, 0.08);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+        }
+
+        .component-card.selected::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--color-primary);
+        }
+
+        .card-top {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .component-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .component-specs {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.35rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .card-bottom {
+            margin-top: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            padding-top: 0.75rem;
+        }
+
+        .component-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+        }
+
+        .select-indicator {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-smooth);
+        }
+
+        .component-card.selected .select-indicator {
+            border-color: var(--color-primary);
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .component-card.selected .select-indicator::after {
+            content: "\f00c";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            font-size: 0.65rem;
+        }
+
+        /* Sidebar Panel (Cart / Status) */
+        .sidebar {
+            position: sticky;
+            top: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-premium);
+            backdrop-filter: blur(12px);
+        }
+
+        .sidebar-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.75rem;
+        }
+
+        .selected-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        /* Custom Scrollbar for sidebar list */
+        .selected-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .selected-list::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 2px;
+        }
+
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            border-bottom: 1px dashed rgba(255,255,255,0.03);
+            padding-bottom: 0.5rem;
+        }
+
+        .selected-item-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .selected-item-val {
+            color: var(--text-secondary);
+            font-weight: 600;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+        }
+
+        .selected-item-val.empty {
+            color: var(--color-danger);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .budget-summary {
+            margin-top: 1.5rem;
+            background-color: rgba(0,0,0,0.25);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .budget-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .budget-row:last-child {
+            margin-bottom: 0;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 0.5rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .budget-overlimit {
+            color: var(--color-danger) !important;
+        }
+
+        .btn-validate {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+            color: white;
+            border: none;
+            padding: 1rem;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(99,102,241,0.2);
+        }
+
+        .btn-validate:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99,102,241,0.3);
+        }
+
+        /* SCREEN: FINAL RESULTS DISPLAY */
+        .final-results-screen {
+            max-width: 1350px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .final-results-card {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-premium);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .global-score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .score-circle-large {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 35px rgba(0,0,0,0.5);
+            transition: var(--transition-smooth);
+        }
+
+        .grade-glow-excelente {
+            border: 4px solid var(--color-success);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        }
+        .grade-glow-bueno {
+            border: 4px solid var(--color-info);
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.4);
+        }
+        .grade-glow-regular {
+            border: 4px solid var(--color-warning);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+        }
+        .grade-glow-malo {
+            border: 4px solid var(--color-danger);
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .global-status-badge {
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 0.4rem 1.2rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.5rem;
+        }
+
+        .final-results-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .final-results-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        .lockout-notice {
+            background-color: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Cases Grid for results */
+        .cases-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            align-items: start;
+        }
+
+        .case-result-card {
+            background: rgba(10, 15, 30, 0.5);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .case-result-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .case-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 0.75rem;
+        }
+
+        .case-result-title h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .case-result-title p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .case-score-badge {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .case-components-summary {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .case-comp-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed rgba(255,255,255,0.02);
+            padding-bottom: 0.25rem;
+        }
+        .case-comp-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .case-comp-label {
+            color: var(--text-muted);
+        }
+
+        .case-comp-val {
+            color: var(--text-secondary);
+            font-weight: 500;
+            max-width: 180px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .case-diagnostic-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 1rem;
+        }
+
+        .case-diag-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            font-size: 0.825rem;
+            line-height: 1.4;
+        }
+
+        .case-diag-icon {
+            font-size: 0.95rem;
+            margin-top: 0.15rem;
+        }
+
+        .case-diag-icon.success { color: var(--color-success); }
+        .case-diag-icon.warning { color: var(--color-warning); }
+        .case-diag-icon.danger { color: var(--color-danger); }
+
+        .case-diag-text strong {
+            color: var(--text-primary);
+        }
+
+        .case-diag-text p {
+            color: var(--text-secondary);
+            font-size: 0.775rem;
+            margin-top: 0.1rem;
+        }
+
+        /* Footer Style */
+        .app-footer {
+            background-color: rgba(10, 15, 30, 0.6);
+            text-align: center;
+            padding: 1.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-glass);
+            margin-top: auto;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: #1e1b4b;
+            border: 1px solid var(--color-danger);
+            color: #fca5a5;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-premium);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fa-solid fa-laptop-code logo-icon"></i>
+                <div>
+                    <h1>Simulador de Armado de PC</h1>
+                    <p class="subtitle">Evaluación Práctica de Hardware</p>
+                </div>
+            </div>
+            <div class="subject-badge">
+                <i class="fa-solid fa-graduation-cap"></i> Laboratorio de Informática I
+            </div>
+        </div>
+    </header>
+
+    <!-- PANTALLA PRINCIPAL DEL EXAMEN (ESPACIO DE ARMADO) -->
+    <div id="app-workspace" class="main-container">
+        <!-- Columna Izquierda: Solapas de Pestañas y Catálogo de Componentes -->
+        <section class="workspace">
+            <!-- Solapas indicadoras del paso/caso activo (Pestañas bloqueadas al click) -->
+            <div class="tabs-container">
+                <button class="tab-btn active" id="tab-0">
+                    <i class="fa-solid fa-user-graduate"></i> Caso 1: Sofía (Cotidianidad)
+                </button>
+                <button class="tab-btn" id="tab-1">
+                    <i class="fa-solid fa-user-tie"></i> Caso 2: Martín (Oficina)
+                </button>
+                <button class="tab-btn" id="tab-2">
+                    <i class="fa-solid fa-gamepad"></i> Caso 3: Valentina (Gaming)
+                </button>
+            </div>
+
+            <!-- Consigna del Cliente -->
+            <div class="scenario-card">
+                <h3 id="scenario-title"><i class="fa-solid fa-user"></i> Cargando Cliente...</h3>
+                <p id="scenario-description">Cargando detalles de la consigna...</p>
+                <div class="scenario-meta">
+                    <div class="meta-item">
+                        <i class="fa-solid fa-wallet"></i> Presupuesto Máximo: <strong id="scenario-budget">$0</strong>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fa-solid fa-microchip"></i> Objetivo Clave: <strong id="scenario-goal">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Catálogo de Componentes (Inyectados por JS) -->
+            <h2 class="catalog-section-title">
+                <i class="fa-solid fa-microchip"></i> 1. Componentes Internos del Hardware
+            </h2>
+            <div id="catalog-internals"></div>
+
+            <h2 class="catalog-section-title">
+                <i class="fa-solid fa-desktop"></i> 2. Componentes Externos y Periféricos
+            </h2>
+            <div id="catalog-externals"></div>
+        </section>
+
+        <!-- Columna Derecha: Minimapa Lateral y Botón de Validación -->
+        <aside class="sidebar">
+            <div class="sidebar-card">
+                <h3><i class="fa-solid fa-cart-shopping"></i> Tu Armado Actual</h3>
+                <div class="selected-list" id="selected-components-list"></div>
+
+                <div class="budget-summary">
+                    <div class="budget-row">
+                        <span>Límite Cliente:</span>
+                        <span id="summary-limit">$0</span>
+                    </div>
+                    <div class="budget-row">
+                        <span>Costo Total:</span>
+                        <span id="summary-total">$0</span>
+                    </div>
+                </div>
+
+                <button class="btn-validate" id="btn-validar-accion" onclick="procesarPasoArmado()">
+                    <i class="fa-solid fa-arrow-right-long"></i> Validar y Continuar
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- PANTALLA SECUNDARIA DE RESULTADOS FINALES (OCULTA POR DEFECTO, SE ABRE AL TERMINAR) -->
+    <section id="final-results-screen" class="final-results-screen hidden">
+        <div class="final-results-card">
+            <div class="global-score-container">
+                <div class="score-circle-large" id="global-score-badge">8</div>
+                <h2 class="final-results-title">Evaluación de Armado Finalizada</h2>
+                <div class="global-status-badge" id="global-status-badge">Aprobado</div>
+                <p class="final-results-subtitle" id="global-score-desc">
+                    Tu promedio final del examen. A continuación se detallan las decisiones correctas y los errores de compatibilidad u optimización para cada armado.
+                </p>
+            </div>
+            
+            <div class="lockout-notice">
+                <i class="fa-solid fa-lock"></i>
+                <span>Atención: Las respuestas han sido guardadas. Esta computadora ya ha agotado su único intento de examen.</span>
+            </div>
+
+            <!-- Grilla con la resolución detallada de cada caso conteniendo la nota y el diagnóstico correctivo -->
+            <div class="cases-results-grid" id="cases-results-grid"></div>
+        </div>
+    </section>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 - Universidad Tecnológica. Cátedra de Laboratorio de Informática I.</p>
+    </footer>
+
+    <!-- Toast Notification para avisar de componentes faltantes -->
+    <div id="toast" class="toast hidden">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="toast-message">Por favor completa el armado.</span>
+    </div>
+
+    <script>
+        // ==========================================
+        // BASE DE DATOS DE COMPONENTES (ESPECIFICACIONES RÍGIDAS, ORDENADAS POR PRECIO)
+        // ==========================================
+        const catalogData = {
+            cpu: {
+                title: "Procesador (CPU)",
+                category: "internal",
+                options: [
+                    {
+                        id: "cpu-filler",
+                        name: "Intel Celeron G6900",
+                        type: "relleno",
+                        specs: ["Núcleos: 2 (Básicos)", "Hilos: 2", "Gráficos: UHD Intel 710", "Frecuencia: 3.4 GHz fija", "Consumo (TDP): 46W"],
+                        price: 78000,
+                        powerDraw: 46,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        gen: 12,
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-i5-4460",
+                        name: "Intel Core i5-4460",
+                        type: "relleno",
+                        specs: ["Núcleos: 4 (Básicos)", "Hilos: 4", "Gráficos: Intel HD Graphics 4600", "Frecuencia: 3.2 GHz base / 3.4 GHz turbo", "Consumo (TDP): 84W"],
+                        price: 82000,
+                        powerDraw: 84,
+                        socket: "LGA1150",
+                        brand: "Intel",
+                        gen: 4,
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-i5-10400",
+                        name: "Intel Core i5-10400",
+                        type: "balanced",
+                        specs: ["Núcleos: 6 (Multiprocesamiento)", "Hilos: 12", "Gráficos: UHD Intel 630", "Frecuencia: 2.9 GHz base / 4.3 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 135000,
+                        powerDraw: 65,
+                        socket: "LGA1200",
+                        brand: "Intel",
+                        gen: 10,
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-eco",
+                        name: "Intel Core i3-12100",
+                        type: "economico",
+                        specs: ["Núcleos: 4 (Performance)", "Hilos: 8", "Gráficos: UHD Intel 730", "Frecuencia: 3.3 GHz base / 4.3 GHz turbo", "Consumo (TDP): 60W"],
+                        price: 145000,
+                        powerDraw: 60,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        gen: 12,
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-r5-4500",
+                        name: "AMD Ryzen 5 4500",
+                        type: "alternativo",
+                        specs: ["Núcleos: 6 (Multiprocesamiento)", "Hilos: 12", "Gráficos: No incluye GPU integrada (Requiere placa dedicada)", "Frecuencia: 3.6 GHz base / 4.1 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 165000,
+                        powerDraw: 65,
+                        socket: "AM4",
+                        brand: "AMD",
+                        gen: "Zen 2",
+                        hasNoIntegratedGPU: true
+                    },
+                    {
+                        id: "cpu-balanced",
+                        name: "AMD Ryzen 5 5600G",
+                        type: "balanced",
+                        specs: ["Núcleos: 6 (Multiprocesamiento)", "Hilos: 12", "Gráficos: Radeon Vega 7 Integrados", "Frecuencia: 3.9 GHz base / 4.4 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 215000,
+                        powerDraw: 65,
+                        socket: "AM4",
+                        brand: "AMD",
+                        gen: "Zen 3",
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-trap1",
+                        name: "AMD Ryzen 5 5600X",
+                        type: "alternativo",
+                        specs: ["Núcleos: 6 (Rendimiento)", "Hilos: 12", "Gráficos: No incluye GPU integrada (Requiere placa dedicada)", "Frecuencia: 3.7 GHz base / 4.6 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 230000,
+                        powerDraw: 65,
+                        socket: "AM4",
+                        brand: "AMD",
+                        gen: "Zen 3",
+                        hasNoIntegratedGPU: true
+                    },
+                    {
+                        id: "cpu-i5",
+                        name: "Intel Core i5-13400",
+                        type: "balanced",
+                        specs: ["Núcleos: 10 (6 P-cores + 4 E-cores)", "Hilos: 16", "Gráficos: UHD Intel 730", "Frecuencia: 2.5 GHz base / 4.6 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 310000,
+                        powerDraw: 65,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        gen: 13,
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-trap2",
+                        name: "AMD Ryzen 7 5700X",
+                        type: "alternativo",
+                        specs: ["Núcleos: 8 (Multiprocesamiento alto)", "Hilos: 16", "Gráficos: No incluye GPU integrada (Requiere placa dedicada)", "Frecuencia: 3.4 GHz base / 4.6 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 330000,
+                        powerDraw: 65,
+                        socket: "AM4",
+                        brand: "AMD",
+                        gen: "Zen 3",
+                        hasNoIntegratedGPU: true
+                    },
+                    {
+                        id: "cpu-r5-7600",
+                        name: "AMD Ryzen 5 7600",
+                        type: "balanced",
+                        specs: ["Núcleos: 6 (Arquitectura Zen 4)", "Hilos: 12", "Gráficos: Radeon Graphics Integrados", "Frecuencia: 3.8 GHz base / 5.1 GHz turbo", "Consumo (TDP): 65W"],
+                        price: 380000,
+                        powerDraw: 65,
+                        socket: "AM5",
+                        brand: "AMD",
+                        gen: "Zen 4",
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-am5",
+                        name: "AMD Ryzen 7 7700X",
+                        type: "alternativo",
+                        specs: ["Núcleos: 8 (Arquitectura Zen 4)", "Hilos: 16", "Gráficos: AMD Radeon Graphics básicos integrados", "Frecuencia: 4.5 GHz base / 5.4 GHz turbo", "Consumo (TDP): 105W"],
+                        price: 490000,
+                        powerDraw: 105,
+                        socket: "AM5",
+                        brand: "AMD",
+                        gen: "Zen 4",
+                        hasNoIntegratedGPU: false
+                    },
+                    {
+                        id: "cpu-perf",
+                        name: "Intel Core i7-13700K",
+                        type: "rendimiento",
+                        specs: ["Núcleos: 16 (8 P-cores + 8 E-cores)", "Hilos: 24", "Gráficos: No incluye GPU integrada (Requiere placa dedicada)", "Frecuencia: 3.4 GHz base / 5.4 GHz turbo", "Consumo (TDP): 125W"],
+                        price: 580000,
+                        powerDraw: 125,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        gen: 13,
+                        hasNoIntegratedGPU: true
+                    },
+                    {
+                        id: "cpu-i9-13900k",
+                        name: "Intel Core i9-13900K",
+                        type: "alternativo",
+                        specs: ["Núcleos: 24 (8 P-cores + 16 E-cores)", "Hilos: 32", "Gráficos: UHD Intel 770", "Frecuencia: 3.0 GHz base / 5.8 GHz turbo", "Consumo (TDP): 125W"],
+                        price: 850000,
+                        powerDraw: 125,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        gen: 13,
+                        hasNoIntegratedGPU: false
+                    }
+                ]
+            },
+            motherboard: {
+                title: "Placa Madre (Motherboard)",
+                category: "internal",
+                options: [
+                    {
+                        id: "mobo-filler",
+                        name: "ASRock H81M-VG4 LGA1150",
+                        type: "relleno",
+                        specs: ["Socket: LGA1150 (Antiguo)", "Chipset: Intel H81", "Memoria: 2 ranuras DDR3 (Hasta 1600MHz)", "Formato: Micro-ATX", "Puertos: PCIe 2.0 x16, SATA III"],
+                        price: 45000,
+                        socket: "LGA1150",
+                        brand: "Intel",
+                        ramType: "DDR3"
+                    },
+                    {
+                        id: "mobo-trap1",
+                        name: "ASUS Prime H510M LGA1200",
+                        type: "alternativo",
+                        specs: ["Socket: LGA1200 (Intel 10ma/11ma Gen)", "Chipset: Intel H510", "Memoria: 2 ranuras DDR4 (Hasta 3200MHz)", "Formato: Micro-ATX", "Puertos: PCIe 4.0, M.2 NVMe"],
+                        price: 85000,
+                        socket: "LGA1200",
+                        brand: "Intel",
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "mobo-a320",
+                        name: "Gigabyte A320M-S2H AM4",
+                        type: "alternativo",
+                        specs: ["Socket: AM4", "Chipset: AMD A320", "Memoria: 2 ranuras DDR4 (Hasta 3200MHz)", "Formato: Micro-ATX", "Puertos: PCIe 3.0, M.2 SATA/NVMe"],
+                        price: 95000,
+                        socket: "AM4",
+                        brand: "AMD",
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "mobo-eco",
+                        name: "Gigabyte H610M H DDR4",
+                        type: "economico",
+                        specs: ["Socket: LGA1700", "Chipset: Intel H610", "Memoria: 2 ranuras DDR4 (Hasta 3200MHz)", "Formato: Micro-ATX", "Puertos: PCIe 4.0 x16, M.2 NVMe"],
+                        price: 115000,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "mobo-balanced",
+                        name: "ASUS Prime B550M-A AM4",
+                        type: "balanced",
+                        specs: ["Socket: AM4", "Chipset: AMD B550", "Memoria: 4 ranuras DDR4 (Hasta 4800MHz)", "Formato: Micro-ATX", "Puertos: PCIe 4.0, Dual M.2 NVMe"],
+                        price: 155000,
+                        socket: "AM4",
+                        brand: "AMD",
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "mobo-b760",
+                        name: "ASUS Prime B760M-A DDR4",
+                        type: "alternativo",
+                        specs: ["Socket: LGA1700", "Chipset: Intel B760", "Memoria: 4 ranuras DDR4 (Hasta 5333MHz)", "Formato: Micro-ATX", "Puertos: PCIe 4.0, Dual M.2 NVMe"],
+                        price: 195000,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "mobo-am5",
+                        name: "ASUS Prime X670-P AM5",
+                        type: "alternativo",
+                        specs: ["Socket: AM5 (Para Ryzen 7000/8000)", "Chipset: AMD X670", "Memoria: 4 ranuras DDR5 (Hasta 6400MHz)", "Formato: ATX", "Puertos: PCIe 5.0, Triple M.2 NVMe"],
+                        price: 390000,
+                        socket: "AM5",
+                        brand: "AMD",
+                        ramType: "DDR5"
+                    },
+                    {
+                        id: "mobo-perf",
+                        name: "MSI MPG Z790 Carbon WiFi",
+                        type: "rendimiento",
+                        specs: ["Socket: LGA1700", "Chipset: Intel Z790", "Memoria: 4 ranuras DDR5 (Hasta 7800MHz)", "Formato: ATX", "Adicionales: Wi-Fi 6E, PCIe 5.0, disipación avanzada"],
+                        price: 460000,
+                        socket: "LGA1700",
+                        brand: "Intel",
+                        ramType: "DDR5"
+                    }
+                ]
+            },
+            ram: {
+                title: "Memoria RAM",
+                category: "internal",
+                options: [
+                    {
+                        id: "ram-filler",
+                        name: "4GB DDR3 1333MHz Novatech",
+                        type: "relleno",
+                        specs: ["Capacidad: 4 GB", "Frecuencia: 1333 MHz", "Estándar: DDR3", "Latencia: CL9", "Voltaje: 1.5V"],
+                        price: 15000,
+                        ramType: "DDR3"
+                    },
+                    {
+                        id: "ram-trap1",
+                        name: "8GB DDR3 1600MHz Kingston",
+                        type: "relleno",
+                        specs: ["Capacidad: 8 GB", "Frecuencia: 1600 MHz", "Estándar: DDR3", "Latencia: CL11", "Voltaje: 1.5V"],
+                        price: 25000,
+                        ramType: "DDR3"
+                    },
+                    {
+                        id: "ram-eco-d4-8gb",
+                        name: "8GB DDR4 2666MHz Crucial Value",
+                        type: "economico",
+                        specs: ["Capacidad: 8 GB (1 x 8GB)", "Frecuencia: 2666 MHz", "Estándar: DDR4 UDIMM", "Latencia: CL19", "Voltaje: 1.2V"],
+                        price: 30000,
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "ram-eco",
+                        name: "8GB DDR4 3200MHz Kingston Value",
+                        type: "economico",
+                        specs: ["Capacidad: 8 GB (1 x 8GB)", "Frecuencia: 3200 MHz", "Estándar: DDR4 UDIMM", "Latencia: CL22", "Voltaje: 1.2V"],
+                        price: 38000,
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "ram-trap2",
+                        name: "16GB DDR3 (2x8GB) Corsair",
+                        type: "relleno",
+                        specs: ["Capacidad: 16 GB (Kit Dual Channel DDR3)", "Frecuencia: 1600 MHz", "Estándar: DDR3 UDIMM", "Latencia: CL10", "Disipador de aluminio azul"],
+                        price: 48000,
+                        ramType: "DDR3"
+                    },
+                    {
+                        id: "ram-d4-16gb-single",
+                        name: "16GB DDR4 3200MHz Kingston Fury Beast",
+                        type: "balanced",
+                        specs: ["Capacidad: 16 GB (1 x 16GB)", "Frecuencia: 3200 MHz", "Estándar: DDR4 UDIMM", "Latencia: CL16", "Disipador de aluminio negro"],
+                        price: 55000,
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "ram-balanced",
+                        name: "16GB DDR4 (2x8GB) Corsair Vengeance 3200MHz",
+                        type: "balanced",
+                        specs: ["Capacidad: 16 GB (Kit Dual Channel 2x8GB)", "Frecuencia: 3200 MHz", "Estándar: DDR4 UDIMM", "Latencia: CL16", "Disipador de aluminio negro"],
+                        price: 76000,
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "ram-d5-16",
+                        name: "16GB DDR5 4800MHz Crucial",
+                        type: "alternativo",
+                        specs: ["Capacidad: 16 GB (1 x 16GB)", "Frecuencia: 4800 MHz", "Estándar: DDR5 UDIMM", "Latencia: CL40", "Voltaje: 1.1V"],
+                        price: 95000,
+                        ramType: "DDR5"
+                    },
+                    {
+                        id: "ram-d4-32",
+                        name: "32GB DDR4 (2x16GB) Kingston Fury 3600MHz",
+                        type: "alternativo",
+                        specs: ["Capacidad: 32 GB (Kit Dual Channel 2x16GB)", "Frecuencia: 3600 MHz", "Estándar: DDR4 UDIMM", "Latencia: CL18", "Soporte XMP 2.0"],
+                        price: 135000,
+                        ramType: "DDR4"
+                    },
+                    {
+                        id: "ram-d5-32gb-crucial",
+                        name: "32GB DDR5 (2x16GB) Crucial 4800MHz",
+                        type: "alternativo",
+                        specs: ["Capacidad: 32 GB (Kit Dual Channel 2x16GB)", "Frecuencia: 4800 MHz", "Estándar: DDR5 UDIMM", "Latencia: CL40", "Voltaje: 1.1V"],
+                        price: 150000,
+                        ramType: "DDR5"
+                    },
+                    {
+                        id: "ram-perf",
+                        name: "32GB DDR5 (2x16GB) G.Skill Trident Z5 6000MHz",
+                        type: "rendimiento",
+                        specs: ["Capacidad: 32 GB (Kit Dual Channel 2x16GB)", "Frecuencia: 6000 MHz", "Estándar: DDR5 UDIMM", "Latencia: CL36", "Iluminación RGB, soporte XMP 3.0"],
+                        price: 185000,
+                        ramType: "DDR5"
+                    },
+                    {
+                        id: "ram-d5-64gb-corsair",
+                        name: "64GB DDR5 (2x32GB) Corsair Vengeance 5600MHz",
+                        type: "alternativo",
+                        specs: ["Capacidad: 64 GB (Kit Dual Channel 2x32GB)", "Frecuencia: 5600 MHz", "Estándar: DDR5 UDIMM", "Latencia: CL40", "Disipador de aluminio negro"],
+                        price: 320000,
+                        ramType: "DDR5"
+                    }
+                ]
+            },
+            storage: {
+                title: "Almacenamiento (Disco)",
+                category: "internal",
+                options: [
+                    {
+                        id: "store-filler",
+                        name: "HDD WD 500GB SATA II",
+                        type: "relleno",
+                        specs: ["Capacidad: 500 GB", "Velocidad: 5400 RPM", "Formato: 3.5 pulgadas", "Interfaz: SATA II 3 Gb/s", "Estado: Refurbished"],
+                        price: 19000
+                    },
+                    {
+                        id: "store-eco",
+                        name: "SSD SATA III 240GB Kingston A400",
+                        type: "economico",
+                        specs: ["Capacidad: 240 GB", "Velocidad de lectura: 500 MB/s", "Velocidad de escritura: 350 MB/s", "Formato: 2.5 pulgadas", "Interfaz: SATA III 6 Gb/s"],
+                        price: 30000
+                    },
+                    {
+                        id: "store-hdd1",
+                        name: "HDD Seagate Barracuda 1TB SATA III",
+                        type: "alternativo",
+                        specs: ["Capacidad: 1 TB (1000 GB)", "Velocidad: 7200 RPM", "Memoria Cache: 64MB", "Interfaz: SATA III 6 Gb/s"],
+                        price: 45000
+                    },
+                    {
+                        id: "store-ssd480",
+                        name: "SSD SATA III 480GB Kingston A400",
+                        type: "alternativo",
+                        specs: ["Capacidad: 480 GB", "Velocidad de lectura: 500 MB/s", "Velocidad de escritura: 450 MB/s", "Formato: 2.5 pulgadas", "Interfaz: SATA III"],
+                        price: 48000
+                    },
+                    {
+                        id: "store-nvme500",
+                        name: "SSD M.2 NVMe 500GB WD Blue SN570",
+                        type: "alternativo",
+                        specs: ["Capacidad: 500 GB", "Velocidad de lectura: 3500 MB/s", "Velocidad de escritura: 2300 MB/s", "Interfaz: PCIe Gen 3.0 x4 (NVMe)"],
+                        price: 65000
+                    },
+                    {
+                        id: "store-nvme1",
+                        name: "SSD M.2 NVMe 1TB WD Blue SN570",
+                        type: "alternativo",
+                        specs: ["Capacidad: 1 TB", "Velocidad de lectura: 3500 MB/s", "Velocidad de escritura: 3000 MB/s", "Interfaz: PCIe Gen 3.0 x4"],
+                        price: 95000
+                    },
+                    {
+                        id: "store-balanced",
+                        name: "SSD M.2 NVMe 1TB + HDD 1TB Seagate",
+                        type: "balanced",
+                        specs: ["Unidades: Duales (SSD M.2 PCIe 3.0 + HDD SATA III 3.5\")", "Capacidad: 2 TB combinados", "SSD Lectura: 3500 MB/s", "HDD: 7200 RPM, 64MB Cache"],
+                        price: 118000
+                    },
+                    {
+                        id: "store-dual-ssd",
+                        name: "SSD M.2 NVMe 2TB + HDD 2TB Seagate",
+                        type: "balanced",
+                        specs: ["Unidades: Duales (SSD M.2 PCIe 4.0 + HDD SATA III 3.5\")", "Capacidad: 4 TB combinados", "SSD Lectura: 5000 MB/s", "HDD: 7200 RPM, 256MB Cache para resguardos masivos"],
+                        price: 180000
+                    },
+                    {
+                        id: "store-perf",
+                        name: "SSD NVMe M.2 2TB Samsung 990 Pro",
+                        type: "rendimiento",
+                        specs: ["Capacidad: 2 TB", "Velocidad de lectura: 7450 MB/s", "Velocidad de escritura: 6900 MB/s", "Interfaz: PCIe Gen 4.0 x4 (NVMe 2.0)", "Disipador pasivo integrado"],
+                        price: 255000
+                    }
+                ]
+            },
+            gpu: {
+                title: "Tarjeta Gráfica (GPU)",
+                category: "internal",
+                options: [
+                    {
+                        id: "gpu-eco",
+                        name: "No incluir dedicada (Gráficos Integrados)",
+                        type: "economico",
+                        specs: ["Sin tarjeta gráfica adicional", "Utiliza la memoria RAM de sistema", "Consumo energético: 0W", "Costo: ARS$ 0"],
+                        price: 0,
+                        powerDraw: 0
+                    },
+                    {
+                        id: "gpu-filler",
+                        name: "NVIDIA GeForce GT 710 2GB DDR3",
+                        type: "relleno",
+                        specs: ["Memoria: 2 GB DDR3", "Frecuencia: 954 MHz", "Interfaz: PCIe 2.0 x8", "Consumo: 19W", "Salidas: VGA, DVI, HDMI"],
+                        price: 60000,
+                        powerDraw: 19
+                    },
+                    {
+                        id: "gpu-gt1030",
+                        name: "NVIDIA GeForce GT 1030 2GB GDDR5",
+                        type: "alternativo",
+                        specs: ["Memoria: 2 GB GDDR5", "Frecuencia: 1468 MHz", "Interfaz: PCIe 3.0 x4", "Consumo: 30W", "Salidas: HDMI, DVI-D"],
+                        price: 110000,
+                        powerDraw: 30
+                    },
+                    {
+                        id: "gpu-gtx1650",
+                        name: "NVIDIA GeForce GTX 1650 4GB GDDR6",
+                        type: "alternativo",
+                        specs: ["Memoria: 4 GB GDDR6", "Frecuencia boost: 1590 MHz", "Interfaz: PCIe 3.0 x16", "Consumo: 75W (No requiere conector extra)"],
+                        price: 240000,
+                        powerDraw: 75
+                    },
+                    {
+                        id: "gpu-rtx3050",
+                        name: "NVIDIA GeForce RTX 3050 6GB GDDR6",
+                        type: "alternativo",
+                        specs: ["Memoria: 6 GB GDDR6", "Frecuencia boost: 1470 MHz", "Consumo: 70W", "Soporta DLSS 2.0, Ray Tracing"],
+                        price: 340000,
+                        powerDraw: 70
+                    },
+                    {
+                        id: "gpu-balanced",
+                        name: "NVIDIA GeForce RTX 4060 8GB GDDR6",
+                        type: "balanced",
+                        specs: ["Memoria: 8 GB GDDR6", "Interfaz: PCIe 4.0 x8", "Frecuencia boost: 2460 MHz", "Consumo bajo (TDP): 115W", "Soporta DLSS 3.0 e Frame Generation"],
+                        price: 480000,
+                        powerDraw: 115
+                    },
+                    {
+                        id: "gpu-ti16",
+                        name: "NVIDIA GeForce RTX 4060 Ti 16GB GDDR6",
+                        type: "alternativo",
+                        specs: ["Memoria: 16 GB GDDR6", "Interfaz: PCIe 4.0 x8", "Frecuencia boost: 2535 MHz", "Consumo: 165W (Requiere conector 8-pin)", "Soporta DLSS 3.0"],
+                        price: 690000,
+                        powerDraw: 165
+                    },
+                    {
+                        id: "gpu-perf",
+                        name: "NVIDIA RTX 4070 Ti Super 16GB GDDR6X",
+                        type: "rendimiento",
+                        specs: ["Memoria: 16 GB GDDR6X", "Interfaz: PCIe 4.0 x16", "Frecuencia boost: 2610 MHz", "Consumo alto (TDP): 285W", "Soporta DLSS 3.0, Ray Tracing, NVENC Dual Encoder"],
+                        price: 1180000,
+                        powerDraw: 285
+                    }
+                ]
+            },
+            psu: {
+                title: "Fuente de Poder (PSU)",
+                category: "internal",
+                options: [
+                    {
+                        id: "psu-filler",
+                        name: "Fuente Genérica 300W Usada",
+                        type: "relleno",
+                        specs: ["Potencia real máxima: 180W", "Certificación: No posee", "Conectores: Molex predominantes", "Estado: Sin garantía ni caja original"],
+                        price: 12000,
+                        wattage: 180,
+                        isCertified: false
+                    },
+                    {
+                        id: "psu-eco",
+                        name: "Fuente Genérica 500W (Con Gabinete Kit)",
+                        type: "economico",
+                        specs: ["Potencia real máxima: 220W", "Certificación: No posee", "Protecciones: Básicas por fusible", "Ventilador: 80 mm"],
+                        price: 35000,
+                        wattage: 220,
+                        isCertified: false
+                    },
+                    {
+                        id: "psu-white",
+                        name: "Fuente EVGA 500W 80 Plus White",
+                        type: "alternativo",
+                        specs: ["Potencia real continua: 500W", "Certificación: 80 Plus White", "Protecciones activas: OVP, UVP, OCP, OPP, SCP", "Ventilador: 120 mm"],
+                        price: 62000,
+                        wattage: 500,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-balanced",
+                        name: "Thermaltake Smart 550W Bronze",
+                        type: "balanced",
+                        specs: ["Potencia continua: 550W reales", "Certificación: 80 Plus Bronze", "Protecciones: OVP, OPP, SCP activas", "Ventilador: 120 mm con control automático"],
+                        price: 88000,
+                        wattage: 550,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-bronze650",
+                        name: "Fuente Gigabyte 650W 80 Plus Bronze",
+                        type: "alternativo",
+                        specs: ["Potencia continua: 650W reales", "Certificación: 80 Plus Bronze", "Cables planos negros no modulares", "Ventilador: 120 mm silencioso"],
+                        price: 105000,
+                        wattage: 650,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-gold650",
+                        name: "Fuente Corsair 650W 80 Plus Gold",
+                        type: "alternativo",
+                        specs: ["Potencia continua: 650W reales", "Certificación: 80 Plus Gold", "Cables semimodulares", "Condensadores japoneses"],
+                        price: 150000,
+                        wattage: 650,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-gold750",
+                        name: "Fuente Corsair 750W 80 Plus Gold Modular",
+                        type: "alternativo",
+                        specs: ["Potencia continua: 750W reales", "Certificación: 80 Plus Gold", "Cables: 100% Modulares", "Ventilador zero-RPM silencioso"],
+                        price: 180000,
+                        wattage: 750,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-perf",
+                        name: "Corsair RM850x 850W Gold Modular",
+                        type: "rendimiento",
+                        specs: ["Potencia continua: 850W reales", "Certificación: 80 Plus Gold", "Cables: 100% Modulares", "Protecciones: OVP, UVP, SCP, OPP, OTP", "Condensadores japoneses de 105°C"],
+                        price: 215000,
+                        wattage: 850,
+                        isCertified: true
+                    },
+                    {
+                        id: "psu-gold1000",
+                        name: "Fuente Corsair RM1000x 1000W Gold Modular",
+                        type: "alternativo",
+                        specs: ["Potencia continua: 1000W reales", "Certificación: 80 Plus Gold", "Cables: 100% Modulares", "Ventilador levitación magnética", "Excesiva para la mayoría de configuraciones standard"],
+                        price: 310000,
+                        wattage: 1000,
+                        isCertified: true
+                    }
+                ]
+            },
+            cabinet: {
+                title: "Gabinete (Gabinete)",
+                category: "internal",
+                options: [
+                    {
+                        id: "cab-eco",
+                        name: "Gabinete Kit Oficina Genérico",
+                        type: "economico",
+                        specs: ["Formato: Mid Tower", "Panel frontal: Cerrado con puertos USB 2.0", "Ventilación: Pasiva (sin ventiladores)", "Espacio de fuente: Superior"],
+                        price: 22000,
+                        hasIncludedPSU: false
+                    },
+                    {
+                        id: "cab-filler",
+                        name: "Gabinete Slim ITX Limitado (SFX 200W)",
+                        type: "relleno",
+                        specs: ["Formato: Mini-ITX Slim", "Fuente incluida: SFX 200W integrada", "Dimensiones internas: No soporta tarjetas gráficas dedicadas", "Espacio cooler CPU: perfil bajo únicamente"],
+                        price: 35000,
+                        hasIncludedPSU: true
+                    },
+                    {
+                        id: "cab-std",
+                        name: "Gabinete Mid Tower Standard (Sin coolers)",
+                        type: "alternativo",
+                        specs: ["Formato: Mid Tower", "Panel lateral: Acero ciego", "Ventilación: Soportes para 3 coolers (ninguno incluido)", "Espacio de fuente: Superior"],
+                        price: 38000,
+                        hasIncludedPSU: false
+                    },
+                    {
+                        id: "cab-bolt",
+                        name: "Gabinete Aerocool Bolt RGB",
+                        type: "alternativo",
+                        specs: ["Formato: Mid Tower", "Panel lateral: Acrílico transparente", "Ventilación: 1 cooler de 120mm trasero instalado", "Frente: Tira LED RGB con botonera física"],
+                        price: 48000,
+                        hasIncludedPSU: false
+                    },
+                    {
+                        id: "cab-gamerkit",
+                        name: "Gabinete Kit Gamer (Fuente Genérica 500W inc.)",
+                        type: "relleno",
+                        specs: ["Formato: Mid Tower Gamer", "Fuente Incluida: Genérica de 500W instalada", "Ventilación: 2 coolers de 120mm sin LED traseros", "Panel lateral: Acrílico"],
+                        price: 55000,
+                        hasIncludedPSU: true
+                    },
+                    {
+                        id: "cab-balanced",
+                        name: "Gabinete Sentey K20 RGB",
+                        type: "balanced",
+                        specs: ["Formato: Mid Tower", "Panel lateral: Vidrio templado", "Ventilación: 4 coolers 120mm LED RGB incluidos", "Panel frontal: Mesh (ventilado)"],
+                        price: 65000,
+                        hasIncludedPSU: false
+                    },
+                    {
+                        id: "cab-perf",
+                        name: "Gabinete Corsair 4000D Airflow",
+                        type: "rendimiento",
+                        specs: ["Formato: Mid Tower Premium", "Panel lateral: Vidrio templado con soporte magnético", "Ventilación: Frente mesh optimizado para alto flujo", "Adicionales: Filtros de polvo, canalización de cables"],
+                        price: 120000,
+                        hasIncludedPSU: false
+                    },
+                    {
+                        id: "cab-lianli",
+                        name: "Gabinete Lian Li O11 Dynamic",
+                        type: "alternativo",
+                        specs: ["Formato: Mid Tower Dual Chamber de lujo", "Paneles: Vidrio templado frontal y lateral", "Ventilación: Soporte para 9 coolers (Ninguno incluido)", "Material: Aluminio y acero premium"],
+                        price: 250000,
+                        hasIncludedPSU: false
+                    }
+                ]
+            },
+            monitor: {
+                title: "Monitor",
+                category: "external",
+                options: [
+                    {
+                        id: "monitor-filler",
+                        name: "Monitor Tubo CRT 15\" Samsung",
+                        type: "relleno",
+                        specs: ["Tecnología: Tubo de Rayos Catódicos", "Resolución: 1024x768 a 60Hz", "Peso: 14.5 kg", "Conexión: Cable VGA incorporado"],
+                        price: 15000
+                    },
+                    {
+                        id: "monitor-eco",
+                        name: "Monitor 19\" LED HD VGA",
+                        type: "economico",
+                        specs: ["Tamaño: 19 pulgadas", "Resolución: 1366x768 píxeles", "Frecuencia: 60Hz", "Entradas: VGA analógico únicamente"],
+                        price: 95000
+                    },
+                    {
+                        id: "monitor-22hd",
+                        name: "Monitor 22\" FHD HDMI 75Hz",
+                        type: "alternativo",
+                        specs: ["Tamaño: 21.5 pulgadas", "Resolución: 1920x1080 Full HD", "Frecuencia: 75Hz", "Tecnología de panel: VA, Entradas: HDMI, VGA"],
+                        price: 125000
+                    },
+                    {
+                        id: "monitor-balanced",
+                        name: "Monitor 24\" IPS FHD HDMI 75Hz",
+                        type: "balanced",
+                        specs: ["Tamaño: 24 pulgadas", "Resolución: 1920x1080 Full HD", "Frecuencia: 75Hz", "Tecnología de panel: IPS, Flicker-free", "Entradas: HDMI, DisplayPort"],
+                        price: 160000
+                    },
+                    {
+                        id: "monitor-144hz",
+                        name: "Monitor 24\" VA FHD 144Hz 1ms",
+                        type: "alternativo",
+                        specs: ["Tamaño: 23.8 pulgadas", "Resolución: 1920x1080", "Frecuencia: 144Hz / 1ms de respuesta", "Entradas: Dual HDMI, DisplayPort", "Diseñado para gaming fluido"],
+                        price: 210000
+                    },
+                    {
+                        id: "monitor-27qhd",
+                        name: "Monitor 27\" IPS QHD 75Hz",
+                        type: "alternativo",
+                        specs: ["Tamaño: 27 pulgadas", "Resolución: 2560x1440 QHD (2K)", "Frecuencia: 75Hz", "Panel: IPS de alta definición y precisión de color", "Entradas: HDMI, DisplayPort"],
+                        price: 280000
+                    },
+                    {
+                        id: "monitor-perf",
+                        name: "Monitor Gamer 27\" IPS QHD 165Hz",
+                        type: "rendimiento",
+                        specs: ["Tamaño: 27 pulgadas", "Resolución: 2560x1440 QHD 2K", "Frecuencia: 165Hz", "Panel: IPS con 1ms de respuesta", "Tecnologías: G-Sync/FreeSync Compatible"],
+                        price: 380000
+                    },
+                    {
+                        id: "monitor-lg32",
+                        name: "Monitor LG 32\" Curvo 4K 60Hz",
+                        type: "alternativo",
+                        specs: ["Tamaño: 31.5 pulgadas", "Resolución: 3840x2160 Ultra HD 4K", "Frecuencia: 60Hz", "Panel: VA Curvo, HDR10", "Entradas: Dual HDMI, DisplayPort"],
+                        price: 490000
+                    }
+                ]
+            },
+            peripherals: {
+                title: "Teclado y Mouse",
+                category: "external",
+                options: [
+                    {
+                        id: "peri-eco",
+                        name: "Kit Teclado + Mouse Genérico USB",
+                        type: "economico",
+                        specs: ["Teclado: Membrana estándar en español con pad numérico", "Mouse: Óptico 1000 DPI con 3 botones", "Conexión: Cable USB 1.5m"],
+                        price: 15000,
+                        hasNumpad: true
+                    },
+                    {
+                        id: "peri-filler",
+                        name: "Teclado Inalámbrico Flexible Goma",
+                        type: "relleno",
+                        specs: ["Material: Silicona flexible impermeable", "Conexión: Receptor USB recargable", "Táctil: Recorrido plano, propenso a rebotes de pulsación"],
+                        price: 25000,
+                        hasNumpad: false
+                    },
+                    {
+                        id: "peri-genius",
+                        name: "Kit Inalámbrico Básico Genius",
+                        type: "alternativo",
+                        specs: ["Teclado: Membrana silenciosa, distribución completa con pad numérico", "Mouse: Óptico inalámbrico 1200 DPI", "Conexión: Receptor USB 2.4 GHz"],
+                        price: 28000,
+                        hasNumpad: true
+                    },
+                    {
+                        id: "peri-balanced",
+                        name: "Kit Inalámbrico Ergonómico Logitech MK270",
+                        type: "balanced",
+                        specs: ["Conexión: Receptor USB Nano 2.4 GHz", "Teclado: Distribución completa con pad numérico, anti-salpicaduras", "Mouse: Óptico compacto portátil", "Rango: Hasta 10 metros"],
+                        price: 38000,
+                        hasNumpad: true
+                    },
+                    {
+                        id: "peri-rgbmem",
+                        name: "Kit Gamer Membrana RGB Redragon",
+                        type: "alternativo",
+                        specs: ["Teclado: Membrana silenciosa con luces RGB fijas, pad numérico", "Mouse: Óptico 3200 DPI con botones laterales", "Conexión: Cable USB reforzado"],
+                        price: 45000,
+                        hasNumpad: true
+                    },
+                    {
+                        id: "peri-trap1",
+                        name: "Teclado Mecánico Redragon 60% (Sin Pad Numérico)",
+                        type: "relleno",
+                        specs: ["Teclado: Compacto al 60% sin teclado numérico lateral ni flechas dedicadas", "Switches: Mecánicos Outemu Red", "Iluminación: LED roja fija"],
+                        price: 62000,
+                        hasNumpad: false
+                    },
+                    {
+                        id: "peri-perf",
+                        name: "Kit Gamer Mecánico RGB + Mouse 12K",
+                        type: "rendimiento",
+                        specs: ["Teclado: Mecánico completo con pad numérico, switches Outemu Blue, RGB", "Mouse: Sensor óptico de 12000 DPI, 7 botones programables", "Conexión: USB con cable trenzado reforzado"],
+                        price: 115000,
+                        hasNumpad: true
+                    },
+                    {
+                        id: "peri-premium",
+                        name: "Kit Inalámbrico Premium Logitech MX",
+                        type: "alternativo",
+                        specs: ["Teclado: Teclas cóncavas de corto recorrido con pad numérico, retroiluminación inteligente", "Mouse: Sensor de alta precisión Darkfield 8000 DPI (funciona en vidrio)", "Conexión: Bluetooth / Receptor Logi Bolt"],
+                        price: 210000,
+                        hasNumpad: true
+                    }
+                ]
+            },
+            audio: {
+                title: "Auriculares y Micrófono",
+                category: "external",
+                options: [
+                    {
+                        id: "aud-eco",
+                        name: "No incluir auriculares ni micrófonos",
+                        type: "economico",
+                        specs: ["Sin periférico de sonido adicional", "Utiliza la salida integrada analógica", "Costo: ARS$ 0"],
+                        price: 0
+                    },
+                    {
+                        id: "aud-speakers-20",
+                        name: "Parlantes 2.0 Genius SP-Q180 USB",
+                        type: "relleno",
+                        specs: ["Tipo: Parlantes estéreo 2.0", "Potencia: 6W RMS", "Conexión: Audio Jack 3.5mm + Alimentación USB", "Control de volumen en cable"],
+                        price: 12000
+                    },
+                    {
+                        id: "aud-balanced",
+                        name: "Auriculares Vincha con Micrófono",
+                        type: "balanced",
+                        specs: ["Tipo: Vincha circumaural", "Conexión: Conectores Jack 3.5mm duales", "Micrófono: Brazo flexible omnidireccional", "Material: Plástico liviano"],
+                        price: 18000
+                    },
+                    {
+                        id: "aud-filler",
+                        name: "Micrófono Karaoke con Parlante",
+                        type: "relleno",
+                        specs: ["Micrófono: Dinámico de mano", "Parlante: 5W bluetooth integrado", "Alimentación: Batería litio recargable"],
+                        price: 20000
+                    },
+                    {
+                        id: "aud-basicgamer",
+                        name: "Auriculares Gamer Básicos Redragon",
+                        type: "alternativo",
+                        specs: ["Tipo: Vincha de estructura metálica", "Conexión: Jack 3.5mm compatible con consolas y PC", "Micrófono: Integrado con cancelación pasiva de ruido"],
+                        price: 35000
+                    },
+                    {
+                        id: "aud-speakers-21",
+                        name: "Parlantes 2.1 Logitech Z213 Subwoofer",
+                        type: "alternativo",
+                        specs: ["Tipo: Sistema de parlantes 2.1", "Potencia: 7W RMS (14W pico)", "Subwoofer con salida orientada hacia abajo (4 pulgadas)", "Sección de control con cable"],
+                        price: 45000
+                    },
+                    {
+                        id: "aud-midgamer",
+                        name: "Auriculares Gamer Redragon 7.1 USB",
+                        type: "alternativo",
+                        specs: ["Sonido: Envolvente virtual 7.1 mediante software", "Conexión: Puerto USB 2.0 directo", "Adicionales: Iluminación LED roja en las copas, micrófono flexible"],
+                        price: 68000
+                    },
+                    {
+                        id: "aud-usmic",
+                        name: "Micrófono Condensador USB Redragon",
+                        type: "alternativo",
+                        specs: ["Tipo: Micrófono de escritorio con soporte de trípode", "Conexión: USB Plug & Play", "Patrón de captación: Cardioide unidireccional para streaming"],
+                        price: 85000
+                    },
+                    {
+                        id: "aud-speakers-edifier",
+                        name: "Parlantes 2.1 Edifier M1380 Subwoofer",
+                        type: "balanced",
+                        specs: ["Tipo: Sistema de sonido 2.1 de alta fidelidad", "Potencia: 28W RMS reales", "Subwoofer de madera (MDF) para graves profundos libres de resonancia", "Control remoto cableado con salida para auriculares", "Ideal para ver películas en salas o habitaciones"],
+                        price: 98000
+                    },
+                    {
+                        id: "aud-g733",
+                        name: "Auriculares Logitech G733 Inalámbricos",
+                        type: "alternativo",
+                        specs: ["Auriculares: Inalámbricos Lightspeed 7.1 envolvente", "Conexión: Transmisor USB", "Autonomía: Hasta 29 horas", "Micrófono: Extraíble con tecnología Blue VO!CE"],
+                        price: 185000
+                    },
+                    {
+                        id: "aud-perf",
+                        name: "Logitech G733 + Micrófono Cardioide Pro",
+                        type: "rendimiento",
+                        specs: ["Combo Completo: Auriculares inalámbricos 7.1 + Micrófono cardioide USB profesional", "Micrófono: Captura de voz de alta fidelidad, filtro anti-pop", "Ideados para streaming y transmisiones en vivo sin ruidos de fondo"],
+                        price: 230000
+                    },
+                    {
+                        id: "aud-speakers-51",
+                        name: "Sistema Home Theater 5.1 Edifier X550",
+                        type: "alternativo",
+                        specs: ["Tipo: Sistema de sonido envolvente 5.1", "Potencia: 48W RMS totales", "Subwoofer de madera de 5 pulgadas + 5 satélites", "Control remoto inalámbrico", "Ideal para cine en casa inmersivo"],
+                        price: 290000
+                    }
+                ]
+            }
+        };
+
+        // ==========================================
+        // CASOS PRÁCTICOS / PERFILES DE CLIENTES
+        // ==========================================
+        const clients = [
+            {
+                name: "Sofía (Estudiante / Uso Cotidiano)",
+                description: "Sofía necesita una computadora para sus tareas de escuela secundaria, navegar por internet para hacer investigaciones, ver películas en Netflix, realizar videollamadas con sus compañeros y utilizar herramientas de oficina básicas. Posee un presupuesto ajustado y busca algo duradero y eficiente sin gastar de más.",
+                maxBudget: 600000,
+                goal: "PC hogareña equilibrada y de bajo costo que dure varios años.",
+                id: 0
+            },
+            {
+                name: "Martín (Oficina / Multitarea Profesional)",
+                description: "Martín es contador autónomo. Trabaja desde su casa procesando grandes planillas de Excel, sistemas de liquidación de sueldos y múltiples bases de datos locales. Necesita que la PC sea ágil al abrir muchas aplicaciones en simultáneo, y requiere una solución segura de almacenamiento físico para respaldar los datos contables confidenciales de sus clientes.",
+                maxBudget: 1100000,
+                goal: "Gran capacidad de multitarea y respaldo de almacenamiento robusto.",
+                id: 1
+            },
+            {
+                name: "Valentina (Gamer / Streamer)",
+                description: "Valentina quiere transmitir sus partidas en Twitch en calidad 1080p a 60 FPS estables mientras juega títulos modernos como Cyberpunk 2077 y Valorant. También realiza edición de sus videos para subirlos a YouTube en resolución 2K, por lo que requiere un renderizado rápido.",
+                maxBudget: 3200000,
+                goal: "Máximo rendimiento gráfico, codificación de video rápida y pantalla fluida.",
+                id: 2
+            }
+        ];
+
+        // ==========================================
+        // ESTADO DE LA APLICACIÓN
+        // ==========================================
+        let activeTab = 0;
+        let selections = {
+            0: { cpu: null, motherboard: null, ram: null, storage: null, gpu: null, psu: null, cabinet: null, monitor: null, peripherals: null, audio: null },
+            1: { cpu: null, motherboard: null, ram: null, storage: null, gpu: null, psu: null, cabinet: null, monitor: null, peripherals: null, audio: null },
+            2: { cpu: null, motherboard: null, ram: null, storage: null, gpu: null, psu: null, cabinet: null, monitor: null, peripherals: null, audio: null }
+        };
+        let appCompleted = false;
+
+        // ==========================================
+        // INICIALIZACIÓN
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ordenar las opciones por precio ascendente antes de renderizar
+            for (const key in catalogData) {
+                catalogData[key].options.sort((a, b) => a.price - b.price);
+            }
+            
+            cargarEstado();
+            if (appCompleted) {
+                mostrarPantallaFinal();
+            } else {
+                initApp();
+            }
+        });
+
+        function initApp() {
+            renderScenario();
+            renderCatalog();
+            updateSidebar();
+            actualizarBotonAccion();
+        }
+
+        function cargarEstado() {
+            const completed = localStorage.getItem('pc_sim_completed');
+            const data = localStorage.getItem('pc_sim_selections');
+            if (completed === 'true' && data) {
+                appCompleted = true;
+                selections = JSON.parse(data);
+            }
+        }
+
+        function guardarEstadoFinal() {
+            localStorage.setItem('pc_sim_completed', 'true');
+            localStorage.setItem('pc_sim_selections', JSON.stringify(selections));
+        }
+
+        // ==========================================
+        // RENDERIZADO DE LA INTERFAZ DE ARMADO
+        // ==========================================
+        function renderScenario() {
+            const client = clients[activeTab];
+            document.getElementById('scenario-title').innerHTML = `<i class="fa-solid fa-user"></i> Cliente: ${client.name}`;
+            document.getElementById('scenario-description').innerText = client.description;
+            document.getElementById('scenario-budget').innerText = `ARS$ ${client.maxBudget.toLocaleString('es-AR')}`;
+            document.getElementById('scenario-goal').innerText = client.goal;
+        }
+
+        function renderCatalog() {
+            const internalsContainer = document.getElementById('catalog-internals');
+            const externalsContainer = document.getElementById('catalog-externals');
+            
+            internalsContainer.innerHTML = '';
+            externalsContainer.innerHTML = '';
+
+            for (const [key, category] of Object.entries(catalogData)) {
+                const group = document.createElement('div');
+                group.className = 'category-group';
+
+                const selectedOption = selections[activeTab][key];
+                const isSelected = selectedOption !== null;
+                const statusClass = isSelected ? 'category-status selected' : 'category-status';
+                const statusText = isSelected ? 'Seleccionado' : 'Pendiente';
+
+                const icon = category.category === 'internal' ? 'fa-microchip' : 'fa-desktop';
+
+                group.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-name">
+                            <i class="fa-solid ${icon}"></i> ${category.title}
+                        </div>
+                        <div class="${statusClass}" id="status-${key}">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+
+                const grid = document.createElement('div');
+                grid.className = 'components-grid';
+
+                category.options.forEach(option => {
+                    const card = document.createElement('div');
+                    card.className = `component-card ${isSelected && selectedOption.id === option.id ? 'selected' : ''}`;
+                    card.setAttribute('onclick', `selectComponent('${key}', '${option.id}')`);
+                    card.id = `card-${option.id}`;
+
+                    const specsList = option.specs.map(spec => `<span>• ${spec}</span>`).join('');
+
+                    card.innerHTML = `
+                        <div class="card-top">
+                            <div class="component-title">${option.name}</div>
+                            <div class="component-specs">
+                                ${specsList}
+                            </div>
+                        </div>
+                        <div class="card-bottom">
+                            <span class="component-price">ARS$ ${option.price.toLocaleString('es-AR')}</span>
+                            <span class="select-indicator"></span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                group.appendChild(grid);
+
+                if (category.category === 'internal') {
+                    internalsContainer.appendChild(group);
+                } else {
+                    externalsContainer.appendChild(group);
+                }
+            }
+        }
+
+        // ==========================================
+        // ACCIONES DE SELECCIÓN Y PASO SECUENCIAL
+        // ==========================================
+        function selectComponent(categoryKey, optionId) {
+            const category = catalogData[categoryKey];
+            const option = category.options.find(opt => opt.id === optionId);
+            
+            selections[activeTab][categoryKey] = option;
+
+            category.options.forEach(opt => {
+                const card = document.getElementById(`card-${opt.id}`);
+                if (card) {
+                    if (opt.id === optionId) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                }
+            });
+
+            const statusLabel = document.getElementById(`status-${categoryKey}`);
+            if (statusLabel) {
+                statusLabel.className = 'category-status selected';
+                statusLabel.innerText = 'Seleccionado';
+            }
+
+            updateSidebar();
+        }
+
+        function updateSidebar() {
+            const currentTabSelections = selections[activeTab];
+            const listContainer = document.getElementById('selected-components-list');
+            listContainer.innerHTML = '';
+
+            let totalSpent = 0;
+
+            for (const [key, category] of Object.entries(catalogData)) {
+                const selected = currentTabSelections[key];
+                
+                const item = document.createElement('div');
+                item.className = 'selected-item';
+
+                if (selected) {
+                    totalSpent += selected.price;
+                    item.innerHTML = `
+                        <span class="selected-item-label">${category.title}:</span>
+                        <span class="selected-item-val" title="${selected.name}">${selected.name}</span>
+                    `;
+                } else {
+                    item.innerHTML = `
+                        <span class="selected-item-label">${category.title}:</span>
+                        <span class="selected-item-val empty"><i class="fa-solid fa-triangle-exclamation"></i> Pendiente</span>
+                    `;
+                }
+                listContainer.appendChild(item);
+            }
+
+            const client = clients[activeTab];
+            document.getElementById('summary-limit').innerText = `ARS$ ${client.maxBudget.toLocaleString('es-AR')}`;
+            
+            const totalText = document.getElementById('summary-total');
+            totalText.innerText = `ARS$ ${totalSpent.toLocaleString('es-AR')}`;
+            
+            // Tolerancia de 10k ARS antes de pintar de rojo en el presupuesto en caliente
+            if (totalSpent > client.maxBudget + 10000) {
+                totalText.className = 'budget-overlimit';
+            } else {
+                totalText.className = '';
+            }
+        }
+
+        function switchTab(tabIndex) {
+            activeTab = tabIndex;
+            
+            for (let i = 0; i < 3; i++) {
+                const btn = document.getElementById(`tab-${i}`);
+                if (i === tabIndex) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            }
+
+            renderScenario();
+            renderCatalog();
+            updateSidebar();
+            actualizarBotonAccion();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function actualizarBotonAccion() {
+            const btn = document.getElementById('btn-validar-accion');
+            if (activeTab === 2) {
+                btn.innerHTML = `<i class="fa-solid fa-clipboard-check"></i> Validar y Finalizar`;
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-arrow-right-long"></i> Validar y Continuar`;
+            }
+        }
+
+        function procesarPasoArmado() {
+            const currentTabSelections = selections[activeTab];
+            
+            // Verificar si falta seleccionar alguna categoría obligatoria
+            const missing = [];
+            for (const [key, category] of Object.entries(catalogData)) {
+                if (currentTabSelections[key] === null) {
+                    missing.push(category.title);
+                }
+            }
+
+            if (missing.length > 0) {
+                showToast("Por favor completa el armado. Faltan componentes obligatorios en la configuración.");
+                return;
+            }
+
+            if (activeTab < 2) {
+                switchTab(activeTab + 1);
+            } else {
+                appCompleted = true;
+                guardarEstadoFinal();
+                mostrarPantallaFinal();
+            }
+        }
+
+        // ==========================================
+        // VALIDACIÓN DE COMPATIBILIDAD CPU Y PLACA MADRE
+        // ==========================================
+        function checkCpuMoboCompatibility(cpu, mobo) {
+            // 1. Compatibilidad de Marca
+            if (cpu.brand !== mobo.brand) {
+                return {
+                    ok: false,
+                    reason: `Incompatibilidad de Fabricante: El procesador es ${cpu.brand} pero la placa madre tiene chipset para ${mobo.brand}. Físicamente no pueden conectarse.`
+                };
+            }
+            
+            // 2. Compatibilidad de Generación y Socket
+            if (mobo.brand === "Intel") {
+                const moboSupportsOld = (mobo.socket === "LGA1150" || mobo.socket === "LGA1200");
+                const cpuIsOld = (cpu.gen <= 11);
+                
+                if (moboSupportsOld && !cpuIsOld) {
+                    return {
+                        ok: false,
+                        reason: `Incompatibilidad de Generación: La placa madre '${mobo.name}' admite procesadores Intel de 11va generación o inferiores, pero has seleccionado '${cpu.name}' (12va/13va generación).`
+                    };
+                }
+                if (!moboSupportsOld && cpuIsOld) {
+                    return {
+                        ok: false,
+                        reason: `Incompatibilidad de Generación: La placa madre '${mobo.name}' admite procesadores Intel de 12da generación o superiores (Socket LGA1700), pero has seleccionado '${cpu.name}' (4ta/10ma generación).`
+                    };
+                }
+            } else if (mobo.brand === "AMD") {
+                if (mobo.socket === "AM4" && cpu.socket === "AM5") {
+                    return {
+                        ok: false,
+                        reason: `Incompatibilidad de Generación: La placa madre '${mobo.name}' utiliza el socket AM4 (para Ryzen serie 3000/5000), pero seleccionaste un procesador '${cpu.name}' de socket AM5.`
+                    };
+                }
+                if (mobo.socket === "AM5" && cpu.socket === "AM4") {
+                    return {
+                        ok: false,
+                        reason: `Incompatibilidad de Generación: La placa madre '${mobo.name}' utiliza el socket AM5 (para Ryzen serie 7000/8000), pero seleccionaste un procesador '${cpu.name}' de socket AM4.`
+                    };
+                }
+            }
+
+            // 3. Chequeo directo de sockets por seguridad
+            if (cpu.socket !== mobo.socket) {
+                return {
+                    ok: false,
+                    reason: `Incompatibilidad Física: El socket del procesador es ${cpu.socket} pero el de la placa madre es ${mobo.socket}.`
+                };
+            }
+
+            return { ok: true };
+        }
+
+        // Helper para comprobar que la PC gamer sea válida y potente antes de darle el bono de ahorro
+        function notaFinalGamerValida(sel, totalWatts) {
+            let cpuOk = (sel.cpu.id === "cpu-perf" || sel.cpu.id === "cpu-am5" || sel.cpu.id === "cpu-trap2" || sel.cpu.id === "cpu-i5" || sel.cpu.id === "cpu-r5-7600" || sel.cpu.id === "cpu-i9-13900k");
+            let gpuOk = (sel.gpu.id === "gpu-perf" || sel.gpu.id === "gpu-ti16" || sel.gpu.id === "gpu-balanced");
+            let psuOk = (sel.psu.wattage >= totalWatts && sel.psu.isCertified);
+            let ramOk = (sel.ram.id !== "ram-eco" && sel.ram.id !== "ram-filler" && sel.ram.id !== "ram-trap1" && sel.ram.id !== "ram-trap2" && sel.ram.id !== "ram-eco-d4-8gb");
+            return cpuOk && gpuOk && psuOk && ramOk;
+        }
+
+        // ==========================================
+        // MOTOR DE EVALUACIÓN DETALLADA DE HARDWARE
+        // ==========================================
+        function evaluarCasoHardware(tabIndex, sel) {
+            const client = clients[tabIndex];
+            let totalCost = Object.values(sel).reduce((sum, item) => sum + item.price, 0);
+            const items = [];
+
+            // Banderas para el nuevo sistema de puntuación
+            let hasIncompatibility = false;
+            let hasBudgetBreach = false;
+            let meetsVitalRequirement = false;
+
+            // Inicializar puntajes de cada una de las 10 categorías en 10
+            const scores = {
+                cpu: 10,
+                motherboard: 10,
+                ram: 10,
+                storage: 10,
+                gpu: 10,
+                psu: 10,
+                cabinet: 10,
+                monitor: 10,
+                peripherals: 10,
+                audio: 10
+            };
+
+            // Calcular consumo
+            let totalWatts = (sel.cpu.powerDraw || 0) + (sel.gpu.powerDraw || 0) + 50;
+
+            // ------------------------------------------
+            // A. VALIDACIONES DE COMPATIBILIDAD FÍSICA
+            // ------------------------------------------
+
+            // 1. CPU-Motherboard Brand & Socket & Gen
+            const compCheck = checkCpuMoboCompatibility(sel.cpu, sel.motherboard);
+            if (!compCheck.ok) {
+                scores.cpu = 1;
+                scores.motherboard = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incompatibilidad Física: CPU y Placa Madre',
+                    desc: compCheck.reason
+                });
+            }
+
+            // 2. Placa antigua descontinuada H81M
+            if (sel.motherboard.id === "mobo-filler") {
+                scores.motherboard = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incompatibilidad Física: Placa Madre Obsoleta',
+                    desc: `Has seleccionado la placa madre ASRock H81M (LGA1150). Es una plataforma obsoleta incompatible con todo procesador moderno de la lista.`
+                });
+            }
+
+            // 3. RAM DDR mismatch con Motherboard
+            if (sel.motherboard.ramType !== sel.ram.ramType) {
+                scores.ram = 1;
+                scores.motherboard = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incompatibilidad Física: Estándar DDR de RAM',
+                    desc: `La placa madre '${sel.motherboard.name}' utiliza ranuras de memoria ${sel.motherboard.ramType}, pero seleccionaste memoria ${sel.ram.ramType}. No encajará físicamente.`
+                });
+            }
+
+            // 4. CPU sin gráficos integrados + sin placa de video dedicada
+            if (sel.cpu.hasNoIntegratedGPU && sel.gpu.id === "gpu-eco") {
+                scores.cpu = 1;
+                scores.gpu = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Error de Video: Sin Salida Gráfica',
+                    desc: `El procesador '${sel.cpu.name}' carece de chip de video integrado, y elegiste la opción de 'No incluir placa de video dedicada'. La PC encenderá pero no dará imagen.`
+                });
+            }
+
+            // 5. Gabinete Slim ITX con Placa de Video dedicada
+            if (sel.cabinet.id === "cab-filler" && sel.gpu.id !== "gpu-eco") {
+                scores.cabinet = 1;
+                scores.gpu = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incompatibilidad de Chasis: GPU en Gabinete Slim',
+                    desc: `El gabinete Slim ITX posee un chasis compacto que no soporta tarjetas gráficas dedicadas de tamaño estándar.`
+                });
+            }
+
+            // 6. Gabinete Slim ITX con Placa Madre no Mini-ITX (mismatch físico de montaje)
+            if (sel.cabinet.id === "cab-filler") {
+                scores.cabinet = 1;
+                scores.motherboard = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incompatibilidad de Formato: Placa en Gabinete Slim',
+                    desc: `El Gabinete Slim ITX admite únicamente placas formato Mini-ITX. Las placas de la lista son Micro-ATX o ATX y no cabrán físicamente.`
+                });
+            }
+
+            // 7. Consumo eléctrico total superior a la fuente de poder
+            if (sel.psu.wattage < totalWatts) {
+                scores.psu = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Peligro Eléctrico: Fuente Insuficiente',
+                    desc: `La fuente '${sel.psu.name}' provee una potencia real de ${sel.psu.wattage}W, pero el consumo de los componentes es de ~${totalWatts}W. El equipo se apagará por sobrecarga.`
+                });
+            }
+
+            // 8. RAM DDR3 trap on DDR4/DDR5 motherboard
+            if (sel.ram.ramType === "DDR3" && sel.motherboard.ramType !== "DDR3") {
+                scores.ram = 1;
+                hasIncompatibility = true;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Trampa Detectada: RAM DDR3 Obsoleta',
+                    desc: `Intentaste acoplar memoria DDR3 lenta y obsoleta en una placa madre '${sel.motherboard.name}' que requiere DDR4 o DDR5.`
+                });
+            }
+
+            // ------------------------------------------
+            // B. EVALUACIÓN DE REQUERIMIENTOS POR CASO
+            // ------------------------------------------
+            if (tabIndex === 0) {
+                // CASO 1: SOFÍA (COTIDIANIDAD / ESTUDIANTE) - Límite: 600K
+                
+                // CPU ideal: Ryzen 5 5600G (Balanced)
+                if (sel.cpu.id === "cpu-balanced") {
+                    scores.cpu = 10;
+                } else if (sel.cpu.id === "cpu-eco" || sel.cpu.id === "cpu-i5-10400" || sel.cpu.id === "cpu-i5-4460") {
+                    scores.cpu = 8;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Procesador Aceptable',
+                        desc: `El procesador '${sel.cpu.name}' es correcto, pero el Ryzen 5 5600G era superior por su excelente relación costo-beneficio y gráficos Vega integrados.`
+                    });
+                } else if (sel.cpu.id === "cpu-filler") {
+                    scores.cpu = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Procesador Muy Limitado',
+                        desc: `Elegiste el Celeron. Sus 2 núcleos básicos sufrirán lentitud severa al procesar tareas y videollamadas en simultáneo.`
+                    });
+                } else { // High-end or no-iGPU
+                    scores.cpu = 5;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Procesador Excesivo y Costoso',
+                        desc: `El procesador '${sel.cpu.name}' es innecesariamente potente y costoso para un estudiante, reduciendo presupuesto crítico.`
+                    });
+                }
+
+                // Motherboard
+                if (sel.motherboard.id === "mobo-eco" || sel.motherboard.id === "mobo-a320") {
+                    scores.motherboard = 10;
+                } else if (sel.motherboard.id === "mobo-balanced" || sel.motherboard.id === "mobo-b760" || sel.motherboard.id === "mobo-trap1") {
+                    scores.motherboard = 8;
+                } else {
+                    scores.motherboard = 4;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Placa Madre Excesiva',
+                        desc: `La placa '${sel.motherboard.name}' de gama entusiasta encarece en demasía el presupuesto.`
+                    });
+                }
+
+                // RAM
+                if (sel.ram.id === "ram-eco" || sel.ram.id === "ram-balanced" || sel.ram.id === "ram-eco-d4-8gb" || sel.ram.id === "ram-d4-16gb-single") {
+                    scores.ram = 10;
+                } else if (sel.ram.ramType === "DDR5") {
+                    scores.ram = 5;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Memoria RAM DDR5 Ineficiente',
+                        desc: 'Las memorias DDR5 incrementan el costo de la placa y no aportan beneficios perceptibles para tareas de escuela secundaria.'
+                    });
+                } else {
+                    scores.ram = 7;
+                }
+
+                // Almacenamiento
+                if (sel.storage.id === "store-eco" || sel.storage.id === "store-ssd480" || sel.storage.id === "store-nvme500") {
+                    scores.storage = 10;
+                } else if (sel.storage.id === "store-filler") {
+                    scores.storage = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Almacenamiento HDD Lento',
+                        desc: 'Elegir un HDD de 500GB como disco primario hará que el inicio del sistema operativo y los programas sea frustrantemente lento.'
+                    });
+                } else {
+                    scores.storage = 7;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Almacenamiento Excesivo',
+                        desc: `El disco '${sel.storage.name}' es innecesario para un perfil estudiantil básico y encarece la cotización.`
+                    });
+                }
+
+                // GPU
+                if (sel.gpu.id === "gpu-eco") {
+                    scores.gpu = 10;
+                } else {
+                    scores.gpu = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Placa Gráfica Dedicada Innecesaria',
+                        desc: `Elegiste la placa '${sel.gpu.name}'. El uso cotidiano escolar no requiere una tarjeta dedicada; los gráficos integrados son más que suficientes.`
+                    });
+                }
+
+                // PSU
+                if (sel.psu.id === "psu-eco" || sel.psu.id === "psu-white" || sel.psu.id === "psu-balanced") {
+                    scores.psu = 10;
+                } else {
+                    scores.psu = 7;
+                }
+
+                // Cabinet
+                if (sel.cabinet.id === "cab-eco" || sel.cabinet.id === "cab-std") {
+                    scores.cabinet = 10;
+                } else if (sel.cabinet.id === "cab-bolt" || sel.cabinet.id === "cab-balanced") {
+                    scores.cabinet = 8;
+                } else {
+                    scores.cabinet = 4;
+                }
+
+                // Monitor
+                if (sel.monitor.id === "monitor-balanced" || sel.monitor.id === "monitor-22hd") {
+                    scores.monitor = 10;
+                } else if (sel.monitor.id === "monitor-eco") {
+                    scores.monitor = 8;
+                } else if (sel.monitor.id === "monitor-filler") {
+                    scores.monitor = 2;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Monitor de Tubo CRT Obsoleto',
+                        desc: 'Un monitor CRT de tubo tiene baja definición, genera fatiga ocular severa para estudiar y consume mucho espacio y corriente.'
+                    });
+                } else {
+                    scores.monitor = 5;
+                }
+
+                // Peripherals
+                if (sel.peripherals.id === "peri-eco" || sel.peripherals.id === "peri-genius" || sel.peripherals.id === "peri-balanced") {
+                    scores.peripherals = 10;
+                } else {
+                    scores.peripherals = 8;
+                }
+
+                // Audio (Movie speakers reward!)
+                if (sel.audio.id === "aud-speakers-edifier" || sel.audio.id === "aud-speakers-51") {
+                    scores.audio = 10;
+                    meetsVitalRequirement = true;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Excelente Audio para Cine',
+                        desc: `¡Excelente acierto! Los parlantes con subwoofer proveen la calidad y acústica ambiental perfecta para disfrutar de películas en el hogar.`
+                    });
+                } else if (sel.audio.id === "aud-speakers-21") {
+                    scores.audio = 9;
+                    meetsVitalRequirement = true;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Audio 2.1 Decente para Películas',
+                        desc: 'El sistema 2.1 de Logitech brinda un sonido decente con bajos apropiados para la habitación.'
+                    });
+                } else if (sel.audio.id === "aud-speakers-20") {
+                    scores.audio = 8;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Parlantes 2.0 Básicos',
+                        desc: 'Los parlantes 2.0 reproducen sonido básico, pero para películas se echa en falta la presencia de un subwoofer de graves.'
+                    });
+                } else if (sel.audio.id === "aud-balanced" || sel.audio.id === "aud-basicgamer") {
+                    scores.audio = 6;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Auriculares en Lugar de Parlantes',
+                        desc: 'Has configurado auriculares. Si bien sirven para estudiar, los parlantes 2.1 son superiores y más cómodos para ver películas en la habitación.'
+                    });
+                } else {
+                    scores.audio = 3;
+                }
+
+            } else if (tabIndex === 1) {
+                // CASO 2: MARTÍN (OFICINA / MULTITAREA / BACKUPS) - Límite: 1.1M
+                
+                // CPU
+                if (sel.cpu.id === "cpu-i5" || sel.cpu.id === "cpu-balanced" || sel.cpu.id === "cpu-i5-10400" || sel.cpu.id === "cpu-r5-7600") {
+                    scores.cpu = 10;
+                } else if (sel.cpu.id === "cpu-eco" || sel.cpu.id === "cpu-r5-4500" || sel.cpu.id === "cpu-i5-4460") {
+                    scores.cpu = 8;
+                } else if (sel.cpu.id === "cpu-filler") {
+                    scores.cpu = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Procesador Insuficiente para Contaduría',
+                        desc: 'El procesador Celeron sufrirá congelamientos severos al procesar planillas de sueldos extensas e interactuar con bases de datos contables.'
+                    });
+                } else {
+                    scores.cpu = 6;
+                }
+
+                // Motherboard
+                if (sel.motherboard.id === "mobo-eco" || sel.motherboard.id === "mobo-balanced" || sel.motherboard.id === "mobo-b760" || sel.motherboard.id === "mobo-a320" || sel.motherboard.id === "mobo-trap1") {
+                    scores.motherboard = 10;
+                } else {
+                    scores.motherboard = 7;
+                }
+
+                // RAM
+                if (sel.ram.id === "ram-balanced" || sel.ram.id === "ram-d4-32" || sel.ram.id === "ram-d5-16" || sel.ram.id === "ram-d4-16gb-single" || sel.ram.id === "ram-d5-32gb-crucial") {
+                    scores.ram = 10;
+                } else if (sel.ram.id === "ram-perf" || sel.ram.id === "ram-d5-64gb-corsair") {
+                    scores.ram = 8;
+                } else { // 8GB or less
+                    scores.ram = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Memoria RAM Muy Baja para Oficina',
+                        desc: 'Con solo 8GB de RAM o menos, Martín experimentará ralentizaciones al abrir múltiples aplicativos impositivos y planillas de cálculo simultáneamente.'
+                    });
+                }
+
+                // Storage (Backups redundancy check)
+                if (sel.storage.id === "store-balanced" || sel.storage.id === "store-dual-ssd") {
+                    scores.storage = 10;
+                    meetsVitalRequirement = true;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Acierto: Resguardo y Redundancia Física',
+                        desc: `¡Excelente acierto! Al configurar '${sel.storage.name}', dispones de una unidad de estado sólido veloz para el arranque del sistema y un disco físico secundario independiente dedicado de forma aislada para los respaldos de tus clientes.`
+                    });
+                } else {
+                    scores.storage = 7;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Falta de Unidad Secundaria para Backups',
+                        desc: `Has configurado '${sel.storage.name}'. Un contador autónomo requiere un esquema redundante (SSD principal para apps y HDD/SSD secundario para resguardo) para asegurar copias de seguridad de clientes ante fallos imprevistos.`
+                    });
+                }
+
+                // GPU
+                if (sel.gpu.id === "gpu-eco") {
+                    scores.gpu = 10;
+                } else {
+                    scores.gpu = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Placa de Video Dedicada Innecesaria para Oficina',
+                        desc: `La placa '${sel.gpu.name}' encarece innecesariamente la PC de oficina sin aportar utilidad al trabajo contable.`
+                    });
+                }
+
+                // PSU
+                if (sel.psu.isCertified) {
+                    scores.psu = 10;
+                } else {
+                    scores.psu = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Peligro Eléctrico: Fuente Genérica en PC Comercial',
+                        desc: 'Has seleccionado una fuente genérica sin certificación. Ante una falla de tensión, Martín arriesga quemar sus componentes y perder la información fiscal de sus clientes.'
+                    });
+                }
+
+                // Cabinet
+                if (sel.cabinet.id === "cab-eco" || sel.cabinet.id === "cab-std") {
+                    scores.cabinet = 10;
+                } else {
+                    scores.cabinet = 8;
+                }
+
+                // Monitor
+                if (sel.monitor.id === "monitor-balanced") {
+                    scores.monitor = 10;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Monitor Ergonómico IPS Excelente',
+                        desc: 'La pantalla de 24" IPS previene el cansancio visual tras pasar muchas horas frente a balances contables.'
+                    });
+                } else if (sel.monitor.id === "monitor-22hd" || sel.monitor.id === "monitor-27qhd") {
+                    scores.monitor = 9;
+                } else {
+                    scores.monitor = 6;
+                }
+
+                // Peripherals: Numpad check
+                if (sel.peripherals.hasNumpad) {
+                    scores.peripherals = 10;
+                } else {
+                    scores.peripherals = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Teclado Inadecuado para Contabilidad',
+                        desc: `El teclado '${sel.peripherals.name}' carece de bloque numérico lateral (pad numérico), indispensable para la carga masiva y veloz de números en balances contables.`
+                    });
+                }
+
+                // Audio
+                if (sel.audio.id === "aud-eco" || sel.audio.id === "aud-balanced" || sel.audio.id === "aud-speakers-20") {
+                    scores.audio = 10;
+                } else {
+                    scores.audio = 6;
+                }
+
+            } else if (tabIndex === 2) {
+                // CASO 3: VALENTINA (GAMER / STREAMER / EDICIÓN 2K) - Límite: 3.2M
+                
+                // CPU
+                if (sel.cpu.id === "cpu-perf" || sel.cpu.id === "cpu-i9-13900k") {
+                    scores.cpu = 10;
+                } else if (sel.cpu.id === "cpu-am5" || sel.cpu.id === "cpu-r5-7600") {
+                    scores.cpu = 9;
+                } else if (sel.cpu.id === "cpu-trap2" || sel.cpu.id === "cpu-i5" || sel.cpu.id === "cpu-trap1") {
+                    scores.cpu = 7;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Procesador Ajustado para Streamer',
+                        desc: 'Elegiste un procesador de gama media. Para directos en 1080p, Valorant, Cyberpunk y codificación en OBS simultánea, el i7 o Ryzen 7 de última generación es óptimo.'
+                    });
+                } else {
+                    scores.cpu = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Procesador Insuficiente para Gaming/Stream',
+                        desc: `El procesador '${sel.cpu.name}' no tiene la potencia multinúcleo para evitar congelamientos en juegos AAA durante directos.`
+                    });
+                }
+
+                // Motherboard
+                if (sel.motherboard.id === "mobo-perf" || sel.motherboard.id === "mobo-am5" || sel.motherboard.id === "mobo-b760" || sel.motherboard.id === "mobo-balanced") {
+                    scores.motherboard = 10;
+                } else {
+                    scores.motherboard = 6;
+                }
+
+                // RAM
+                if (sel.ram.id === "ram-perf" || sel.ram.id === "ram-d4-32" || sel.ram.id === "ram-d5-32gb-crucial" || sel.ram.id === "ram-d5-64gb-corsair") {
+                    scores.ram = 10;
+                } else if (sel.ram.id === "ram-balanced" || sel.ram.id === "ram-d5-16" || sel.ram.id === "ram-d4-16gb-single") {
+                    scores.ram = 7;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Memoria RAM muy Ajustada',
+                        desc: 'Elegiste 16GB. Aunque funciona, 32GB es lo recomendado para la multitarea del streaming y edición de video 2K.'
+                    });
+                } else {
+                    scores.ram = 3;
+                }
+
+                // Storage
+                if (sel.storage.id === "store-perf" || sel.storage.id === "store-nvme1" || sel.storage.id === "store-dual-ssd") {
+                    scores.storage = 10;
+                } else if (sel.storage.id === "store-nvme500" || sel.storage.id === "store-balanced") {
+                    scores.storage = 8;
+                } else {
+                    scores.storage = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Disco Muy Lento o Chico para Videos 2K',
+                        desc: 'Los proyectos de edición en 2K y los juegos AAA modernos requieren la alta tasa de transferencia de un SSD M.2 NVMe de gran capacidad.'
+                    });
+                }
+
+                // GPU
+                if (sel.gpu.id === "gpu-perf" || sel.gpu.id === "gpu-ti16") {
+                    scores.gpu = 10;
+                } else if (sel.gpu.id === "gpu-balanced") {
+                    scores.gpu = 9;
+                } else if (sel.gpu.id === "gpu-gtx1650" || sel.gpu.id === "gpu-rtx3050") {
+                    scores.gpu = 5;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Tarjeta Gráfica Insuficiente para directos AAA',
+                        desc: `La placa '${sel.gpu.name}' se quedará extremadamente corta para jugar Cyberpunk 2077 y renderizar video a resolución 2K con soltura.`
+                    });
+                } else {
+                    scores.gpu = 1;
+                }
+
+                // PSU: Power spike control
+                if (sel.psu.id === "psu-perf" || sel.psu.id === "psu-gold750") {
+                    scores.psu = 10;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Fuente Óptima para Power Spikes',
+                        desc: `¡Excelente elección! La fuente '${sel.psu.name}' tiene suficiente capacidad y certificación de alta calidad para absorber con seguridad los picos transitorios de consumo (power spikes) de la tarjeta gráfica RTX sin apagarse.`
+                    });
+                } else if (sel.psu.id === "psu-gold1000") {
+                    scores.psu = 8;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Fuente Excesiva y Costosa',
+                        desc: 'Has seleccionado una fuente de 1000W. Aunque es muy segura, es sobredimensionada para esta configuración, lo cual incrementa el costo total innecesariamente.'
+                    });
+                } else if (sel.psu.wattage < totalWatts) {
+                    scores.psu = 1;
+                } else { // 650W or similar
+                    scores.psu = 6;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Fuente Ajustada ante Power Spikes',
+                        desc: `La fuente '${sel.psu.name}' (${sel.psu.wattage}W) es suficiente para el consumo continuo, pero se encuentra muy al límite para absorber de forma segura los picos transitorios de consumo de la RTX 4070 Ti Super.`
+                    });
+                }
+
+                // Cabinet
+                if (sel.cabinet.id === "cab-perf" || sel.cabinet.id === "cab-balanced" || sel.cabinet.id === "cab-lianli") {
+                    scores.cabinet = 10;
+                } else if (sel.cabinet.id === "cab-bolt" || sel.cabinet.id === "cab-std") {
+                    scores.cabinet = 6;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Flujo de Aire Deficiente',
+                        desc: 'El gabinete elegido tiene poca ventilación para disipar el calor extremo que generan un CPU y GPU potentes bajo carga.'
+                    });
+                } else {
+                    scores.cabinet = 3;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Gabinete sin Flujo de Aire (Throttling)',
+                        desc: 'Meter componentes gamer en un gabinete cerrado de oficina causará estrangulamiento térmico (thermal throttling).'
+                    });
+                }
+
+                // Monitor: High Hz screen
+                if (sel.monitor.id === "monitor-perf" || sel.monitor.id === "monitor-144hz") {
+                    scores.monitor = 10;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Pantalla de Altos Hz Excelente',
+                        desc: `¡Excelente acierto! Elegiste un monitor de ${sel.monitor.id === "monitor-perf" ? "165Hz" : "144Hz"}, lo cual permite visualizar la fluidez total de fotogramas del juego, reduciendo el desenfoque de movimiento.`
+                    });
+                } else if (sel.monitor.id === "monitor-lg32") {
+                    scores.monitor = 6;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Monitor 4K Limitado a 60Hz para Gaming',
+                        desc: 'El monitor 4K curvo de 32" brinda una imagen espectacular para editar video, pero su tasa de refresco está limitada a 60Hz. En juegos rápidos de disparos perderás fluidez.'
+                    });
+                } else {
+                    scores.monitor = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Monitor Lento para Gaming Competitivo',
+                        desc: `Elegiste un monitor de 60Hz/75Hz estándar. La tasa de refresco es insuficiente para Valentina, limitando visualmente el rendimiento gráfico de su potente GPU.`
+                    });
+                }
+
+                // Verificar requisitos vitales del caso 3: Monitor de altos Hz y GPU potente
+                const hasHighHz = (sel.monitor.id === "monitor-perf" || sel.monitor.id === "monitor-144hz");
+                const hasGoodGpu = (sel.gpu.id === "gpu-perf" || sel.gpu.id === "gpu-ti16" || sel.gpu.id === "gpu-balanced");
+                if (hasHighHz && hasGoodGpu) {
+                    meetsVitalRequirement = true;
+                }
+
+                // Peripherals: Latency / Keyboard & Mouse
+                if (sel.peripherals.id === "peri-perf") {
+                    scores.peripherals = 10;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Periféricos Gamer Mecánicos y Cableados',
+                        desc: 'Excelente. El teclado mecánico completo y mouse gamer con cable trenzado garantizan la menor latencia de entrada y máxima precisión en juegos competitivos.'
+                    });
+                } else if (sel.peripherals.id === "peri-rgbmem" || sel.peripherals.id === "peri-trap1") {
+                    scores.peripherals = 8;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Teclado Gamer con Cable Aceptable',
+                        desc: `Has elegido periféricos con cable ('${sel.peripherals.name}'), lo cual elimina el retardo. Sin embargo, no es el kit mecánico de distribución completa ideal.`
+                    });
+                } else if (sel.peripherals.id === "peri-eco") {
+                    scores.peripherals = 7;
+                } else { // Wireless options
+                    scores.peripherals = 4;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Latencia Inalámbrica Alta en Gaming',
+                        desc: `Has seleccionado un kit inalámbrico ('${sel.peripherals.name}'). Los dispositivos inalámbricos estándar introducen micro-retardo en las pulsaciones, lo cual perjudica el desempeño competitivo.`
+                    });
+                }
+
+                // Audio: Surround Headset
+                if (sel.audio.id === "aud-perf" || sel.audio.id === "aud-g733" || sel.audio.id === "aud-midgamer") {
+                    scores.audio = 10;
+                    items.push({
+                        iconType: 'success',
+                        title: 'Cascos con Sonido Envolvente 7.1',
+                        desc: `Excelente elección. Los auriculares '${sel.audio.name}' poseen tecnología de sonido envolvente 7.1 virtual y captación limpia de voz, ideales para escuchar la dirección de pisadas en juegos y transmitir con calidad profesional.`
+                    });
+                } else if (sel.audio.id === "aud-basicgamer" || sel.audio.id === "aud-balanced") {
+                    scores.audio = 6;
+                    items.push({
+                        iconType: 'warning',
+                        title: 'Auriculares de Sonido Estéreo Básico',
+                        desc: 'Elegiste cascos básicos de sonido estéreo. Carecen de sonido envolvente 7.1, dificultando la localización espacial en juegos competitivos.'
+                    });
+                } else {
+                    scores.audio = 2;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Audio o Parlantes Inadecuados para Gaming y Stream',
+                        desc: 'Seleccionaste parlantes o no incluiste auriculares. Para hacer streaming y jugar competitivamente se requiere usar cascos cerrados con micrófono para evitar acoples de sonido.'
+                    });
+                }
+            }
+
+            // ------------------------------------------
+            // C. PENALIZACIÓN DE PRESUPUESTO
+            // ------------------------------------------
+            if (totalCost > client.maxBudget) {
+                if (totalCost <= client.maxBudget + 10000) {
+                    items.push({
+                        iconType: 'success',
+                        title: 'Presupuesto dentro del Margen de Tolerancia',
+                        desc: `El costo total es de ARS$ ${totalCost.toLocaleString('es-AR')}, excediendo el presupuesto por menos de ARS$ 10,000. Al haberse elegido componentes certificados y seguros, se acepta sin penalización.`
+                    });
+                } else {
+                    hasBudgetBreach = true;
+                    items.push({
+                        iconType: 'danger',
+                        title: 'Error de Presupuesto: Límite Superado',
+                        desc: `El armado cuesta ARS$ ${totalCost.toLocaleString('es-AR')}, superando el límite del cliente (ARS$ ${client.maxBudget.toLocaleString('es-AR')}).`
+                    });
+                    // Reduce scores of CPU, GPU, and Motherboard since they are the main price drivers
+                    scores.cpu = Math.max(1, scores.cpu - 3);
+                    scores.gpu = Math.max(1, scores.gpu - 3);
+                    scores.motherboard = Math.max(1, scores.motherboard - 3);
+                }
+            }
+
+            // Calcular nota base como promedio simple de las 10 categorías
+            const sumScores = Object.values(scores).reduce((sum, s) => sum + s, 0);
+            let baseAverage = Math.max(1, Math.min(10, Math.round(sumScores / 10)));
+
+            let finalScore = baseAverage;
+            if (meetsVitalRequirement) {
+                finalScore += 5;
+                items.push({
+                    iconType: 'success',
+                    title: 'Bonificación por Requisito Vital',
+                    desc: '¡Excelente acierto! Se han sumado +5 puntos a la nota por cumplir con los requisitos vitales del cliente.'
+                });
+            }
+            if (hasIncompatibility) {
+                finalScore -= 10;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incumplimiento Crítico por Incompatibilidad',
+                    desc: 'Se detectó una incompatibilidad física entre componentes. Se restan -10 puntos de la nota.'
+                });
+            }
+            if (hasBudgetBreach) {
+                finalScore -= 10;
+                items.push({
+                    iconType: 'danger',
+                    title: 'Incumplimiento por Presupuesto Excedido',
+                    desc: 'El costo total supera el presupuesto máximo permitido. Se restan -10 puntos de la nota.'
+                });
+            }
+
+            finalScore = Math.max(1, Math.min(10, finalScore));
+
+            return {
+                nota: finalScore,
+                items: items
+            };
+        }
+
+        // ==========================================
+        // PANTALLA DE RESULTADOS FINALES DE CIERRE
+        // ==========================================
+        function mostrarPantallaFinal() {
+            // Ocultar espacio de armado
+            document.getElementById('app-workspace').classList.add('hidden');
+            
+            // Evaluar los 3 armados
+            const diag0 = evaluarCasoHardware(0, selections[0]);
+            const diag1 = evaluarCasoHardware(1, selections[1]);
+            const diag2 = evaluarCasoHardware(2, selections[2]);
+
+            // Calcular promedio general
+            const promedioFloat = (diag0.nota + diag1.nota + diag2.nota) / 3;
+            const promedioFinal = Math.round(promedioFloat);
+
+            // Cargar datos en los contenedores
+            const badge = document.getElementById('global-score-badge');
+            badge.innerText = promedioFinal;
+            badge.className = 'score-circle-large';
+
+            const statusBadge = document.getElementById('global-status-badge');
+            
+            if (promedioFinal >= 9) {
+                badge.classList.add('grade-glow-excelente');
+                badge.style.color = 'var(--color-success)';
+                statusBadge.innerText = "Excelente";
+                statusBadge.style.backgroundColor = 'var(--color-success)';
+                statusBadge.style.color = '#000';
+            } else if (promedioFinal >= 7) {
+                badge.classList.add('grade-glow-bueno');
+                badge.style.color = 'var(--color-info)';
+                statusBadge.innerText = "Bueno";
+                statusBadge.style.backgroundColor = 'var(--color-info)';
+                statusBadge.style.color = '#000';
+            } else if (promedioFinal >= 4) {
+                badge.classList.add('grade-glow-regular');
+                badge.style.color = 'var(--color-warning)';
+                statusBadge.innerText = "Aprobado";
+                statusBadge.style.backgroundColor = 'var(--color-warning)';
+                statusBadge.style.color = '#000';
+            } else {
+                badge.classList.add('grade-glow-malo');
+                badge.style.color = 'var(--color-danger)';
+                statusBadge.innerText = "Reprobado";
+                statusBadge.style.backgroundColor = 'var(--color-danger)';
+                statusBadge.style.color = '#fff';
+            }
+
+            // Inyectar tarjetas de los 3 casos
+            const grid = document.getElementById('cases-results-grid');
+            grid.innerHTML = '';
+
+            const casos = [
+                { id: 0, client: clients[0], diag: diag0 },
+                { id: 1, client: clients[1], diag: diag1 },
+                { id: 2, client: clients[2], diag: diag2 }
+            ];
+
+            casos.forEach(caso => {
+                const card = document.createElement('div');
+                card.className = 'case-result-card';
+
+                // Determinar color de la nota del caso
+                let scoreColor = '';
+                let borderGlow = '';
+                if (caso.diag.nota >= 9) {
+                    scoreColor = 'var(--color-success)';
+                    borderGlow = 'rgba(16, 185, 129, 0.2)';
+                } else if (caso.diag.nota >= 7) {
+                    scoreColor = 'var(--color-info)';
+                    borderGlow = 'rgba(6, 182, 212, 0.2)';
+                } else if (caso.diag.nota >= 4) {
+                    scoreColor = 'var(--color-warning)';
+                    borderGlow = 'rgba(245, 158, 11, 0.2)';
+                } else {
+                    scoreColor = 'var(--color-danger)';
+                    borderGlow = 'rgba(239, 68, 68, 0.2)';
+                }
+                card.style.border = `1px solid ${borderGlow}`;
+
+                // Recopilar resumen de componentes seleccionados
+                const sel = selections[caso.id];
+                const compList = `
+                    <div class="case-comp-row"><span class="case-comp-label">CPU:</span><span class="case-comp-val">${sel.cpu.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Placa Madre:</span><span class="case-comp-val">${sel.motherboard.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Memoria RAM:</span><span class="case-comp-val">${sel.ram.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Almacenamiento:</span><span class="case-comp-val">${sel.storage.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Placa de Video:</span><span class="case-comp-val">${sel.gpu.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Fuente de Poder:</span><span class="case-comp-val">${sel.psu.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Gabinete:</span><span class="case-comp-val">${sel.cabinet.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Monitor:</span><span class="case-comp-val">${sel.monitor.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Teclado/Mouse:</span><span class="case-comp-val">${sel.peripherals.name}</span></div>
+                    <div class="case-comp-row"><span class="case-comp-label">Audio:</span><span class="case-comp-val">${sel.audio.name}</span></div>
+                `;
+
+                // Recopilar diagnósticos
+                let diagListHTML = '';
+                if (caso.diag.items.length === 0) {
+                    diagListHTML = `
+                        <div class="case-diag-item">
+                            <i class="fa-solid fa-circle-check case-diag-icon success"></i>
+                            <div class="case-diag-text">
+                                <strong>Armado de Ojo Experto Perfecto</strong>
+                                <p>Excelente elección de componentes. Ninguna penalización aplicada.</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    caso.diag.items.forEach(item => {
+                        let iconClass = '';
+                        let colorClass = '';
+                        if (item.iconType === 'success') {
+                            iconClass = 'fa-circle-check';
+                            colorClass = 'success';
+                        } else if (item.iconType === 'warning') {
+                            iconClass = 'fa-circle-exclamation';
+                            colorClass = 'warning';
+                        } else {
+                            iconClass = 'fa-circle-xmark';
+                            colorClass = 'danger';
+                        }
+
+                        diagListHTML += `
+                            <div class="case-diag-item">
+                                <i class="fa-solid ${iconClass} case-diag-icon ${colorClass}"></i>
+                                <div class="case-diag-text">
+                                    <strong>${item.title}</strong>
+                                    <p>${item.desc}</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="case-result-header">
+                        <div class="case-result-title">
+                            <h4>${caso.client.name}</h4>
+                            <p>${caso.client.goal}</p>
+                        </div>
+                        <div class="case-score-badge" style="border: 2px solid ${scoreColor}; color: ${scoreColor}">
+                            ${caso.diag.nota}
+                        </div>
+                    </div>
+                    
+                    <div class="case-components-summary">
+                        <strong>Resumen del Armado:</strong>
+                        ${compList}
+                    </div>
+                    
+                    <div class="case-diagnostic-container">
+                        <strong>Diagnóstico del Experto:</strong>
+                        ${diagListHTML}
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Mostrar pantalla de resultados
+            document.getElementById('final-results-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "101",
+    "nombre": "Teclado Mecánico Keychron K2",
+    "categoria": "Periféricos",
+    "precio": 89000.00,
+    "stock": 12
+  },
+  {
+    "id": "102",
+    "nombre": "Monitor Gamer LG UltraGear 27\"",
+    "categoria": "Monitores",
+    "precio": 245000.00,
+    "stock": 5
+  },
+  {
+    "id": "103",
+    "nombre": "Mouse Inalámbrico Logitech MX Master 3S",
+    "categoria": "Periféricos",
+    "precio": 115000.00,
+    "stock": 18
+  },
+  {
+    "id": "104",
+    "nombre": "Notebook ASUS Zenbook 14 OLED",
+    "categoria": "Laptops",
+    "precio": 1250000.00,
+    "stock": 3
+  },
+  {
+    "id": "105",
+    "nombre": "Auriculares Inalámbricos Sony WH-1000XM4",
+    "categoria": "Audio",
+    "precio": 320000.00,
+    "stock": 7
+  }
+]

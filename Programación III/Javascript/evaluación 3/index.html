@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - Sistema de Gestión de Inventario</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Hoja de Estilos -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fa-solid fa-boxes-stacked logo-icon"></i>
+                <div>
+                    <h1>TechStore</h1>
+                    <p class="subtitle">Panel de Control de Inventario</p>
+                </div>
+            </div>
+            <div class="course-info">
+                <span>Programación III - JavaScript</span>
+                <span class="badge">Evaluación Práctica 3</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Contenedor global de Alertas/Notificaciones -->
+        <div id="contenedor-alerta" class="alert hidden">
+            <i class="alert-icon fa-solid"></i>
+            <span id="mensaje-alerta">Mensaje de notificación.</span>
+            <button id="btn-cerrar-alerta" class="btn-close">&times;</button>
+        </div>
+
+        <!-- Fila de Estadísticas -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon val-icon">
+                    <i class="fa-solid fa-hand-holding-dollar"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Valor Total</h3>
+                    <p id="stat-valor-total">$0.00</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon qty-icon">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Productos</h3>
+                    <p id="stat-cantidad-productos">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon max-icon">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>Más Valioso</h3>
+                    <p id="stat-producto-caro" class="truncate">-</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Principal: Formulario y Tabla -->
+        <div class="main-grid">
+            <!-- Formulario de Producto -->
+            <section class="card form-section">
+                <h2 id="titulo-formulario"><i class="fa-solid fa-circle-plus"></i> Registrar Producto</h2>
+                <form id="form-producto" novalidate>
+                    <!-- Campo oculto para saber si estamos editando -->
+                    <input type="hidden" id="editando-id" value="">
+
+                    <div class="form-group">
+                        <label for="input-id">ID del Producto</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="text" id="input-id" placeholder="Ej: 106" required>
+                        </div>
+                        <small class="form-help">Debe ser único y no estar vacío.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-nombre">Nombre Comercial</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-tag input-icon"></i>
+                            <input type="text" id="input-nombre" placeholder="Ej: Mouse Gamer Inalámbrico" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input-categoria">Categoría</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-layer-group input-icon"></i>
+                            <select id="input-categoria" required>
+                                <option value="" disabled selected>Seleccione una categoría</option>
+                                <option value="Periféricos">Periféricos</option>
+                                <option value="Monitores">Monitores</option>
+                                <option value="Laptops">Laptops</option>
+                                <option value="Audio">Audio</option>
+                                <option value="Accesorios">Accesorios</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="input-precio">Precio Unitario ($)</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-dollar-sign input-icon"></i>
+                                <input type="number" id="input-precio" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="input-stock">Stock Inicial</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-boxes-stacked input-icon"></i>
+                                <input type="number" id="input-stock" placeholder="0" min="0" step="1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btn-cancelar" class="btn btn-secondary hidden">
+                            <i class="fa-solid fa-xmark"></i> Cancelar
+                        </button>
+                        <button type="submit" id="btn-guardar" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Listado y Tabla de Inventario -->
+            <section class="card list-section">
+                <div class="list-header">
+                    <h2><i class="fa-solid fa-list"></i> Productos en Stock</h2>
+
+                    <!-- Acciones globales -->
+                    <div class="global-actions">
+                        <button id="btn-restaurar" class="btn btn-secondary btn-sm"
+                            title="Cargar JSON Inicial / Limpiar">
+                            <i class="fa-solid fa-rotate-left"></i> Restaurar
+                        </button>
+                        <button id="btn-exportar" class="btn btn-accent btn-sm" title="Descargar como archivo JSON">
+                            <i class="fa-solid fa-file-arrow-down"></i> Exportar JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Buscador y Filtros -->
+                <div class="filters-row">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="filtro-busqueda" placeholder="Buscar por nombre...">
+                    </div>
+                    <div class="filter-select">
+                        <select id="filtro-categoria">
+                            <option value="">Todas las categorías</option>
+                            <option value="Periféricos">Periféricos</option>
+                            <option value="Monitores">Monitores</option>
+                            <option value="Laptops">Laptops</option>
+                            <option value="Audio">Audio</option>
+                            <option value="Accesorios">Accesorios</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Contenedor de la tabla scrollable -->
+                <div class="table-responsive">
+                    <table id="tabla-productos" class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th class="text-right">Precio</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-right">Valor Total</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpo-tabla">
+                            <!-- Filas dinámicas inyectadas por app.js -->
+                            <tr>
+                                <td colspan="7" class="empty-state text-center">
+                                    <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando inventario...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 - Universidad Tecnológica. Cátedra de Programación III.</p>
+    </footer>
+
+    <!-- Script de la Aplicación -->
+    <script src="app.js"></script>
+</body>
+
+</html>
