@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS Inscripciones (
 
 -- Insertar 50 estudiantes aleatorios
 INSERT INTO Estudiantes (nombre, apellido, email, telefono)
-VALUES 
+VALUES
 ('Juan', 'Pérez', 'juan.perez@email.com', '1234567890'),
 ('Ana', 'Gomez', 'ana.gomez@email.com', '9876543210'),
 ('Carlos', 'Mendez', 'carlos.mendez@email.com', '3216549870'),
@@ -81,7 +81,26 @@ VALUES
 ('Gabriel', 'Benítez', 'gabriel.benitez@email.com', '9876543211'),
 ('Lola', 'Mora', 'lola.mora@email.com', '6547893450'),
 ('Javier', 'Paniagua', 'javier.paniagua@email.com', '3456782345'),
-('Carolina', 'Espinosa', 'carolina.espinosa@email.com', '2345676789');
+('Carolina', 'Espinosa', 'carolina.espinosa@email.com', '2345676789'),
+('Alejandro', 'Torres', 'alejandro.torres@email.com', '1122334455'),
+('Andrea', 'Ruiz', 'andrea.ruiz@email.com', '2233445566'),
+('Agustín', 'Ortega', 'agustin.ortega@email.com', '3344556677'),
+('Amalia', 'Castro', 'amalia.castro@email.com', '4455667788'),
+('Alberto', 'Diaz', 'alberto.diaz@email.com', '5566778899'),
+('Beatriz', 'Gomez', 'beatriz.gomez@email.com', '6677889900'),
+('Claudio', 'Morales', 'claudio.morales@email.com', '7788990011'),
+('Daniela', 'Fernandez', 'daniela.fernandez@email.com', '8899001122'),
+('Eduardo', 'Sanchez', 'eduardo.sanchez@email.com', '9900112233'),
+('Florencia', 'Martinez', 'florencia.martinez@email.com', '0011223344'),
+('Gonzalo', 'Lopez', 'gonzalo.lopez@email.com', '1212121212'),
+('Hugo', 'Rodriguez', 'hugo.rodriguez@email.com', '2323232323'),
+('Irene', 'Garcia', 'irene.garcia@email.com', '3434343434'),
+('Julian', 'Diaz', 'julian.diaz@email.com', '4545454545'),
+('Karina', 'Soto', 'karina.soto@email.com', '5656565656'),
+('Lucas', 'Silva', 'lucas.silva@email.com', '6767676767'),
+('Marina', 'Paredes', 'marina.paredes@email.com', '7878787878'),
+('Nicolas', 'Fuentes', 'nicolas.fuentes@email.com', '8989898989'),
+('Olivia', 'Luna', 'olivia.luna@email.com', '9090909090');
 
 -- Insertar 10 cursos aleatorios
 INSERT INTO Cursos (nombre_curso, descripcion, fecha_inicio, fecha_fin)
