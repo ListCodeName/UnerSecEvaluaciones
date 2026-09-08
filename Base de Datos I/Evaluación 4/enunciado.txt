@@ -1,41 +1,141 @@
-<<<< EVALUACIÓN BASE DE DATOS I >>>>
+<<<< EVALUACIÓN 4 - BASE DE DATOS I >>>>
 
-1- Realice el siguiente modelo de entidad relación.
+-- CONTEXTO --
+La cadena de tecnología y electrodomésticos "ElectroMundo" requiere un sistema para registrar sus transacciones comerciales.
+El sistema administra el catálogo de productos disponibles, el padrón de clientes registrados y las ventas efectuadas en sus sucursales.
 
-La tienda de electrónica "ElectroMundo" necesita un sistema para registrar sus ventas.
-Venden productos tecnológicos y quieren llevar un control de sus clientes y las compras que realizan.
+============================================================
+1. MODELO ENTIDAD-RELACIÓN (MER)
+============================================================
+A partir de los siguientes requerimientos del negocio, diseñe el Modelo Entidad-Relación correspondiente:
 
-    Productos
-        ID_Producto, nombre, marca, precio, stock, categoria (Ej. Celulares, Notebooks).
+- Un CLIENTE puede realizar múltiples compras a lo largo del tiempo, pero cada venta puntual corresponde a un único cliente registrado (Relación 1 a N).
+- Un PRODUCTO puede formar parte de múltiples ventas efectuadas en la tienda, pero cada registro de venta simple de este módulo identifica la salida de un producto específico con su cantidad (Relación 1 a N).
+- Debe representar en su diagrama: Entidades, Atributos, Claves Primarias (PK), Claves Foráneas (FK) y Cardinalidades.
 
-    Clientes
-        ID_Cliente, nombre, apellido, email, direccion.
+============================================================
+2. DEFINICIÓN Y ESTRUCTURA RELACIONAL (DDL)
+============================================================
+Implemente la base de datos escribiendo las sentencias SQL correspondientes:
 
-    Ventas
-        ID_Venta, fecha, cantidad, metodo_pago.
+1. Creación de la base de datos:
+   Cree una nueva base de datos llamada 'electromundo'.
+   [CREATE DATABASE]
 
-Un cliente puede realizar muchas compras (ventas), pero una venta pertenece a un solo cliente.
-Una venta puede incluir un producto (para simplificar este nivel), y un producto puede estar en muchas ventas.
+2. Selección de la base de datos:
+   Active y comience a trabajar sobre la base de datos 'electromundo'.
+   [USE]
 
-2- Realice las siguientes actividades SQL
+3. Creación de tablas principales:
+   Cree las siguientes tablas definiendo tipos de datos, restricciones y claves foráneas:
 
-    Cree una base de datos nueva con el nombre 'ElectroMundo'
-    Cree las tablas con sus tipos de datos adecuados.
-    Cargue 50 productos y 50 clientes usando CHATGPT.
-        > Los precios de los productos deben variar entre $10000 y $1500000.
-        > Incluya marcas conocidas como Samsung, Apple, Motorola, Lenovo.
+   • Tabla: productos
+     - idProducto: INT, PRIMARY KEY
+     - nombre: VARCHAR(100), NOT NULL
+     - marca: VARCHAR(50), NOT NULL
+     - precio: DECIMAL(10,2), NOT NULL
+     - stock: INT, NOT NULL
+     - categoria: VARCHAR(50), NOT NULL
+     [PRIMARY KEY]
 
-    • Ejercicios en SQL:
-        ◦ Liste los productos de la marca 'Samsung' que tengan un precio menor a $500000. (WHERE y AND)
-        ◦ El gerente quiere saber de cuánto es el stock total de todos los productos en la tienda. (SUM)
-        ◦ Busque los clientes que tengan un correo electrónico de 'gmail.com'. (LIKE)
-        ◦ Muestre los productos cuyo precio esté entre $100000 y $300000. (BETWEEN)
-        ◦ Liste las ventas realizadas con el método de pago 'Tarjeta de Crédito'.
+   • Tabla: clientes
+     - idCliente: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - apellido: VARCHAR(50), NOT NULL
+     - email: VARCHAR(100), NOT NULL
+     - ciudad: VARCHAR(50), NOT NULL
+     [PRIMARY KEY]
 
-Ahora al revés, qué resuelven las siguientes consultas:
+   • Tabla: ventas
+     - idVenta: INT, PRIMARY KEY
+     - idCliente: INT, NOT NULL (Clave foránea referenciando a clientes)
+     - idProducto: INT, NOT NULL (Clave foránea referenciando a productos)
+     - fecha: DATE, NOT NULL
+     - cantidad: INT, NOT NULL
+     - metodo_pago: VARCHAR(30), NOT NULL
+     [FOREIGN KEY ... REFERENCES]
 
-SELECT nombre, precio FROM productos WHERE stock = 0;
+4. Modificaciones sobre tablas existentes:
+   - Agregar columna: Añada el campo 'descuento' de tipo decimal (DECIMAL(4,2), con valor por defecto 0.00) a la tabla 'ventas'.
+     [ADD]
+   - Renombrar columna: En la tabla 'clientes', modifique el nombre de la columna 'ciudad' para que pase a llamarse 'localidad' (manteniendo VARCHAR(50)).
+     [RENAME COLUMN] o [CHANGE]
+   - Eliminar columna: Elimine la columna 'descuento' recientemente incorporada en la tabla 'ventas'.
+     [DROP COLUMN]
 
-SELECT AVG(precio) AS 'Precio Promedio' FROM productos WHERE categoria = 'Notebooks';
+============================================================
+3. CARGA DE DATOS (DML)
+============================================================
+Para realizar las consultas y operaciones posteriores, cargue la información en su base de datos utilizando el archivo 'datos.sql' provisto junto a esta evaluación:
 
-UPDATE productos SET precio = precio * 1.10 WHERE marca = 'Apple';
+1. Abra el archivo 'datos.sql' en su gestor de bases de datos (phpMyAdmin, MySQL Workbench, DBeaver).
+2. Copie y ejecute las sentencias INSERT para poblar las tablas 'productos', 'clientes' y 'ventas'.
+3. Verifique que las tres tablas contengan sus registros correspondientes antes de continuar.
+
+============================================================
+4. CONSULTAS BÁSICAS DE DATOS (DQL)
+============================================================
+* IMPORTANTE: Resuelva cada consigna con una consulta SQL simple sobre una sola tabla.
+* NO debe utilizar JOINs ni subconsultas.
+* Cada ejercicio cuenta con una palabra clave, símbolo o función guía entre corchetes:
+
+1. Cálculo aritmético en columnas:
+   Muestre de la tabla 'productos' el nombre, el precio, el stock y una columna calculada llamada 'capital_stock' multiplicando el precio por el stock disponible.
+   [*]
+
+2. Agrupamiento con suma acumulada:
+   Calcule el stock total disponible agrupado por cada categoría en la tabla 'productos' ('Celulares', 'Notebooks', 'Tablets', etc.).
+   [GROUP BY]
+
+3. Filtrado sobre grupos agregados:
+   Muestre únicamente las categorías de productos que tengan un stock total acumulado estrictamente mayor a 30 unidades.
+   [HAVING]
+
+4. Valor extremo máximo:
+   Encuentre la mayor cantidad de unidades vendidas en una sola operación registrada en la tabla 'ventas'.
+   [MAX]
+
+5. Conteo condicional con alternativa:
+   Cuente cuántos productos pertenecen a la marca 'Apple' o a la marca 'Samsung'.
+   [OR]
+
+6. Búsqueda por patrón de texto:
+   Busque todos los clientes de la tabla 'clientes' cuya dirección de correo electrónico finalice con '@gmail.com'.
+   [LIKE]
+
+7. Agrupamiento con conteo:
+   Cuente cuántas ventas se han realizado discriminadas por cada método de pago ('Tarjeta de Crédito', 'Efectivo', 'Transferencia') en la tabla 'ventas'.
+   [GROUP BY]
+
+8. Filtro en rango numérico:
+   Liste los productos pertenecientes a la categoría 'Celulares' cuyo precio se encuentre entre $400000 y $1400000.
+   [BETWEEN]
+
+9. Ranking y limitación de resultados:
+   Muestre el nombre, la marca y el precio de los 4 productos más costosos de la tienda, ordenados del mayor precio al menor.
+   [ORDER BY DESC LIMIT]
+
+10. Comparación de umbral de inventario:
+    Liste los productos que tengan un stock menor o igual a 10 unidades para emitir una alerta de reposición urgente.
+    [<=]
+
+============================================================
+5. MODIFICACIÓN Y ELIMINACIÓN DE REGISTROS (DML)
+============================================================
+Escriba las sentencias SQL necesarias para actualizar o dar de baja información en la base de datos:
+
+1. Actualización con ajuste porcentual:
+   Aplique un incremento del 10% en el precio de todos los productos de la marca 'Apple' utilizando una operación aritmética directa en la sentencia.
+   [UPDATE]
+
+2. Modificación condicional masiva:
+   Actualice el método de pago a 'Transferencia' para todas aquellas ventas que se hayan concretado en la fecha '2024-04-15'.
+   [SET]
+
+3. Eliminación puntual de venta:
+   Elimine el registro de la venta con idVenta = 25 por motivo de anulación comercial.
+   [DELETE]
+
+4. Eliminación condicional por inventario:
+   Elimine de la tabla 'productos' a aquellos artículos que tengan stock igual a 0.
+   [WHERE]

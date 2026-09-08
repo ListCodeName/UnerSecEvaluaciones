@@ -1,40 +1,144 @@
-<<<< EVALUACIÓN BASE DE DATOS I >>>>
+<<<< EVALUACIÓN 6 - BASE DE DATOS I >>>>
 
-1- Realice el siguiente modelo de entidad relación.
+-- CONTEXTO --
+La plataforma de streaming bajo demanda "StreamFlix" gestiona un extenso catálogo de contenidos audiovisuales y una comunidad activa de usuarios en diversos países.
+El sistema requiere modelar la relación Muchos a Muchos entre los usuarios y las películas que reproducen, registrando métricas de consumo de cada sesión.
 
-La plataforma de streaming "StreamFlix" necesita gestionar su catálogo de contenido y sus usuarios.
+============================================================
+1. MODELO ENTIDAD-RELACIÓN (MER) - RELACIÓN MUCHOS A MUCHOS
+============================================================
+A partir de los requerimientos de la plataforma, diseñe el Modelo Entidad-Relación correspondiente:
 
-    Peliculas
-        ID_Pelicula, titulo, genero (Acción, Comedia, Drama), duracion_minutos, año_lanzamiento.
+- Un USUARIO puede reproducir y visualizar múltiples películas a lo largo del tiempo.
+- Una PELÍCULA puede ser reproducida por múltiples usuarios en diferentes momentos.
+- Esta interacción constituye una relación Muchos a Muchos (N a M), la cual se materializa en una entidad intermedia llamada VISUALIZACIONES.
+- La entidad intermedia contiene atributos propios del consumo: fecha_visualizacion, minutos_vistos, dispositivo ('Smart TV', 'Móvil', 'PC') y calificacion (1 a 5 estrellas).
+- Debe diagramar: Entidades, Atributos, Claves Primarias (PK), Clave Primaria Compuesta en la tabla intermedia, Claves Foráneas (FK) y Cardinalidades.
 
-    Usuarios
-        ID_Usuario, nombre, email, plan (Básico, Estándar, Premium), pais.
+============================================================
+2. DEFINICIÓN Y ESTRUCTURA CON RELACIÓN N:M (DDL)
+============================================================
+Implemente la estructura de la base de datos escribiendo las sentencias SQL correspondientes:
 
-    Visualizaciones
-        ID_Visualizacion, fecha, dispositivo (TV, Celular, PC).
+1. Creación de la base de datos:
+   Cree una nueva base de datos llamada 'streamflix'.
+   [CREATE DATABASE]
 
-Un usuario puede ver muchas películas.
-Una película es vista por muchos usuarios.
+2. Selección de la base de datos:
+   Active y comience a trabajar sobre la base de datos 'streamflix'.
+   [USE]
 
-2- Realice las siguientes actividades SQL
+3. Creación de tablas principales:
+   Cree las siguientes tablas definiendo tipos, clave primaria compuesta y eliminación en cascada:
 
-    Cree una base de datos nueva con el nombre 'StreamFlix'
-    Cree las tablas correspondientes.
-    Genere datos de prueba con CHATGPT: 50 películas y 50 usuarios.
-        > Incluya clásicos y películas nuevas (2024).
-        > Variedad de géneros.
+   • Tabla: peliculas
+     - idPelicula: INT, PRIMARY KEY
+     - titulo: VARCHAR(100), NOT NULL
+     - genero: VARCHAR(50), NOT NULL
+     - duracion_min: INT, NOT NULL
+     - anio_estreno: INT, NOT NULL
+     [PRIMARY KEY]
 
-    • Ejercicios en SQL:
-        ◦ Liste todas las películas del género 'Ciencia Ficción'. (WHERE)
-        ◦ Muestre los usuarios que tienen el plan 'Premium'. (WHERE)
-        ◦ Busque las películas lanzadas entre el año 1990 y el 2000. (BETWEEN)
-        ◦ Encuentre las películas cuyo título contenga la palabra 'Amor'. (LIKE)
-        ◦ ¿Cuántos usuarios hay registrados en 'Argentina'? (COUNT)
+   • Tabla: usuarios
+     - idUsuario: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - email: VARCHAR(100), NOT NULL
+     - plan: VARCHAR(20), NOT NULL ('Básico', 'Estándar', 'Premium')
+     - pais: VARCHAR(50), NOT NULL
+     [PRIMARY KEY]
 
-Ahora al revés, qué resuelven las siguientes consultas:
+   • Tabla: visualizaciones
+     - idUsuario: INT, NOT NULL
+     - idPelicula: INT, NOT NULL
+     - fecha_visualizacion: DATE, NOT NULL
+     - minutos_vistos: INT, NOT NULL
+     - dispositivo: VARCHAR(30), NOT NULL
+     - calificacion: INT
+     - Definir la clave primaria compuesta por (idUsuario, idPelicula, fecha_visualizacion).
+     - Definir claves foráneas hacia 'usuarios' y 'peliculas' con eliminación en cascada.
+     [PRIMARY KEY (campo1, campo2, ...) ... ON DELETE CASCADE]
 
-SELECT genero, COUNT(*) FROM peliculas GROUP BY genero;
+4. Modificaciones sobre tablas existentes:
+   - Agregar columna: Añada el campo 'idioma_audio' de tipo texto (VARCHAR(30), con valor por defecto 'Español') a la tabla 'peliculas'.
+     [ADD]
+   - Renombrar columna: En la tabla 'usuarios', modifique el nombre de la columna 'pais' para que pase a llamarse 'nacionalidad' (manteniendo su tipo VARCHAR(50)).
+     [RENAME COLUMN] o [CHANGE]
+   - Eliminar columna: Elimine la columna 'idioma_audio' de la tabla 'peliculas'.
+     [DROP COLUMN]
 
-SELECT titulo FROM peliculas WHERE duracion_minutos > 120 ORDER BY duracion_minutos ASC;
+============================================================
+3. CARGA DE DATOS (DML)
+============================================================
+Para realizar las consultas y operaciones posteriores, cargue la información en su base de datos utilizando el archivo 'datos.sql' provisto junto a esta evaluación:
 
-INSERT INTO usuarios (nombre, email, plan) VALUES ('Nuevo Usuario', 'nuevo@email.com', 'Básico');
+1. Abra el archivo 'datos.sql' en su gestor de bases de datos (phpMyAdmin, MySQL Workbench, DBeaver).
+2. Copie y ejecute las sentencias INSERT para poblar las tablas 'peliculas', 'usuarios' y 'visualizaciones'.
+3. Verifique que las tres tablas contengan sus registros correspondientes antes de continuar.
+
+============================================================
+4. CONSULTAS BÁSICAS DE DATOS (DQL)
+============================================================
+* IMPORTANTE: Resuelva cada consigna con una consulta SQL simple sobre una sola tabla.
+* NO debe utilizar JOINs ni subconsultas.
+* Cada ejercicio cuenta con una palabra clave, símbolo o función guía entre corchetes:
+
+1. Promedio general de duración:
+   Calcule la duración promedio en minutos de todas las películas que integran el catálogo en la tabla 'peliculas'.
+   [AVG]
+
+2. Agrupamiento con conteo por género:
+   Cuente cuántas películas hay registradas en el catálogo agrupadas por cada género cinematográfico ('Ciencia Ficción', 'Drama', 'Acción', etc.).
+   [GROUP BY]
+
+3. Filtro sobre agregaciones de catálogo:
+   Muestre únicamente los géneros cinematográficos que cuenten con 2 o más títulos en el catálogo.
+   [HAVING]
+
+4. Conteo de reproducciones por plataforma:
+   Cuente cuántas sesiones de reproducción se realizaron discriminadas por cada tipo de dispositivo ('Smart TV', 'Móvil', 'PC') en la tabla 'visualizaciones'.
+   [GROUP BY]
+
+5. Conversión de unidades con cálculo aritmético:
+   Muestre el título de cada película, su duración en minutos y una columna calculada llamada 'duracion_horas' dividiendo los minutos entre 60.
+   [/]
+
+6. Filtro con operador de pertenencia:
+   Liste todos los usuarios de la tabla 'usuarios' cuyo plan sea 'Premium' o 'Estándar' utilizando el operador de conjunto.
+   [IN]
+
+7. Búsqueda por rango cronológico:
+   Liste las películas que hayan sido estrenadas entre el año 1990 y el año 2010.
+   [BETWEEN]
+
+8. Valor extremo histórico:
+   Encuentre el año de estreno más antiguo registrado en la tabla 'peliculas'.
+   [MIN]
+
+9. Ranking y limitación de resultados:
+   Muestre las 4 sesiones de visualización con mayor cantidad de minutos reproducidos en la tabla 'visualizaciones', ordenadas de mayor a menor.
+   [ORDER BY DESC LIMIT]
+
+10. Conteo con condiciones simultáneas:
+    Calcule cuántas visualizaciones registradas obtuvieron una calificación de 5 estrellas y fueron vistas desde un 'Smart TV'.
+    [AND]
+
+============================================================
+5. MODIFICACIÓN Y ELIMINACIÓN DE REGISTROS (DML)
+============================================================
+Escriba las sentencias SQL necesarias para actualizar o dar de baja información en la base de datos:
+
+1. Actualización por promoción comercial:
+   Suba al plan 'Premium' a todos los usuarios con nacionalidad 'Argentina' que actualmente tengan contratado el plan 'Básico'.
+   [UPDATE]
+
+2. Modificación condicional masiva:
+   Actualice la calificación otorgando 5 estrellas a todas aquellas sesiones de visualización donde los minutos vistos hayan sido de 150 minutos o más.
+   [SET]
+
+3. Eliminación con propagación en cascada:
+   Elimine del catálogo la película con idPelicula = 1 y compruebe que se hayan eliminado automáticamente todas sus visualizaciones vinculadas.
+   [DELETE]
+
+4. Depuración de registros residuales:
+   Elimine de la tabla 'visualizaciones' aquellos registros donde los minutos vistos hayan sido menores o iguales a 5 minutos.
+   [WHERE]

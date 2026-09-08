@@ -1,27 +1,141 @@
-<<<< EVALUACIÓN BASE DE DATOS I >>>>
+<<<< EVALUACIÓN 1 - BASE DE DATOS I >>>>
 
-Se desea crear una base de datos llamada "Literato", donde se guardará información referente a la venta de libros.
-La misma contará con la siguiente estructura:
-    • Tablas:
-        ◦ libros (idLibro, titulo, autor, genero, precio, stock)
-        ◦ autores (nombre, apellido, nacionalidad)
-        ◦ ventas (codigo, idLibro, fecha_venta, cantidad)
+-- CONTEXTO --
+Se desea informatizar la gestión de una librería y tienda cultural llamada "Literato".
+En ella se administrará el inventario de libros disponibles, el registro de clientes y la nómina de empleados que trabajan en el establecimiento.
 
-Deberá insertar al menos 50 autores, y 50 ventas, con la ayuda de CHATGPT para formular registros aleatorios.
+============================================================
+1. DEFINICIÓN Y MODIFICACIÓN DE ESTRUCTURA (DDL)
+============================================================
+Resuelva las siguientes actividades escribiendo las sentencias SQL correspondientes.
+Cada ejercicio indica entre corchetes la palabra clave principal que debe utilizar:
 
-    • Ejercicios en SQL:
-        ◦ Lista el nombre y el precio de los libros de género policial.
-        ◦ ¿Cuántos libros hay en stock de un autor en particular, por ejemplo Ray Bradbury?
-        ◦ Muestra listado de las ventas realizadas entre el 1/1/2023 al 1/1/2024. (Formato de fecha 'Y-m-d').
-        ◦ Lista todos los libros cuyo stock esté por agotarse (menos de 5 ejemplares).
-        ◦ Liste todos los autores ordenados alfabéticamente por apellido, que hayan nacido en España. Por cuestiones protocolares
-        el apellido debe figurar primero (en la primera columna) y luego el nombre (en la segunda columna).
-        ◦ Se han escrito muchos libros de matemática pero algunos autores han decidido abreviar en algunos casos la palabra a Mat.
-        Por esta razón se dificulta buscar directamente los libros de matemáticas. ¿Cuántos libros hay en total?
+1. Creación de la base de datos:
+   Cree una nueva base de datos llamada 'literato'.
+   [CREATE DATABASE]
 
+2. Selección de la base de datos:
+   Indique la instrucción para activar y comenzar a trabajar sobre la base de datos 'literato'.
+   [USE]
 
-Ahora al revés, qué resuelven las siguientes consultas:
+3. Creación de tabla auxiliar de prueba:
+   Cree una tabla llamada 'borrador_pedidos' con los campos:
+   - idPedido de tipo entero (INT).
+   - detalle de tipo texto (VARCHAR(100)).
+   [CREATE TABLE]
 
-SELECT COUNT(*) AS 'Libros de Julio Verne' FROM libros WHERE autor = 'Julio Verne';
-SELECT titulo, genero, precio FROM libros WHERE stock < 10 ORDER BY idLibro DESC;
-SELECT * FROM autores WHERE nacionalidad = 'Argentina' AND nombre = 'Manuel';
+4. Creación de tablas principales:
+   Cree las siguientes tablas con sus correspondientes tipos de datos y claves primarias:
+
+   • Tabla: libros
+     - idLibro: INT, PRIMARY KEY
+     - titulo: VARCHAR(120), NOT NULL
+     - autor: VARCHAR(100), NOT NULL
+     - genero: VARCHAR(50)
+     - precio: DECIMAL(8,2)
+     - stock: INT
+     [CREATE TABLE]
+
+   • Tabla: clientes
+     - idCliente: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - apellido: VARCHAR(50), NOT NULL
+     - email: VARCHAR(100)
+     - ciudad: VARCHAR(50)
+     - telefono: VARCHAR(30)
+     [CREATE TABLE]
+
+   • Tabla: empleados
+     - idEmpleado: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - apellido: VARCHAR(50), NOT NULL
+     - puesto: VARCHAR(50)
+     - salario: DECIMAL(10,2)
+     - turno: VARCHAR(20)
+     [CREATE TABLE]
+
+5. Modificaciones sobre tablas existentes:
+   - Agregar columna: Añada un nuevo campo llamado 'anio_edicion' de tipo entero (INT) a la tabla 'libros'.
+     [ADD]
+   - Renombrar columna: En la tabla 'clientes', modifique el nombre del atributo 'telefono' para que pase a llamarse 'contacto' (manteniendo su tipo VARCHAR(30)).
+     [RENAME COLUMN] o [CHANGE]
+   - Eliminar columna: Elimine la columna 'anio_edicion' que agregó previamente en la tabla 'libros'.
+     [DROP COLUMN]
+   - Eliminar tabla: Elimine de forma permanente la tabla de prueba 'borrador_pedidos'.
+     [DROP TABLE]
+
+============================================================
+2. CARGA DE DATOS (DML)
+============================================================
+Para realizar las consultas y operaciones posteriores, cargue la información en su base de datos utilizando el archivo 'datos.sql' provisto junto a esta evaluación:
+
+1. Abra el archivo 'datos.sql' en su editor de texto o en su gestor de bases de datos (phpMyAdmin, MySQL Workbench, DBeaver).
+2. Copie y ejecute las sentencias INSERT para poblar las tablas 'libros', 'clientes' y 'empleados'.
+3. Verifique que las tres tablas contengan sus registros correspondientes antes de continuar.
+
+============================================================
+3. CONSULTAS BÁSICAS DE DATOS (DQL)
+============================================================
+* IMPORTANTE: Resuelva cada consigna con una consulta SQL simple sobre una sola tabla.
+* NO debe utilizar JOINs ni subconsultas.
+
+1. Listado completo:
+   Muestre todos los registros y todas las columnas de la tabla 'libros'.
+   [SELECT *]
+
+2. Columnas específicas y origen:
+   Muestre únicamente el titulo, autor y precio de todos los ejemplares, indicando explícitamente la tabla de donde proceden los datos.
+   [FROM]
+
+3. Filtrado por comparación:
+   Liste todos los libros cuyo precio sea estrictamente mayor a 12.00.
+   [WHERE]
+
+4. Valores únicos sin duplicados:
+   Obtenga la lista de todas las ciudades de origen de los clientes, asegurando que cada ciudad aparezca una sola vez (sin repeticiones).
+   [DISTINCT]
+
+5. Búsqueda por patrón de texto:
+   Encuentre todos los libros cuyo título comience con la palabra "El".
+   [LIKE]
+
+6. Filtro por rango numérico:
+   Liste los empleados cuyo salario se encuentre entre $450000 y $650000 (inclusive).
+   [BETWEEN]
+
+7. Conteo total de registros:
+   Calcule cuántos libros en total se encuentran registrados en la tabla 'libros'.
+   [COUNT]
+
+8. Cálculo de sumatoria acumulada:
+   Obtenga la suma total de unidades disponibles en stock sumando todos los libros del inventario.
+   [SUM]
+
+9. Condiciones simultáneas:
+   Liste los libros que pertenezcan al género "Fantasía" y que además tengan un stock superior a 100 unidades.
+   [AND]
+
+10. Condiciones alternativas:
+    Liste a todos los clientes que residan en la ciudad de "Rosario" o en la ciudad de "Córdoba".
+    [OR]
+
+============================================================
+4. MODIFICACIÓN Y ELIMINACIÓN DE REGISTROS (DML)
+============================================================
+Escriba las sentencias SQL necesarias para actualizar o dar de baja información en la base de datos:
+
+1. Actualización de un registro específico:
+   Modifique el precio del libro con idLibro = 1 para que su nuevo valor sea 7.99.
+   [UPDATE]
+
+2. Actualización condicional masiva:
+   Incremente en 15 unidades el stock de todos los libros que pertenezcan al género "Cuentos clásicos".
+   [SET]
+
+3. Eliminación de un registro específico:
+   Elimine de la tabla 'clientes' al registro correspondiente al idCliente = 25.
+   [DELETE]
+
+4. Eliminación condicional por criterio:
+   Elimine de la tabla 'empleados' a todos aquellos cuyo puesto sea "Pasante".
+   [WHERE]

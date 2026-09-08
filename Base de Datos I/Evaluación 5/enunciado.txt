@@ -1,40 +1,152 @@
-<<<< EVALUACIÓN BASE DE DATOS I >>>>
+<<<< EVALUACIÓN 5 - BASE DE DATOS I >>>>
 
-1- Realice el siguiente modelo de entidad relación.
+-- CONTEXTO --
+La firma inmobiliaria "TuHogar" administra una cartera de inmuebles en alquiler y venta en diferentes ciudades del país.
+El sistema informático debe gestionar las propiedades registradas, los agentes inmobiliarios responsables de su comercialización y las visitas concertadas con clientes interesados.
 
-La inmobiliaria "TuHogar" desea llevar un registro de las propiedades que tiene disponibles y los agentes encargados de las mismas.
+============================================================
+1. MODELO ENTIDAD-RELACIÓN (MER)
+============================================================
+A partir de los requerimientos del negocio inmobiliario, diseñe el Modelo Entidad-Relación correspondiente:
 
-    Propiedades
-        ID_Propiedad, direccion, ciudad, precio, operacion (Venta o Alquiler), tipo (Casa, Departamento).
+- Un AGENTE inmobiliario puede tener a su cargo la gestión de múltiples propiedades, pero cada propiedad cuenta con un único agente responsable asignado (Relación 1 a N).
+- Una PROPIEDAD puede recibir visitas de múltiples clientes interesados en fechas distintas (Relación 1 a N con la entidad Visitas).
+- Un CLIENTE interesado puede coordinar y realizar visitas a diferentes propiedades del catálogo (Relación 1 a N con la entidad Visitas).
+- La entidad intermedia VISITAS registra cada encuentro comercial con su fecha y nivel de interés del cliente.
+- Debe diagramar: Entidades, Atributos, Claves Primarias (PK), Claves Foráneas (FK) y Cardinalidades.
 
-    Agentes
-        ID_Agente, nombre, apellido, telefono, fecha_ingreso.
+============================================================
+2. DEFINICIÓN Y ESTRUCTURA RELACIONAL (DDL)
+============================================================
+Implemente la estructura de la base de datos escribiendo las sentencias SQL correspondientes:
 
-    Clientes
-        ID_Cliente, nombre, apellido, presupuesto_maximo.
+1. Creación de la base de datos:
+   Cree una nueva base de datos llamada 'inmobiliaria'.
+   [CREATE DATABASE]
 
-Un agente puede gestionar muchas propiedades.
-Una propiedad puede ser visitada por muchos clientes interesados (aunque para simplificar, no modelaremos las visitas en detalle, sino la relación básica).
+2. Selección de la base de datos:
+   Active y comience a trabajar sobre la base de datos 'inmobiliaria'.
+   [USE]
 
-2- Realice las siguientes actividades SQL
+3. Creación de tablas principales:
+   Cree las siguientes tablas definiendo tipos de datos, restricciones y relaciones de clave foránea:
 
-    Cree una base de datos nueva con el nombre 'Inmobiliaria'
-    Defina las tablas con los campos sugeridos.
-    Cargue 30 propiedades y 20 agentes usando CHATGPT.
-        > Asegúrese de tener propiedades en 'Venta' y en 'Alquiler'.
-        > Las ciudades deben variar (Ej. Paraná, Santa Fe, Rosario).
+   • Tabla: agentes
+     - idAgente: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - apellido: VARCHAR(50), NOT NULL
+     - telefono: VARCHAR(30), NOT NULL
+     - comision_porcentaje: DECIMAL(4,2), NOT NULL
+     [PRIMARY KEY]
 
-    • Ejercicios en SQL:
-        ◦ Liste las propiedades que estén en 'Alquiler' y cuyo precio sea menor a $500000. (WHERE y AND)
-        ◦ Muestre los agentes que ingresaron a la empresa entre el año 2020 y 2023. (BETWEEN)
-        ◦ Busque las propiedades ubicadas en la ciudad de 'Paraná'. (WHERE)
-        ◦ La empresa quiere contactar a los clientes de apellido 'Pérez'. (LIKE)
-        ◦ Ordene las propiedades por precio de mayor a menor. (ORDER BY DESC)
+   • Tabla: clientes
+     - idCliente: INT, PRIMARY KEY
+     - nombre: VARCHAR(50), NOT NULL
+     - apellido: VARCHAR(50), NOT NULL
+     - email: VARCHAR(100), NOT NULL
+     - presupuesto_max: DECIMAL(12,2), NOT NULL
+     [PRIMARY KEY]
 
-Ahora al revés, qué resuelven las siguientes consultas:
+   • Tabla: propiedades
+     - idPropiedad: INT, PRIMARY KEY
+     - idAgente: INT (Clave foránea referenciando a agentes)
+     - direccion: VARCHAR(100), NOT NULL
+     - ciudad: VARCHAR(50), NOT NULL
+     - tipo: VARCHAR(30), NOT NULL ('Casa', 'Departamento', 'Local')
+     - operacion: VARCHAR(20), NOT NULL ('Venta', 'Alquiler')
+     - precio: DECIMAL(12,2), NOT NULL
+     - estado: VARCHAR(20), NOT NULL ('Disponible', 'Reservada', 'Vendida', 'Alquilada')
+     [FOREIGN KEY ... REFERENCES]
 
-SELECT operacion, COUNT(*) FROM propiedades GROUP BY operacion;
+   • Tabla: visitas
+     - idVisita: INT, PRIMARY KEY
+     - idPropiedad: INT, NOT NULL (Clave foránea referenciando a propiedades)
+     - idCliente: INT, NOT NULL (Clave foránea referenciando a clientes)
+     - fecha_visita: DATE, NOT NULL
+     - interes: VARCHAR(20), NOT NULL ('Alto', 'Medio', 'Bajo')
+     [FOREIGN KEY ... REFERENCES]
 
-SELECT * FROM propiedades WHERE tipo = 'Departamento' AND precio > 100000 USD;
+4. Modificaciones sobre tablas existentes:
+   - Agregar columna: Añada el campo 'superficie_m2' de tipo entero (INT) a la tabla 'propiedades'.
+     [ADD]
+   - Renombrar columna: En la tabla 'agentes', modifique el nombre del atributo 'telefono' para que pase a llamarse 'contacto' (manteniendo su tipo VARCHAR(30)).
+     [RENAME COLUMN] o [CHANGE]
+   - Eliminar columna: Elimine la columna 'superficie_m2' de la tabla 'propiedades'.
+     [DROP COLUMN]
 
-DELETE FROM agentes WHERE apellido = 'Gonzalez';
+============================================================
+3. CARGA DE DATOS (DML)
+============================================================
+Para realizar las consultas y operaciones posteriores, cargue la información en su base de datos utilizando el archivo 'datos.sql' provisto junto a esta evaluación:
+
+1. Abra el archivo 'datos.sql' en su gestor de bases de datos (phpMyAdmin, MySQL Workbench, DBeaver).
+2. Copie y ejecute las sentencias INSERT para poblar las tablas 'agentes', 'clientes', 'propiedades' y 'visitas'.
+3. Verifique que las cuatro tablas contengan sus registros correspondientes antes de continuar.
+
+============================================================
+4. CONSULTAS BÁSICAS DE DATOS (DQL)
+============================================================
+* IMPORTANTE: Resuelva cada consigna con una consulta SQL simple sobre una sola tabla.
+* NO debe utilizar JOINs ni subconsultas.
+* Cada ejercicio cuenta con una palabra clave, símbolo o función guía entre corchetes:
+
+1. Agrupamiento con cálculo de promedio:
+   Calcule el precio promedio de las propiedades agrupadas según su tipo de inmueble ('Casa', 'Departamento', 'Local').
+   [AVG]
+
+2. Agrupamiento con conteo por localidad:
+   Cuente cuántas propiedades hay registradas en el catálogo discriminadas por cada ciudad ('Rosario', 'Córdoba', 'Buenos Aires', 'Paraná').
+   [GROUP BY]
+
+3. Filtro sobre agregaciones de mercado:
+   Muestre únicamente las ciudades que tengan 3 o más propiedades registradas en el catálogo.
+   [HAVING]
+
+4. Valor extremo máximo:
+   Encuentre el precio más alto registrado entre todas las propiedades destinadas a 'Venta'.
+   [MAX]
+
+5. Valor extremo mínimo:
+   Encuentre el valor de alquiler mensual más económico registrado entre todas las propiedades de 'Alquiler'.
+   [MIN]
+
+6. Conteo condicional por nivel de interés:
+   Calcule cuántas visitas registradas en la tabla 'visitas' obtuvieron una calificación de interés 'Alto'.
+   [COUNT]
+
+7. Cálculo de comisión estimada en consulta:
+   Para las propiedades en estado 'Vendida', muestre la dirección, el precio y una columna calculada llamada 'comision_agencia' multiplicando el precio por 0.03 (3% de comisión).
+   [*]
+
+8. Búsqueda por patrón de calle:
+   Busque todas las propiedades cuya dirección comience con la abreviatura 'Av.'.
+   [LIKE]
+
+9. Rango presupuestario de clientes:
+   Liste el nombre, apellido y presupuesto de los clientes cuyo presupuesto máximo se encuentre entre $400000 y $600000.
+   [BETWEEN]
+
+10. Ranking de cotización de mercado:
+    Muestre las 3 propiedades más costosas destinadas a 'Venta', ordenadas desde la de mayor precio hacia la menor.
+    [ORDER BY DESC LIMIT]
+
+============================================================
+5. MODIFICACIÓN Y ELIMINACIÓN DE REGISTROS (DML)
+============================================================
+Escriba las sentencias SQL necesarias para actualizar o dar de baja información en la base de datos:
+
+1. Reasignación de cartera comercial:
+   Por reorganización interna, reasigne todas las propiedades a cargo del agente con idAgente = 2 para que pasen a estar bajo la gestión del agente con idAgente = 1.
+   [UPDATE]
+
+2. Modificación masiva de estado:
+   Cambie el estado a 'Alquilada' a todas las propiedades que se encuentren en la ciudad de 'Paraná' y pertenezcan al tipo 'Local'.
+   [SET]
+
+3. Eliminación puntual de visita:
+   Elimine de la tabla 'visitas' el registro con idVisita = 18 tras la cancelación formal del cliente.
+   [DELETE]
+
+4. Eliminación condicional por nivel de interés:
+   Elimine de la tabla 'visitas' todas aquellas donde el interés registrado figure como 'Bajo'.
+   [WHERE]

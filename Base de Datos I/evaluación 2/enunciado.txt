@@ -1,27 +1,140 @@
-<<<< EVALUACIÓN BASE DE DATOS I >>>>
+<<<< EVALUACIÓN 2 - BASE DE DATOS I >>>>
 
-Se desea crear una base de datos llamada "deportivoasturia", donde se guardará información referente a los partidos disputados en la ciudad.
-La misma contará con la siguiente estructura:
-    • Tablas:
-        ◦ partidos (idPartido, local, visitante, cancha, resultado, fecha)
-        ◦ equipo (idEquipo, nombre, DT, liga, fechaCreacion)
+-- CONTEXTO --
+La liga de fútbol regional "Deportivo Asturia" requiere un sistema para registrar y gestionar el torneo oficial.
+El sistema almacenará información sobre los clubes participantes, los estadios habilitados y el desarrollo de los partidos disputados.
 
-Deberá insertar al menos 25 equipos con la ayuda de CHATGPT para formular registros aleatorios.
+============================================================
+1. DEFINICIÓN Y MODIFICACIÓN DE ESTRUCTURA (DDL)
+============================================================
+Resuelva las siguientes actividades escribiendo las sentencias SQL correspondientes.
+Cada ejercicio indica entre corchetes la palabra clave principal que debe utilizar:
 
-    • Ejercicios en SQL:
-        ◦ Liste todos los nombres de los equipos sin repetir, que fueron locales durante la temporada 2024, 
-        ordenados alfabeticamente inverso (Z - A). (SELECT DISTINCT)
-        ◦ Cuantos partidos jugó de visitante el equipo 'Tigres Azules'. (COUNT)
-        ◦ ¿Quiénes fueron los equipos que jugaron contra 'Fénix de Fuego'? (SELECT DISTINCT)
-        ◦ ¿Cuántos partidos terminaron empatados 1 a 1?
-        ◦ Necesitamos listar los partidos donde el equipo local hizo 2 goles.
-        ◦ Liste todos los partidos donde el visitante haya recibido 10 goles.
+1. Creación de la base de datos:
+   Cree una nueva base de datos llamada 'deportivoasturia'.
+   [CREATE DATABASE]
 
+2. Selección de la base de datos:
+   Active y comience a trabajar sobre la base de datos 'deportivoasturia'.
+   [USE]
 
-Ahora al revés, qué resuelven las siguientes consultas:
+3. Creación de tabla auxiliar de prueba:
+   Cree una tabla llamada 'borrador_fixture' con los campos:
+   - idBorrador de tipo entero (INT).
+   - notas de tipo texto (VARCHAR(100)).
+   [CREATE TABLE]
 
-SELECT DISTINCT COUNT(*) AS 'Peliculas de Silvester Stallone' FROM libros WHERE actorPrincipal = 'Silvester Stallone';
+4. Creación de tablas principales:
+   Cree las siguientes tablas con sus correspondientes tipos de datos y claves primarias:
 
-SELECT titulo, genero, precio FROM libros WHERE stock < 10 ORDER BY idLibro DESC;
+   • Tabla: estadios
+     - idEstadio: INT, PRIMARY KEY
+     - nombre: VARCHAR(60), NOT NULL
+     - ciudad: VARCHAR(50), NOT NULL
+     - capacidad: INT, NOT NULL
+     [CREATE TABLE]
 
-SELECT SUM(precio) AS 'precio total' FROM productos WHERE nombre LIKE '%azucar%';
+   • Tabla: equipos
+     - idEquipo: INT, PRIMARY KEY
+     - nombre: VARCHAR(60), NOT NULL
+     - director_tecnico: VARCHAR(60), NOT NULL
+     - ciudad: VARCHAR(50), NOT NULL
+     - puntos: INT, DEFAULT 0
+     [CREATE TABLE]
+
+   • Tabla: partidos
+     - idPartido: INT, PRIMARY KEY
+     - equipo_local: VARCHAR(60), NOT NULL
+     - equipo_visitante: VARCHAR(60), NOT NULL
+     - estadio: VARCHAR(60), NOT NULL
+     - goles_local: INT, DEFAULT 0
+     - goles_visitante: INT, DEFAULT 0
+     - fecha: DATE, NOT NULL
+     - arbitro: VARCHAR(60), NOT NULL
+     [CREATE TABLE]
+
+5. Modificaciones sobre tablas existentes:
+   - Agregar columna: Añada un nuevo campo llamado 'estado' de tipo texto (VARCHAR(20)) a la tabla 'partidos'.
+     [ADD]
+   - Renombrar columna: En la tabla 'equipos', modifique el nombre del atributo 'director_tecnico' para que pase a llamarse 'entrenador' (manteniendo su tipo VARCHAR(60)).
+     [RENAME COLUMN] o [CHANGE]
+   - Eliminar columna: Elimine la columna 'estado' que agregó previamente en la tabla 'partidos'.
+     [DROP COLUMN]
+   - Eliminar tabla: Elimine permanentemente la tabla auxiliar 'borrador_fixture'.
+     [DROP TABLE]
+
+============================================================
+2. CARGA DE DATOS (DML)
+============================================================
+Para realizar las consultas y operaciones posteriores, cargue la información en su base de datos utilizando el archivo 'datos.sql' provisto junto a esta evaluación:
+
+1. Abra el archivo 'datos.sql' en su editor de texto o en su gestor de bases de datos (phpMyAdmin, MySQL Workbench, DBeaver).
+2. Copie y ejecute las sentencias INSERT para poblar las tablas 'estadios', 'equipos' y 'partidos'.
+3. Verifique que las tres tablas contengan sus registros correspondientes antes de continuar.
+
+============================================================
+3. CONSULTAS BÁSICAS Y AVANZADAS DE DATOS (DQL)
+============================================================
+* IMPORTANTE: Resuelva cada consigna con una consulta SQL simple sobre una sola tabla.
+* Cada ejercicio cuenta con una palabra clave, símbolo o función guía:
+
+1. Comparación entre columnas:
+   Liste todos los partidos que hayan finalizado en empate comparando directamente los goles del local con los del visitante.
+   [=]
+
+2. Diferencia aritmética de goles:
+   Liste los partidos donde el equipo local haya ganado por más de 1 gol de diferencia respecto al visitante.
+   [-]
+
+3. Valor extremo máximo:
+   Encuentre la mayor cantidad de goles que un equipo local anotó en un solo partido en todo el torneo.
+   [MAX]
+
+4. Valor extremo mínimo:
+   Encuentre la menor capacidad de espectadores registrada entre todos los estadios del torneo.
+   [MIN]
+
+5. Cálculo de promedio:
+   Calcule el promedio general de goles convertidos por los equipos visitantes a lo largo del certamen.
+   [AVG]
+
+6. Ranking y limitación de resultados:
+   Muestre los 4 partidos más recientes jugados en el torneo, ordenados desde la fecha más nueva hacia la más antigua.
+   [ORDER BY DESC LIMIT]
+
+7. Ordenamiento y corte de podio:
+   Liste el nombre y la capacidad de los 3 estadios con mayor capacidad del torneo, ordenados de mayor a menor.
+   [ORDER BY DESC LIMIT]
+
+8. Pertenencia a un conjunto de valores:
+   Liste todos los partidos disputados en cualquiera de los siguientes tres estadios: 'Estadio Centenario', 'Monumental de la Ribera' o 'Nuevo Gasómetro'.
+   [IN]
+
+9. Exclusión de conjunto:
+   Liste el nombre y la ciudad de todos los equipos que NO pertenezcan a las ciudades de 'Rosario' ni 'Córdoba'.
+   [NOT IN]
+
+10. Desigualdad:
+    Liste todos los partidos donde el árbitro designado haya sido distinto de 'Patricio Loustau'.
+    [!=] o [<>]
+
+============================================================
+4. MODIFICACIÓN Y ELIMINACIÓN DE REGISTROS (DML)
+============================================================
+Escriba las sentencias SQL necesarias para actualizar o dar de baja información en la base de datos:
+
+1. Actualización de un registro específico:
+   Modifique el resultado del partido con idPartido = 1 estableciendo que goles_local = 3 y goles_visitante = 1.
+   [UPDATE]
+
+2. Actualización condicional masiva:
+   Sume 3 puntos en la tabla 'equipos' a todos los clubes cuya ciudad de origen sea 'Rosario'.
+   [SET]
+
+3. Eliminación de un registro específico:
+   Elimine de la tabla 'partidos' el registro correspondiente al idPartido = 15.
+   [DELETE]
+
+4. Eliminación condicional por criterio:
+   Elimine de la tabla 'equipos' a aquellos clubes que hayan terminado con 0 puntos en la tabla.
+   [WHERE]
