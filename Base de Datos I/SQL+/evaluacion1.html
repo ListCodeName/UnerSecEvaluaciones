@@ -1,0 +1,3068 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación SQL+ | Base de Datos I</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark con Paleta Pastel */
+            --bg-deep: #0b0d14;
+            --bg-surface: rgba(20, 24, 36, 0.82);
+            --bg-surface-elevated: rgba(30, 35, 52, 0.88);
+            --bg-code: rgba(11, 13, 20, 0.92);
+
+            --text-primary: #f4f5f8;
+            --text-secondary: #b4bcd0;
+            --text-muted: #7e879d;
+
+            /* Colores Pasteles */
+            --pastel-lavender: #c4b5fd;
+            --pastel-mint: #a7f3d0;
+            --pastel-peach: #fbcfe8;
+            --pastel-coral: #fda4af;
+            --pastel-sky: #bae6fd;
+            --pastel-butter: #fde68a;
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(196, 181, 253, 0.14);
+            --border-focus: rgba(186, 230, 253, 0.55);
+            --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(196, 181, 253, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(186, 230, 253, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 50% 85%, rgba(251, 207, 232, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Cuando la Parte 2 (Stages) está activa: sin scroll de página, todo en el mismo display */
+        body.stage-mode-active {
+            height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* Canvas de partículas (Polvo y Luz) */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem 0.9rem 3.5rem;
+        }
+
+        body.stage-mode-active .page-wrapper {
+            height: 100dvh;
+            padding: 0.55rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        /* Selector de Parte 1 / Parte 2 */
+        .mode-switcher {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.35rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(12px);
+            flex-shrink: 0;
+        }
+
+        body.stage-mode-active .mode-switcher {
+            margin-bottom: 0;
+            padding: 0.25rem;
+        }
+
+        .mode-tab {
+            flex: 1;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.84rem;
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, rgba(196, 181, 253, 0.22), rgba(186, 230, 253, 0.22));
+            color: var(--pastel-mint);
+            border-color: rgba(167, 243, 208, 0.35);
+        }
+
+        .mode-tab.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: var(--text-muted);
+            background: rgba(11, 13, 20, 0.4);
+        }
+
+        /* =========================================================
+           ESTILOS PARTE 1: CUESTIONARIO (10 EJERCICIOS)
+           ========================================================= */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.2rem;
+            margin-bottom: 1.25rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-lavender {
+            background: rgba(196, 181, 253, 0.14);
+            color: var(--pastel-lavender);
+            border: 1px solid rgba(196, 181, 253, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(167, 243, 208, 0.12);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(167, 243, 208, 0.28);
+        }
+
+        .badge-butter {
+            background: rgba(253, 230, 138, 0.12);
+            color: var(--pastel-butter);
+            border: 1px solid rgba(253, 230, 138, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-lavender), var(--pastel-sky), var(--pastel-mint));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .schema-card {
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(186, 230, 253, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 1.15rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .schema-title {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--pastel-sky);
+            margin-bottom: 0.4rem;
+        }
+
+        .schema-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        .schema-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .schema-box {
+            background: var(--bg-code);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.95rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .schema-box .table-name {
+            color: var(--pastel-butter);
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+
+        .schema-box ul {
+            list-style: none;
+            color: var(--text-secondary);
+        }
+
+        .schema-box li {
+            padding: 0.1rem 0;
+        }
+
+        .schema-box .col-name {
+            color: var(--pastel-mint);
+        }
+
+        .schema-box .col-type {
+            color: var(--pastel-lavender);
+        }
+
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem;
+            margin-bottom: 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease;
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(167, 243, 208, 0.65);
+            background: linear-gradient(180deg, rgba(167, 243, 208, 0.05) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(253, 230, 138, 0.65);
+            background: linear-gradient(180deg, rgba(253, 230, 138, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.7rem;
+            gap: 0.5rem;
+        }
+
+        .q-number {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--pastel-lavender);
+            background: rgba(196, 181, 253, 0.12);
+            padding: 0.24rem 0.68rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+        }
+
+        .q-points {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .q-prompt {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 0.9rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            background: rgba(196, 181, 253, 0.13);
+            color: var(--pastel-sky);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+        }
+
+        .sql-snippet {
+            background: var(--bg-code);
+            border-left: 3px solid var(--pastel-lavender);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 0.95rem;
+            margin: 0.65rem 0 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            color: var(--pastel-butter);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .sql-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1px solid rgba(196, 181, 253, 0.25);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 0.95rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-input::placeholder {
+            color: rgba(126, 135, 157, 0.6);
+        }
+
+        .sql-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(186, 230, 253, 0.12);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            background: rgba(11, 13, 20, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .option-label:hover {
+            border-color: rgba(196, 181, 253, 0.35);
+            background: rgba(30, 35, 52, 0.6);
+            color: var(--text-primary);
+        }
+
+        .option-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid var(--pastel-lavender);
+            border-radius: 50%;
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+            display: grid;
+            place-content: center;
+        }
+
+        .option-label input[type="radio"]::before {
+            content: "";
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.16s ease-in-out;
+            background-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="radio"]:checked {
+            border-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+
+        .option-label input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid var(--pastel-lavender);
+            border-radius: 5px;
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+            display: grid;
+            place-content: center;
+        }
+
+        .option-label input[type="checkbox"]::before {
+            content: "✓";
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #0b0d14;
+            transform: scale(0);
+            transition: transform 0.16s ease-in-out;
+        }
+
+        .option-label input[type="checkbox"]:checked {
+            border-color: var(--pastel-mint);
+            background-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .option-label:has(input:checked) {
+            border-color: rgba(167, 243, 208, 0.45);
+            background: rgba(167, 243, 208, 0.07);
+            color: var(--text-primary);
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        .option-text code {
+            font-family: var(--font-mono);
+            font-size: 0.83em;
+            color: var(--pastel-butter);
+            background: rgba(253, 230, 138, 0.1);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        .q-status-badge {
+            display: none;
+            margin-top: 0.8rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .q-status-badge.correct {
+            display: block;
+            background: rgba(167, 243, 208, 0.12);
+            border: 1px solid rgba(167, 243, 208, 0.35);
+            color: var(--pastel-mint);
+        }
+
+        .q-status-badge.partial {
+            display: block;
+            background: rgba(253, 230, 138, 0.12);
+            border: 1px solid rgba(253, 230, 138, 0.35);
+            color: var(--pastel-butter);
+        }
+
+        .q-status-badge.wrong {
+            display: block;
+            background: rgba(253, 164, 175, 0.12);
+            border: 1px solid rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .eval-actions {
+            margin-top: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-evaluate,
+        .btn-goto-part2 {
+            width: 100%;
+            padding: 0.95rem 1.4rem;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--pastel-lavender), var(--pastel-sky));
+            color: #0b0d14;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(196, 181, 253, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-goto-part2 {
+            display: none;
+            background: linear-gradient(135deg, var(--pastel-mint), var(--pastel-butter));
+        }
+
+        .btn-goto-part2.unlocked {
+            display: block;
+        }
+
+        .btn-evaluate:hover,
+        .btn-goto-part2:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            width: 100%;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        #results-panel {
+            display: none;
+            margin-top: 2rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(196, 181, 253, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.15rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1.25rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 118px;
+            height: 118px;
+            border-radius: 50%;
+            background: rgba(11, 13, 20, 0.75);
+            border: 3px solid var(--pastel-lavender);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--pastel-mint);
+            line-height: 1;
+        }
+
+        .score-total {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .unlock-banner {
+            margin-top: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .unlock-banner.success {
+            background: rgba(167, 243, 208, 0.12);
+            border: 1px solid rgba(167, 243, 208, 0.38);
+            color: var(--pastel-mint);
+        }
+
+        .unlock-banner.locked {
+            background: rgba(253, 164, 175, 0.12);
+            border: 1px solid rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .errors-heading {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--pastel-coral);
+            margin-bottom: 0.85rem;
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(11, 13, 20, 0.75);
+            border: 1px solid rgba(253, 164, 175, 0.28);
+            border-left: 4px solid var(--pastel-coral);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+
+        .error-item.partial-item {
+            border-color: rgba(253, 230, 138, 0.3);
+            border-left-color: var(--pastel-butter);
+        }
+
+        .error-item-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--pastel-peach);
+            margin-bottom: 0.5rem;
+        }
+
+        .error-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 0.65rem;
+            font-size: 0.82rem;
+        }
+
+        .user-choice-box {
+            background: rgba(253, 164, 175, 0.08);
+            border: 1px solid rgba(253, 164, 175, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.65rem;
+            color: var(--pastel-coral);
+            font-family: var(--font-mono);
+        }
+
+        .correct-choice-box {
+            background: rgba(167, 243, 208, 0.08);
+            border: 1px solid rgba(167, 243, 208, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.65rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            padding-top: 0.4rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .error-explanation strong {
+            color: var(--pastel-butter);
+        }
+
+        .perfect-banner {
+            background: rgba(167, 243, 208, 0.1);
+            border: 1px solid rgba(167, 243, 208, 0.35);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            text-align: center;
+            color: var(--pastel-mint);
+        }
+
+        /* =========================================================
+           ESTILOS PARTE 2: STAGES INTERACTIVOS EN TIEMPO REAL
+           (En el mismo display de pantalla, sin necesidad de scrollear)
+           ========================================================= */
+        #part2-view {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        body.stage-mode-active #part2-view {
+            display: flex;
+        }
+
+        body.stage-mode-active #part1-view {
+            display: none;
+        }
+
+        .stage-hud {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex-shrink: 0;
+        }
+
+        .hud-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stage-progress-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .stage-dot {
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.25s ease;
+        }
+
+        .stage-dot.active {
+            background: rgba(196, 181, 253, 0.25);
+            color: var(--pastel-lavender);
+            border-color: var(--pastel-lavender);
+            box-shadow: 0 0 10px rgba(196, 181, 253, 0.35);
+        }
+
+        .stage-dot.done {
+            background: rgba(167, 243, 208, 0.22);
+            color: var(--pastel-mint);
+            border-color: var(--pastel-mint);
+        }
+
+        .timer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(11, 13, 20, 0.85);
+            border: 1px solid rgba(253, 230, 138, 0.35);
+            color: var(--pastel-butter);
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .timer-badge.urgent {
+            border-color: var(--pastel-coral);
+            color: var(--pastel-coral);
+            animation: pulseUrgent 1s infinite alternate;
+        }
+
+        @keyframes pulseUrgent {
+            from { opacity: 1; }
+            to { opacity: 0.55; }
+        }
+
+        .stage-objective-box {
+            display: flex;
+            align-items: baseline;
+            gap: 0.45rem;
+            font-size: 0.84rem;
+            color: var(--text-primary);
+        }
+
+        .objective-tag {
+            color: var(--pastel-peach);
+            font-weight: 700;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        /* 2. Escenario Gráfico de la Tabla en Tiempo Real */
+        .visual-arena {
+            flex: 1;
+            min-height: 110px;
+            background: rgba(11, 13, 20, 0.78);
+            border: 1px solid rgba(186, 230, 253, 0.22);
+            border-radius: var(--radius-md);
+            padding: 0.55rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arena-empty-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.83rem;
+            padding: 0.5rem;
+        }
+
+        .live-table-container {
+            width: 100%;
+            max-width: 680px;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .live-table-container.anim-slide-in {
+            animation: tableSlideIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes tableSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(35px) scale(0.94);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .live-table-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(196, 181, 253, 0.14);
+            border: 1px solid rgba(196, 181, 253, 0.3);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.28rem 0.7rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .live-table-title {
+            color: var(--pastel-butter);
+            font-weight: 700;
+        }
+
+        .live-agg-badge {
+            background: rgba(167, 243, 208, 0.18);
+            border: 1px solid var(--pastel-mint);
+            color: var(--pastel-mint);
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            animation: popScale 0.45s ease-out;
+        }
+
+        @keyframes popScale {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.08); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .live-sql-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            background: rgba(20, 24, 36, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        .live-sql-table th {
+            background: rgba(30, 35, 52, 0.95);
+            color: var(--pastel-sky);
+            text-align: left;
+            padding: 0.3rem 0.55rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .live-sql-table td {
+            padding: 0.26rem 0.55rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.35s ease;
+        }
+
+        .col-new-anim {
+            animation: colExpandFlash 0.75s ease-out;
+        }
+
+        @keyframes colExpandFlash {
+            0% {
+                background-color: rgba(167, 243, 208, 0.45);
+                transform: translateX(18px);
+                opacity: 0;
+            }
+            100% {
+                background-color: transparent;
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .col-rename-anim {
+            animation: headerFlipGlow 0.75s ease-out;
+            color: var(--pastel-mint) !important;
+        }
+
+        @keyframes headerFlipGlow {
+            0% {
+                transform: rotateX(90deg);
+                background-color: rgba(253, 230, 138, 0.45);
+            }
+            100% {
+                transform: rotateX(0deg);
+            }
+        }
+
+        .row-matched td {
+            background: rgba(167, 243, 208, 0.14);
+            color: var(--pastel-mint);
+            font-weight: 600;
+        }
+
+        .row-dimmed td {
+            opacity: 0.28;
+            filter: blur(0.4px);
+        }
+
+        .row-deleting td {
+            background: rgba(253, 164, 175, 0.25);
+            color: var(--pastel-coral);
+            text-decoration: line-through;
+            animation: rowFadeOut 0.65s ease forwards;
+        }
+
+        @keyframes rowFadeOut {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0.18; transform: translateX(12px); }
+        }
+
+        /* 3. Constructor de Sentencia */
+        .builder-zone {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.55rem 0.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+
+        .sentence-tokens-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.32rem;
+            background: var(--bg-code);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.6rem;
+            min-height: 44px;
+        }
+
+        .kw-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 66px;
+            height: 28px;
+            padding: 0 0.45rem;
+            border: 1.5px dashed rgba(196, 181, 253, 0.45);
+            border-radius: 6px;
+            background: rgba(196, 181, 253, 0.06);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+        }
+
+        .kw-slot.active-target {
+            border-color: var(--pastel-butter);
+            box-shadow: 0 0 0 2px rgba(253, 230, 138, 0.22);
+            color: var(--pastel-butter);
+        }
+
+        .kw-slot.filled {
+            border-style: solid;
+            border-color: var(--pastel-lavender);
+            background: rgba(196, 181, 253, 0.2);
+            color: var(--pastel-lavender);
+        }
+
+        .inline-sql-input {
+            height: 28px;
+            width: 145px;
+            background: rgba(30, 35, 52, 0.95);
+            border: 1px solid rgba(186, 230, 253, 0.4);
+            border-radius: 6px;
+            padding: 0 0.45rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            outline: none;
+        }
+
+        .inline-sql-input:focus {
+            border-color: var(--pastel-mint);
+            box-shadow: 0 0 0 2px rgba(167, 243, 208, 0.2);
+        }
+
+        .inline-sql-input::placeholder {
+            color: rgba(180, 188, 208, 0.5);
+        }
+
+        .sql-literal {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--pastel-butter);
+            font-weight: 600;
+            padding: 0 0.1rem;
+        }
+
+        .builder-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .stage-feedback-msg {
+            flex: 1;
+            font-size: 0.76rem;
+            min-height: 1.1rem;
+            color: var(--text-secondary);
+            transition: opacity 0.25s ease;
+        }
+
+        .stage-feedback-msg.error {
+            color: var(--pastel-coral);
+            font-weight: 500;
+        }
+
+        .stage-feedback-msg.success {
+            color: var(--pastel-mint);
+            font-weight: 600;
+        }
+
+        .builder-btns {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .btn-clear-slots,
+        .btn-finish-part2 {
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.74rem;
+            cursor: pointer;
+        }
+
+        .btn-finish-part2 {
+            border-color: rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .btn-run-stage {
+            padding: 0.35rem 0.85rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--pastel-mint), var(--pastel-sky));
+            color: #0b0d14;
+            font-family: var(--font-sans);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* 4. Banco de Etiquetas de Palabras Clave */
+        .keyword-bank-zone {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.65rem;
+            flex-shrink: 0;
+        }
+
+        .bank-header {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .keyword-tags-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            max-height: 86px;
+            overflow-y: auto;
+        }
+
+        .kw-tag {
+            padding: 0.22rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(30, 35, 52, 0.95);
+            border: 1px solid rgba(196, 181, 253, 0.3);
+            color: var(--pastel-lavender);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .kw-tag:hover {
+            background: rgba(196, 181, 253, 0.22);
+            border-color: var(--pastel-lavender);
+            transform: translateY(-1px);
+        }
+
+        /* Pantalla de Calificación Final Integrada en el Escenario */
+        .stage-completion-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(11, 13, 20, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.85rem 1rem;
+            overflow-y: auto;
+            animation: popScale 0.4s ease-out;
+        }
+
+        .stage-completion-overlay.visible {
+            display: flex;
+        }
+
+        .final-grade-card {
+            width: 100%;
+            max-width: 540px;
+            background: rgba(20, 24, 36, 0.92);
+            border: 1px solid rgba(196, 181, 253, 0.35);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1rem;
+        }
+
+        .final-grade-number {
+            font-family: var(--font-mono);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1.1;
+        }
+
+        .breakdown-list {
+            list-style: none;
+            text-align: left;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin: 0.55rem 0;
+            background: rgba(11, 13, 20, 0.7);
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 0.75rem;
+            font-family: var(--font-mono);
+        }
+
+        .breakdown-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.15rem 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+        }
+
+        .breakdown-list li:last-child {
+            border-bottom: none;
+        }
+
+        .dedication-recognition {
+            display: none;
+            background: linear-gradient(135deg, rgba(253, 230, 138, 0.16), rgba(167, 243, 208, 0.16));
+            border: 1px solid var(--pastel-butter);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.45rem;
+            color: var(--pastel-butter);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        @media (min-width: 640px) {
+            .page-wrapper {
+                padding: 1.75rem 1.5rem 4rem;
+            }
+
+            .schema-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .eval-actions {
+                flex-direction: row;
+            }
+
+            .stage-hud {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .live-sql-table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo animado de polvo y partículas de luz -->
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <!-- Selector de Parte 1 y Parte 2 (Cerrada hasta aprobar Parte 1 con >= 6) -->
+        <nav class="mode-switcher" aria-label="Secciones de la evaluación">
+            <button type="button" id="tab-part1" class="mode-tab active">
+                Paso 1: Cuestionario (10 Ejercicios)
+            </button>
+            <button type="button" id="tab-part2" class="mode-tab locked" title="Obtenga 6 o más puntos en el Paso 1 para habilitar">
+                🔒 Paso 2: Stages Interactivos (Requiere ≥ 6 pts)
+            </button>
+        </nav>
+
+        <!-- =================================================================
+             PASO 1: 10 EJERCICIOS (5 Texto, 3 Múltiple, 2 Binarios)
+             ================================================================= -->
+        <section id="part1-view">
+            <header class="eval-header">
+                <div class="badges-row">
+                    <span class="badge badge-lavender">Base de Datos I</span>
+                    <span class="badge badge-mint">MySQL</span>
+                    <span class="badge badge-butter">Requisito Paso 2: ≥ 6 Puntos</span>
+                </div>
+                <h1 class="eval-title">Evaluación SQL+</h1>
+                <p class="eval-subtitle">
+                    Complete los 10 ejercicios del Paso 1. Al obtener un puntaje de <strong>6 o más puntos</strong>, se desbloqueará el Paso 2 de stages interactivos para definir su calificación final.
+                </p>
+            </header>
+
+            <section class="schema-card" aria-label="Esquema de referencia">
+                <h2 class="schema-title">📋 Tablas y Campos de Referencia</h2>
+                <p class="schema-desc">
+                    Utilice exactamente los identificadores de tablas y columnas listados a continuación cuando los ejercicios hagan referencia a ellos:
+                </p>
+                <div class="schema-grid">
+                    <div class="schema-box">
+                        <span class="table-name">Tabla: mascotas</span>
+                        <ul>
+                            <li>• <span class="col-name">id_mascota</span> : <span class="col-type">entero (identificador único)</span></li>
+                            <li>• <span class="col-name">nombre</span> : <span class="col-type">texto hasta 50 caracteres</span></li>
+                            <li>• <span class="col-name">especie</span> : <span class="col-type">texto hasta 30 caracteres</span></li>
+                            <li>• <span class="col-name">edad</span> : <span class="col-type">entero</span></li>
+                            <li>• <span class="col-name">peso</span> : <span class="col-type">decimal (5 dígitos, 2 decimales)</span></li>
+                            <li>• <span class="col-name">costo_consulta</span> : <span class="col-type">decimal (8 dígitos, 2 decimales)</span></li>
+                        </ul>
+                    </div>
+                    <div class="schema-box">
+                        <span class="table-name">Tabla: clientes</span>
+                        <ul>
+                            <li>• <span class="col-name">id_cliente</span> : <span class="col-type">entero (identificador único)</span></li>
+                            <li>• <span class="col-name">apellido</span> : <span class="col-type">texto hasta 60 caracteres</span></li>
+                            <li>• <span class="col-name">ciudad</span> : <span class="col-type">texto hasta 50 caracteres</span></li>
+                            <li>• <span class="col-name">codigo_postal</span> : <span class="col-type">entero</span></li>
+                            <li>• <span class="col-name">saldo_pendiente</span> : <span class="col-type">decimal (10 dígitos, 2 decimales)</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <form id="sql-eval-form" novalidate>
+                <!-- Ejercicio 1 -->
+                <article class="question-card" id="card-q1">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 1 · CREATE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la sentencia completa para crear una nueva tabla llamada <code>turnos</code> que contenga exactamente dos campos en este orden: <code>id_turno</code> de tipo entero definido como clave primaria, y <code>motivo</code> de tipo texto variable de hasta <code>80</code> caracteres que sea obligatorio (no admita valores nulos).
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q1-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q1"></div>
+                </article>
+
+                <!-- Ejercicio 2 -->
+                <article class="question-card" id="card-q2">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 2 · ALTER</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        En la tabla <code>mascotas</code>, se necesita cambiar el nombre de la columna <code>costo_consulta</code> para que pase a llamarse <code>honorarios</code>, conservando su tipo de dato decimal de <code>8</code> dígitos en total y <code>2</code> decimales. Escriba la sentencia completa que realiza esta modificación.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q2-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q2"></div>
+                </article>
+
+                <!-- Ejercicio 3 -->
+                <article class="question-card" id="card-q3">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 3 · BETWEEN</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que seleccione todas las columnas de la tabla <code>mascotas</code> para aquellos registros cuya <code>edad</code> se encuentre en el rango de <code>2</code> a <code>8</code> años inclusive (utilizando el operador de rango) y cuya <code>especie</code> no sea igual a <code>'Gato'</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q3-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q3"></div>
+                </article>
+
+                <!-- Ejercicio 4 -->
+                <article class="question-card" id="card-q4">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 4 · LIKE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la sentencia para obtener únicamente las columnas <code>nombre</code> y <code>especie</code> (en ese orden) de la tabla <code>mascotas</code>, filtrando aquellas mascotas cuyo <code>nombre</code> comience con la letra <code>'M'</code> o cuyo <code>peso</code> sea estrictamente mayor a <code>25</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q4-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q4"></div>
+                </article>
+
+                <!-- Ejercicio 5 -->
+                <article class="question-card" id="card-q5">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 5 · SUM</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la consulta que calcule el total acumulado de la columna <code>saldo_pendiente</code> de la tabla <code>clientes</code>, considerando únicamente a los clientes cuya <code>ciudad</code> sea igual a <code>'Parana'</code> y cuyo <code>saldo_pendiente</code> sea mayor o igual a <code>15000</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q5-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q5"></div>
+                </article>
+
+                <!-- Ejercicio 6 -->
+                <article class="question-card" id="card-q6">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 6 · WHERE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se desea consultar de la tabla <code>mascotas</code> todos los datos de aquellos animales cuya <code>edad</code> esté comprendida entre <code>3</code> y <code>7</code> años (incluyendo tanto los de 3 como los de 7 años) y cuya <code>especie</code> sea distinta de <code>'Gato'</code>. Seleccione todas las sentencias que sean sintácticamente válidas en MySQL y devuelvan exactamente ese resultado:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> <code>SELECT * FROM mascotas WHERE edad BETWEEN 3 AND 7 AND especie &lt;&gt; 'Gato';</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> <code>SELECT * FROM mascotas WHERE edad &gt; 3 AND edad &lt; 7 AND especie != 'Gato';</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> <code>SELECT * FROM mascotas WHERE edad &gt;= 3 AND edad &lt;= 7 AND NOT especie = 'Gato';</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> <code>SELECT * FROM mascotas WHERE edad BETWEEN 3 OR 7 AND NOT especie = 'Gato';</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q6"></div>
+                </article>
+
+                <!-- Ejercicio 7 -->
+                <article class="question-card" id="card-q7">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 7 · MODIFY</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Sobre la tabla <code>clientes</code> se requiere realizar distintas modificaciones estructurales en sus campos. Identifique y seleccione todas las sentencias que tengan una sintaxis correcta en MySQL y se ejecuten sin producir error:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> <code>ALTER TABLE clientes RENAME COLUMN ciudad TO localidad;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> <code>ALTER TABLE clientes CHANGE ciudad localidad;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> <code>ALTER TABLE clientes CHANGE codigo_postal cp INT NOT NULL;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> <code>ALTER TABLE clientes MODIFY saldo_pendiente DECIMAL(12,2);</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q7"></div>
+                </article>
+
+                <!-- Ejercicio 8 -->
+                <article class="question-card" id="card-q8">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 8 · DELETE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Analice las siguientes afirmaciones sobre el comportamiento de las operaciones de baja, patrones de búsqueda y funciones en MySQL, y seleccione todas las que sean verdaderas:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> Al filtrar con <code>WHERE apellido LIKE '%ez'</code>, el motor seleccionará tanto el apellido <code>'Perez'</code> como <code>'Ez'</code>, ya que el símbolo <code>%</code> representa cero, uno o múltiples caracteres previos.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> El comando <code>DROP TABLE mascotas WHERE edad &gt; 10;</code> elimina únicamente los registros que superan los 10 años y conserva intacta la estructura de la tabla.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> La sentencia <code>DELETE FROM mascotas WHERE edad &gt; 10;</code> borra solo las filas que cumplen la condición, mientras que <code>DELETE FROM mascotas;</code> vacía todas las filas conservando la estructura de la tabla.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> La instrucción <code>DELETE * FROM mascotas;</code> es la forma obligatoria en MySQL para indicar que deben borrarse todas las columnas de cada registro de la tabla.
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q8"></div>
+                </article>
+
+                <!-- Ejercicio 9 -->
+                <article class="question-card" id="card-q9">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 9 · COUNT</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        En una tabla llamada <code>pagos</code> que posee <strong>50 registros en total</strong>, la columna numérica <code>bonificacion</code> tiene <strong>35 filas con el valor <code>0</code></strong> y <strong>15 filas con valor nulo</strong>. Si se ejecutan las siguientes dos consultas:
+                    </p>
+                    <pre class="sql-snippet">-- Consulta 1:
+SELECT COUNT(bonificacion), SUM(bonificacion) FROM pagos;
+
+-- Consulta 2:
+SELECT COUNT(*), SUM(bonificacion) FROM pagos WHERE bonificacion &gt;= 0;</pre>
+                    <p class="q-prompt">
+                        Seleccione cuál de las dos afirmaciones describe de manera exacta el resultado devuelto por MySQL:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="radio" name="q9" value="A">
+                            <span class="option-text">
+                                <strong>Opción A:</strong> Ambas consultas devuelven exactamente los mismos valores (<code>35</code> en el conteo y <code>0</code> en la suma), porque en la Consulta 1 <code>COUNT(bonificacion)</code> ignora los nulos pero cuenta los ceros, y en la Consulta 2 el filtro <code>WHERE bonificacion &gt;= 0</code> descarta las 15 filas nulas antes de que <code>COUNT(*)</code> cuente las filas restantes.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q9" value="B">
+                            <span class="option-text">
+                                <strong>Opción B:</strong> La Consulta 1 devuelve <code>50</code> en el conteo y <code>0</code> en la suma (ya que <code>COUNT</code> sobre una columna cuenta todas las filas de la tabla sin importar si son nulas), mientras que la Consulta 2 devuelve <code>35</code> en el conteo y nulo en la suma porque la suma de ceros equivale a un valor nulo.
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q9"></div>
+                </article>
+
+                <!-- Ejercicio 10 -->
+                <article class="question-card" id="card-q10">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 10 · NOT</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se necesita listar todos los registros de la tabla <code>clientes</code> cuyo <code>codigo_postal</code> no se encuentre en el rango de <code>3000</code> a <code>3999</code> (ambos extremos inclusive), y cuyo <code>apellido</code> tenga la letra <code>'a'</code> exactamente en la segunda posición (sin importar cuántos caracteres tenga después). ¿Cuál de las dos sentencias resuelve correctamente el problema?
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="radio" name="q10" value="A">
+                            <span class="option-text">
+                                <strong>Opción A:</strong> <code>SELECT * FROM clientes WHERE (codigo_postal &lt; 3000 AND codigo_postal &gt; 3999) AND apellido LIKE '%a_';</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q10" value="B">
+                            <span class="option-text">
+                                <strong>Opción B:</strong> <code>SELECT * FROM clientes WHERE codigo_postal NOT BETWEEN 3000 AND 3999 AND apellido LIKE '_a%';</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q10"></div>
+                </article>
+
+                <!-- Botones de Acción -->
+                <div class="eval-actions">
+                    <button type="button" id="btn-evaluar" class="btn-evaluate">
+                        ✨ Evaluar Paso 1
+                    </button>
+                    <button type="button" id="btn-ir-parte2" class="btn-goto-part2">
+                        🔓 Avanzar al Paso 2 (Stages Interactivos)
+                    </button>
+                    <button type="button" id="btn-reiniciar" class="btn-reset">
+                        Borrar Progreso y Reiniciar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Panel de Resultados y Explicación de Errores -->
+            <section id="results-panel" aria-live="polite">
+                <div class="score-summary">
+                    <div class="score-circle">
+                        <span class="score-value" id="score-number">0</span>
+                        <span class="score-total">de 10 pts</span>
+                    </div>
+                    <h3 class="score-message" id="score-title">Resultado del Paso 1</h3>
+                    <p class="score-subtext" id="score-subtitle"></p>
+                    <div id="unlock-status-banner" class="unlock-banner"></div>
+                </div>
+
+                <div id="errors-container"></div>
+            </section>
+        </section>
+
+        <!-- =================================================================
+             PASO 2: DESAFÍO INTERACTIVO EN TIEMPO REAL (6 STAGES EN 1 DISPLAY)
+             ================================================================= -->
+        <section id="part2-view" aria-label="Desafío interactivo por stages">
+            <!-- 1. HUD Superior: Progreso de Stages + Objetivo + Temporizador 40 min -->
+            <header class="stage-hud">
+                <div class="hud-top-row">
+                    <div class="stage-progress-pills" id="stage-dots-container">
+                        <!-- Generado dinámicamente para los 6 stages -->
+                    </div>
+                    <div class="timer-badge" id="stage-timer">
+                        ⏱️ <span id="timer-mmss">40:00</span> (<span id="timer-secs">2400</span>s)
+                    </div>
+                </div>
+                <div class="stage-objective-box">
+                    <span class="objective-tag" id="stage-label-tag">STAGE 1/6:</span>
+                    <span id="stage-objective-text">Crear la tabla "Alumno" definiendo el campo entero "legajo" como clave primaria y el campo de texto obligatorio "nombre".</span>
+                </div>
+            </header>
+
+            <!-- 2. Área Visual de la Tabla en Tiempo Real (con Overlay de Calificación Final) -->
+            <div class="visual-arena" id="visual-arena">
+                <div id="live-table-mount" style="width: 100%; display: flex; justify-content: center;">
+                    <div class="arena-empty-placeholder">
+                        Complete la sentencia del <strong>Stage 1</strong> y presione <strong>Ejecutar</strong> para desplegar la tabla en tiempo real.
+                    </div>
+                </div>
+
+                <!-- Overlay al finalizar los stages o agotar tiempo -->
+                <div class="stage-completion-overlay" id="stage-overlay">
+                    <div class="final-grade-card">
+                        <div style="font-size: 1.5rem;" id="overlay-icon">🏆</div>
+                        <h2 style="font-size: 1.15rem; color: var(--pastel-lavender); margin-bottom: 0.25rem;" id="overlay-title">
+                            Evaluación Finalizada
+                        </h2>
+                        <div class="final-grade-number" id="final-grade-display">10 / 10</div>
+                        <ul class="breakdown-list" id="final-breakdown-list"></ul>
+                        <div class="dedication-recognition" id="dedication-recognition"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Constructor de la Sentencia SQL (Huecos de palabras clave + Inputs de texto) -->
+            <div class="builder-zone">
+                <div class="sentence-tokens-wrap" id="sentence-tokens-wrap">
+                    <!-- Generado dinámicamente por cada stage -->
+                </div>
+                <div class="builder-footer">
+                    <div class="stage-feedback-msg" id="stage-feedback-msg" aria-live="polite">
+                        Seleccione etiquetas del banco inferior para llenar los espacios punteados y complete las cajas de texto.
+                    </div>
+                    <div class="builder-btns">
+                        <button type="button" id="btn-clear-stage" class="btn-clear-slots">Limpiar</button>
+                        <button type="button" id="btn-finish-part2" class="btn-finish-part2" title="Finalizar el Paso 2 ahora y calcular nota final">Finalizar Paso 2</button>
+                        <button type="button" id="btn-run-stage" class="btn-run-stage">▶ Ejecutar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Banco Desordenado de Etiquetas (Palabras Clave) -->
+            <div class="keyword-bank-zone">
+                <div class="bank-header">
+                    <span>PALABRAS CLAVE DISPONIBLES (Toque o arrastre al espacio activo)</span>
+                    <span id="active-slot-indicator" style="color: var(--pastel-butter);"></span>
+                </div>
+                <div class="keyword-tags-pool" id="keyword-tags-pool">
+                    <!-- Etiquetas renderizadas en orden aleatorio -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           0. CLAVE DE PERSISTENCIA EN LOCALSTORAGE (SIN ARCHIVOS EXTERNOS)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd1_sqlplus_evaluacion1_state_v2';
+
+        let appState = {
+            part1Answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [],
+                q9: '', q10: ''
+            },
+            part1Evaluated: false,
+            part1Score: 0,
+            part2Unlocked: false,
+            activeTab: 'part1',
+            currentStageIdx: 0,
+            completedStages: 0,
+            remainingSeconds: 40 * 60,
+            part2Started: false,
+            part2Finished: false,
+            currentStageDraft: {
+                slots: [],
+                inputs: {}
+            },
+            liveSchema: {
+                tableName: 'Alumno',
+                colId: 'legajo',
+                colText: 'nombre',
+                colExtra: 'nota',
+                rows: [
+                    { id: 101, text: 'Ana', extra: 9 },
+                    { id: 102, text: 'Bruno', extra: 4 },
+                    { id: 103, text: 'Alicia', extra: 8 },
+                    { id: 104, text: 'Carlos', extra: 10 }
+                ]
+            }
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                // Ignorar en caso de modo privado restringido
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    appState = Object.assign({}, appState, parsed);
+                    return true;
+                }
+            } catch (e) {
+                return false;
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           1. EFECTO DE PARTÍCULAS: POLVO Y LUZ (CANVAS)
+           ========================================================================= */
+        (function initDustParticles() {
+            const canvas = document.getElementById('dust-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const pastelPalette = [
+                '196, 181, 253',
+                '167, 243, 208',
+                '186, 230, 253',
+                '253, 230, 138',
+                '251, 207, 232'
+            ];
+
+            const particleCount = Math.min(75, Math.floor((width * height) / 16000));
+            const particles = [];
+
+            function createParticle() {
+                const isLightOrb = Math.random() < 0.28;
+                return {
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: isLightOrb ? (Math.random() * 3.2 + 1.8) : (Math.random() * 1.4 + 0.5),
+                    color: pastelPalette[Math.floor(Math.random() * pastelPalette.length)],
+                    vx: (Math.random() - 0.5) * 0.22,
+                    vy: -Math.random() * 0.28 - 0.05,
+                    alpha: Math.random() * 0.55 + 0.15,
+                    pulseSpeed: Math.random() * 0.015 + 0.004,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    isLightOrb: isLightOrb
+                };
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+
+            function drawParticles() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.pulsePhase += p.pulseSpeed;
+
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    const currentAlpha = p.alpha * (0.65 + 0.35 * Math.sin(p.pulsePhase));
+
+                    ctx.beginPath();
+                    if (p.isLightOrb) {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 4.5);
+                        grad.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
+                        grad.addColorStop(0.4, `rgba(${p.color}, ${currentAlpha * 0.35})`);
+                        grad.addColorStop(1, `rgba(${p.color}, 0)`);
+                        ctx.fillStyle = grad;
+                        ctx.arc(p.x, p.y, p.radius * 4.5, 0, Math.PI * 2);
+                    } else {
+                        ctx.fillStyle = `rgba(${p.color}, ${currentAlpha})`;
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(drawParticles);
+            }
+
+            window.addEventListener('resize', () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            });
+
+            drawParticles();
+        })();
+
+        /* =========================================================================
+           2. PASO 1: LÓGICA DE EVALUACIÓN DE LOS 10 EJERCICIOS
+           ========================================================================= */
+        function normalizeSQL(rawInput) {
+            if (!rawInput) return '';
+            return rawInput
+                .toLowerCase()
+                .trim()
+                .replace(/`/g, '')
+                .replace(/"/g, "'")
+                .replace(/;+\s*$/g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*\(\s*/g, '(')
+                .replace(/\s*\)\s*/g, ')')
+                .replace(/\)(?=[a-z0-9_'])/g, ') ')
+                .replace(/\s*,\s*/g, ', ')
+                .replace(/\s*(>=|<=|<>|!=|=|>|<)\s*/g, ' $1 ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · CREATE',
+                canonicalAnswer: 'CREATE TABLE turnos (id_turno INT PRIMARY KEY, motivo VARCHAR(80) NOT NULL);',
+                validNormalized: [
+                    'create table turnos(id_turno int primary key, motivo varchar(80) not null)',
+                    'create table turnos(id_turno int not null primary key, motivo varchar(80) not null)',
+                    'create table turnos(id_turno int primary key not null, motivo varchar(80) not null)',
+                    'create table turnos(id_turno int, motivo varchar(80) not null, primary key(id_turno))',
+                    'create table turnos(id_turno int not null, motivo varchar(80) not null, primary key(id_turno))'
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia SQL. Debías utilizar <strong>CREATE TABLE turnos (...)</strong> definiendo ambos campos, sus tipos y restricciones.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('create table')) {
+                        issues.push('La sentencia debe iniciar con el comando <strong>CREATE TABLE</strong>.');
+                    }
+                    if (!norm.includes('turnos')) {
+                        issues.push('Falta indicar el nombre exacto de la tabla: <code>turnos</code>.');
+                    }
+                    if (!norm.includes('id_turno') || !norm.includes('int')) {
+                        issues.push('El primer campo debe llamarse <code>id_turno</code> y ser de tipo <code>INT</code>.');
+                    }
+                    if (!norm.includes('primary key')) {
+                        issues.push('Omitiste definir la restricción de clave primaria <code>PRIMARY KEY</code> para <code>id_turno</code>.');
+                    }
+                    if (!norm.includes('motivo') || !norm.includes('varchar(80)')) {
+                        issues.push('El segundo campo debe llamarse <code>motivo</code> con el tipo y longitud <code>VARCHAR(80)</code>.');
+                    }
+                    if (!norm.includes('not null')) {
+                        issues.push('Faltó especificar la restricción <code>NOT NULL</code> en el campo <code>motivo</code>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Revisa el orden de los campos, los paréntesis que encierran la definición y la coma separadora entre <code>id_turno</code> y <code>motivo</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · ALTER',
+                canonicalAnswer: 'ALTER TABLE mascotas RENAME COLUMN costo_consulta TO honorarios;',
+                validNormalized: [
+                    'alter table mascotas rename column costo_consulta to honorarios',
+                    'alter table mascotas change costo_consulta honorarios decimal(8, 2)',
+                    'alter table mascotas change column costo_consulta honorarios decimal(8, 2)'
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'Dejaste el campo vacío. Para renombrar una columna en MySQL debes utilizar <strong>ALTER TABLE mascotas</strong> seguido de <code>RENAME COLUMN ... TO ...</code> o <code>CHANGE ...</code>.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('alter table mascotas')) {
+                        issues.push('La modificación estructural sobre la tabla existente debe comenzar con <strong>ALTER TABLE mascotas</strong>.');
+                    }
+                    if (norm.includes('modify')) {
+                        issues.push('Utilizaste <code>MODIFY</code>, pero en MySQL <code>MODIFY</code> solo permite cambiar el tipo de dato o restricciones de una columna, <strong>no su nombre</strong>. Debes usar <code>RENAME COLUMN</code> o <code>CHANGE</code>.');
+                    }
+                    if (norm.includes('rename') && !norm.includes('rename column')) {
+                        issues.push('Al usar <code>RENAME</code> para una columna en MySQL, la sintaxis requiere indicar <code>RENAME COLUMN costo_consulta TO honorarios</code>.');
+                    }
+                    if (norm.includes('change') && !norm.includes('decimal(8, 2)')) {
+                        issues.push('Al utilizar la cláusula <code>CHANGE</code> en MySQL, es obligatorio volver a especificar el tipo de dato al final: <code>CHANGE costo_consulta honorarios DECIMAL(8,2)</code>.');
+                    }
+                    if (!norm.includes('costo_consulta') || !norm.includes('honorarios')) {
+                        issues.push('Verifica haber escrito tanto el nombre actual de la columna (<code>costo_consulta</code>) como el nuevo nombre (<code>honorarios</code>).');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Revisa la sintaxis exacta de renombrado en MySQL: <code>ALTER TABLE mascotas RENAME COLUMN costo_consulta TO honorarios;</code> o bien <code>ALTER TABLE mascotas CHANGE costo_consulta honorarios DECIMAL(8,2);</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · BETWEEN',
+                canonicalAnswer: "SELECT * FROM mascotas WHERE edad BETWEEN 2 AND 8 AND NOT especie = 'Gato';",
+                validNormalized: [
+                    "select * from mascotas where edad between 2 and 8 and not especie = 'gato'",
+                    "select * from mascotas where edad between 2 and 8 and not(especie = 'gato')",
+                    "select * from mascotas where edad between 2 and 8 and especie != 'gato'",
+                    "select * from mascotas where edad between 2 and 8 and especie <> 'gato'",
+                    "select * from mascotas where(edad between 2 and 8) and not especie = 'gato'",
+                    "select * from mascotas where(edad between 2 and 8) and not(especie = 'gato')",
+                    "select * from mascotas where(edad between 2 and 8) and especie != 'gato'",
+                    "select * from mascotas where(edad between 2 and 8) and especie <> 'gato'",
+                    "select * from mascotas where not especie = 'gato' and edad between 2 and 8",
+                    "select * from mascotas where not(especie = 'gato') and edad between 2 and 8",
+                    "select * from mascotas where especie != 'gato' and edad between 2 and 8",
+                    "select * from mascotas where especie <> 'gato' and edad between 2 and 8"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna respuesta. Debías escribir una consulta <strong>SELECT * FROM mascotas WHERE ...</strong> combinando <code>BETWEEN</code> y una condición de exclusión con <code>AND</code>.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('select * from mascotas')) {
+                        issues.push('La consulta debe seleccionar todas las columnas de la tabla mediante <strong>SELECT * FROM mascotas</strong>.');
+                    }
+                    if (!norm.includes('where')) {
+                        issues.push('Falta la cláusula <strong>WHERE</strong> para filtrar los registros.');
+                    }
+                    if (!norm.includes('between 2 and 8')) {
+                        issues.push('Falta especificar el rango de edad con el operador <strong>edad BETWEEN 2 AND 8</strong>.');
+                    }
+                    if (norm.includes(' or ')) {
+                        issues.push('Utilizaste el operador <code>OR</code> en lugar de <code>AND</code>; ambas condiciones deben cumplirse simultáneamente.');
+                    }
+                    if (!norm.includes("'gato'")) {
+                        issues.push("Recuerda encerrar el literal de texto <code>'Gato'</code> entre comillas.");
+                    }
+                    if (norm.includes("especie = 'gato'") && !norm.includes('not')) {
+                        issues.push("Escribiste <code>especie = 'Gato'</code> sin negarlo mediante <code>NOT</code> o sin usar <code>!=</code> / <code>&lt;&gt;</code>.");
+                    }
+                    if (issues.length === 0) {
+                        issues.push("Revisa la estructura de tu condición lógica en el <code>WHERE</code>: asegúrate de conectar <code>edad BETWEEN 2 AND 8</code> y <code>NOT especie = 'Gato'</code> mediante <code>AND</code>.");
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · LIKE',
+                canonicalAnswer: "SELECT nombre, especie FROM mascotas WHERE nombre LIKE 'M%' OR peso > 25;",
+                validNormalized: [
+                    "select nombre, especie from mascotas where nombre like 'm%' or peso > 25",
+                    "select nombre, especie from mascotas where(nombre like 'm%') or(peso > 25)",
+                    "select nombre, especie from mascotas where peso > 25 or nombre like 'm%'"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías proyectar <strong>SELECT nombre, especie FROM mascotas</strong> filtrando con <code>LIKE</code> y <code>OR</code>.';
+                    }
+                    const issues = [];
+                    if (norm.startsWith('select *')) {
+                        issues.push('Usaste <code>SELECT *</code>, pero el enunciado solicita mostrar únicamente las columnas <strong>nombre, especie</strong>.');
+                    } else if (!norm.startsWith('select nombre, especie from mascotas')) {
+                        issues.push('Verifica el inicio de la consulta: debe ser <strong>SELECT nombre, especie FROM mascotas</strong>.');
+                    }
+                    if (norm.includes(' and ')) {
+                        issues.push('Utilizaste <code>AND</code> en lugar de <strong>OR</strong>.');
+                    }
+                    if (!norm.includes('like')) {
+                        issues.push('Falta el operador <strong>LIKE</strong> para evaluar el patrón de texto del nombre.');
+                    } else if (norm.includes("'%m%'") || norm.includes("'%m'") || norm.includes("'m_'") || norm.includes("'m'")) {
+                        issues.push("El patrón de <code>LIKE</code> es incorrecto: para indicar que comienza con M debes usar <strong>'M%'</strong>.");
+                    }
+                    if (norm.includes('peso >= 25')) {
+                        issues.push('Usaste <code>&gt;= 25</code>, pero el enunciado pide que el peso sea <strong>estrictamente mayor</strong> a 25 (<code>peso &gt; 25</code>).');
+                    } else if (!norm.includes('peso > 25')) {
+                        issues.push('Falta o es incorrecta la comparación numérica <strong>peso &gt; 25</strong>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push("Verifica la sintaxis completa: <code>SELECT nombre, especie FROM mascotas WHERE nombre LIKE 'M%' OR peso &gt; 25;</code>.");
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · SUM',
+                canonicalAnswer: "SELECT SUM(saldo_pendiente) FROM clientes WHERE ciudad = 'Parana' AND saldo_pendiente >= 15000;",
+                validNormalized: [
+                    "select sum(saldo_pendiente) from clientes where ciudad = 'parana' and saldo_pendiente >= 15000",
+                    "select sum(saldo_pendiente) from clientes where ciudad = 'paraná' and saldo_pendiente >= 15000",
+                    "select sum(saldo_pendiente) from clientes where saldo_pendiente >= 15000 and ciudad = 'parana'",
+                    "select sum(saldo_pendiente) from clientes where saldo_pendiente >= 15000 and ciudad = 'paraná'",
+                    "select sum(saldo_pendiente) from clientes where(ciudad = 'parana') and(saldo_pendiente >= 15000)"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías utilizar la función de agregación <strong>SUM(saldo_pendiente)</strong> sobre la tabla <code>clientes</code>.';
+                    }
+                    const issues = [];
+                    if (norm.includes('count(')) {
+                        issues.push('Utilizaste <code>COUNT</code> en lugar de <strong>SUM(saldo_pendiente)</strong>.');
+                    } else if (!norm.startsWith('select sum(saldo_pendiente) from clientes')) {
+                        issues.push('La consulta debe iniciar con <strong>SELECT SUM(saldo_pendiente) FROM clientes</strong>.');
+                    }
+                    if (!norm.includes('where')) {
+                        issues.push('Omitiste la cláusula <strong>WHERE</strong>.');
+                    }
+                    if (!norm.includes("'parana'") && !norm.includes("'paraná'")) {
+                        issues.push("Falta filtrar por la ciudad <code>ciudad = 'Parana'</code>.");
+                    }
+                    if (norm.includes(' or ')) {
+                        issues.push('Usaste <code>OR</code> en vez de <strong>AND</strong>.');
+                    }
+                    if (norm.includes('saldo_pendiente > 15000')) {
+                        issues.push('Usaste el operador <code>&gt;</code> estricto, pero la consigna pide <strong>mayor o igual</strong> a 15000 (<code>&gt;= 15000</code>).');
+                    } else if (!norm.includes('saldo_pendiente >= 15000')) {
+                        issues.push('Falta la condición numérica <strong>saldo_pendiente &gt;= 15000</strong>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push("Revisa la escritura exacta de la consulta: <code>SELECT SUM(saldo_pendiente) FROM clientes WHERE ciudad = 'Parana' AND saldo_pendiente &gt;= 15000;</code>.");
+                    }
+                    return issues.join(' ');
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · WHERE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque utiliza los comparadores estrictos <code>&gt; 3</code> y <code>&lt; 7</code>, lo cual deja afuera a las mascotas que tienen exactamente 3 o 7 años.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque el operador <code>BETWEEN</code> exige obligatoriamente la palabra clave <code>AND</code> para unir sus dos extremos (<code>BETWEEN 3 AND 7</code>); escribir <code>BETWEEN 3 OR 7</code> es inválido."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque <code>edad BETWEEN 3 AND 7</code> incluye ambos extremos (3 y 7) y <code>especie &lt;&gt; 'Gato'</code> excluye correctamente a los gatos.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque combinar <code>edad &gt;= 3 AND edad &lt;= 7</code> es lógicamente idéntico a <code>BETWEEN 3 AND 7</code>, y <code>NOT especie = 'Gato'</code> niega la igualdad de forma correcta."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · MODIFY',
+                correctValues: ['A', 'C', 'D'],
+                correctLabel: 'Opciones A, C y D',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong> (<code>ALTER TABLE clientes CHANGE ciudad localidad;</code>): es inválida en MySQL porque la cláusula <code>CHANGE</code> exige siempre volver a definir el tipo de dato de la columna luego del nuevo nombre."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque <code>RENAME COLUMN ciudad TO localidad</code> cambia únicamente el nombre de la columna sin reescribir su tipo.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque <code>CHANGE codigo_postal cp INT NOT NULL</code> indica el nombre actual, el nuevo nombre y la definición completa del tipo de dato.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era válida porque <code>MODIFY saldo_pendiente DECIMAL(12,2)</code> permite cambiar el tipo de dato o precisión de una columna existente sin renombrarla."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · DELETE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es falsa porque <code>DROP TABLE</code> destruye la tabla completa junto con su estructura y no admite la cláusula <code>WHERE</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es falsa porque en MySQL la sintaxis <code>DELETE * FROM</code> produce error de sintaxis; <code>DELETE FROM</code> no lleva asterisco."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque el comodín <code>%</code> en <code>LIKE '%ez'</code> coincide con cero, uno o más caracteres previos.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era verdadera porque <code>DELETE FROM</code> elimina los registros que cumplen el <code>WHERE</code> (o vacía la tabla si se omite) manteniendo intacta la estructura."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · COUNT',
+                correctValue: 'A',
+                correctLabel: 'Opción A: Ambas consultas devuelven 35 en el conteo y 0 en la suma.',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: primero, <code>COUNT(bonificacion)</code> <strong>ignora las filas donde esa columna es NULL</strong> (por lo que cuenta solo las 35 filas con el número <code>0</code>); segundo, la función <code>SUM</code> aplicada sobre 35 ceros devuelve <code>0</code>, y solo devolvería <code>NULL</code> si todas las filas evaluadas fueran nulas."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · NOT',
+                correctValue: 'B',
+                correctLabel: "Opción B: SELECT * FROM clientes WHERE codigo_postal NOT BETWEEN 3000 AND 3999 AND apellido LIKE '_a%';",
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, la cual presenta dos errores lógicos: primero, la condición <code>(codigo_postal &lt; 3000 AND codigo_postal &gt; 3999)</code> es imposible de cumplir (debería unirse con <code>OR</code>). Segundo, el patrón <code>LIKE '%a_'</code> busca que la <em>penúltima</em> letra sea <code>'a'</code>, mientras que para exigir que la <em>segunda</em> letra sea <code>'a'</code> debe utilizarse <code>'_a%'</code>."
+                }
+            }
+        ];
+
+        function formatScore(num) {
+            return Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function syncPart1DOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                appState.part1Answers[id] = document.getElementById(`${id}-input`).value;
+            });
+            ['q6', 'q7', 'q8'].forEach((id) => {
+                appState.part1Answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q9', 'q10'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.part1Answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restorePart1StateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.part1Answers[id] !== undefined) {
+                    el.value = appState.part1Answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8'].forEach((id) => {
+                const vals = appState.part1Answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q9', 'q10'].forEach((id) => {
+                const val = appState.part1Answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function updatePart2LockUI() {
+            const tabPart2 = document.getElementById('tab-part2');
+            const btnIrParte2 = document.getElementById('btn-ir-parte2');
+
+            if (appState.part2Unlocked) {
+                tabPart2.classList.remove('locked');
+                tabPart2.textContent = '🔓 Paso 2: Stages Interactivos (Habilitado)';
+                tabPart2.title = 'Hacer clic para ir al Paso 2';
+                btnIrParte2.classList.add('unlocked');
+            } else {
+                tabPart2.classList.add('locked');
+                tabPart2.textContent = '🔒 Paso 2: Stages Interactivos (Requiere ≥ 6 pts)';
+                tabPart2.title = 'Obtenga 6 o más puntos en el Paso 1 para habilitar';
+                btnIrParte2.classList.remove('unlocked');
+            }
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncPart1DOMToState();
+
+            let totalScore = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validNormalized.includes(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+1 pt)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+1 pt)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    totalScore += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Respuesta parcialmente correcta (+0.25 pts) — Ver detalle de errores al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: +0.25 pts)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+1 pt)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            appState.part1Evaluated = true;
+            appState.part1Score = totalScore;
+            appState.part2Unlocked = (totalScore >= 6);
+            updatePart2LockUI();
+            saveStateToStorage();
+
+            // Si el Paso 2 ya había finalizado previamente, actualizar su nota final combinada
+            if (appState.part2Finished) {
+                renderFinalEvaluationOverlay();
+            }
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const unlockBanner = document.getElementById('unlock-status-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            const formattedScore = formatScore(totalScore);
+            scoreNumber.textContent = formattedScore;
+
+            if (totalScore >= 6) {
+                scoreTitle.textContent = totalScore === 10 ? '¡Excelente trabajo! Puntaje Perfecto en Paso 1' : '¡Paso 1 Aprobado!';
+                scoreSubtitle.textContent = `Obtuviste ${formattedScore} de 10 puntos en el cuestionario inicial.`;
+                unlockBanner.className = 'unlock-banner success';
+                unlockBanner.innerHTML = '🔓 <strong>¡Paso 2 Habilitado!</strong> Al haber obtenido 6 o más puntos, ya puedes avanzar al Desafío Interactivo de Stages para definir tu nota final.';
+            } else {
+                scoreTitle.textContent = 'Puntaje insuficiente para habilitar el Paso 2';
+                scoreSubtitle.textContent = `Obtuviste ${formattedScore} de 10 puntos.`;
+                unlockBanner.className = 'unlock-banner locked';
+                unlockBanner.innerHTML = '🔒 <strong>Paso 2 Bloqueado:</strong> Necesitas alcanzar al menos <strong>6 puntos</strong> en este primer paso para habilitar los stages interactivos. Revisa los errores explicados abajo, corrige tus respuestas y vuelve a evaluar.';
+            }
+
+            if (mistakes.length === 0) {
+                errorsContainer.innerHTML = `
+                    <div class="perfect-banner">
+                        🎉 ¡No cometiste ningún error en el Paso 1! Haz clic en "Avanzar al Paso 2" para completar los stages interactivos.
+                    </div>
+                `;
+            } else {
+                const itemsHTML = mistakes.map((m) => `
+                    <div class="error-item ${m.isPartial ? 'partial-item' : ''}">
+                        <div class="error-item-header">${escapeHTML(m.title)}</div>
+                        <div class="error-comparison">
+                            <div class="user-choice-box">
+                                <strong>Tu respuesta:</strong> ${escapeHTML(m.userAnswer)}
+                            </div>
+                            <div class="correct-choice-box">
+                                <strong>Respuesta esperada:</strong> ${escapeHTML(m.correctAnswer)}
+                            </div>
+                        </div>
+                        <div class="error-explanation">
+                            <strong>Explicación del error:</strong> ${m.explanation}
+                        </div>
+                    </div>
+                `).join('');
+
+                errorsContainer.innerHTML = `
+                    <h4 class="errors-heading">🔍 Revelación y Explicación de Errores (${mistakes.length})</h4>
+                    <div class="errors-list">
+                        ${itemsHTML}
+                    </div>
+                `;
+            }
+
+            resultsPanel.style.display = 'block';
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        /* =========================================================================
+           3. PASO 2: MOTOR INTERACTIVO DE STAGES Y CÁLCULO DE NOTA FINAL
+           ========================================================================= */
+        const ALL_SQL_KEYWORDS = [
+            'CREATE', 'TABLE', 'DATABASE', 'ALTER', 'ADD', 'RENAME', 'COLUMN', 'TO',
+            'DROP', 'DELETE', 'SELECT', 'FROM', 'WHERE', 'LIKE', 'BETWEEN',
+            'AND', 'OR', 'NOT', 'COUNT', 'SUM', 'INT', 'VARCHAR(50)', 'PRIMARY KEY', 'NOT NULL', '*'
+        ];
+
+        const STAGES = [
+            {
+                num: 1,
+                objective: 'Crear la tabla "Alumno" definiendo el campo entero "legajo" como clave primaria y el campo de texto obligatorio "nombre".',
+                tokens: [
+                    { type: 'slot', expected: 'CREATE' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st1-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'literal', text: '(' },
+                    { type: 'input', id: 'st1-col1', placeholder: 'Escriba su respuesta...', matchValue: 'legajo' },
+                    { type: 'slot', expected: 'INT' },
+                    { type: 'slot', expected: 'PRIMARY KEY' },
+                    { type: 'literal', text: ',' },
+                    { type: 'input', id: 'st1-col2', placeholder: 'Escriba su respuesta...', matchValue: 'nombre' },
+                    { type: 'slot', expected: 'VARCHAR(50)' },
+                    { type: 'slot', expected: 'NOT NULL' },
+                    { type: 'literal', text: ');' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.tableName = inputs['st1-table'] || 'Alumno';
+                    appState.liveSchema.colId = inputs['st1-col1'] || 'legajo';
+                    appState.liveSchema.colText = inputs['st1-col2'] || 'nombre';
+                    renderLiveTable({ mode: 'create' });
+                }
+            },
+            {
+                num: 2,
+                objective: 'Modificar la estructura de la tabla "Alumno" para agregar un nuevo campo entero llamado "nota".',
+                tokens: [
+                    { type: 'slot', expected: 'ALTER' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st2-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'slot', expected: 'ADD' },
+                    { type: 'input', id: 'st2-col3', placeholder: 'Escriba su respuesta...', matchValue: 'nota' },
+                    { type: 'slot', expected: 'INT' },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.colExtra = inputs['st2-col3'] || 'nota';
+                    renderLiveTable({ mode: 'add-column' });
+                }
+            },
+            {
+                num: 3,
+                objective: 'Renombrar la columna "nota" de la tabla "Alumno" para que pase a llamarse "calificacion".',
+                tokens: [
+                    { type: 'slot', expected: 'ALTER' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st3-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'slot', expected: 'RENAME' },
+                    { type: 'slot', expected: 'COLUMN' },
+                    { type: 'input', id: 'st3-old', placeholder: 'Escriba su respuesta...', matchValue: 'nota' },
+                    { type: 'slot', expected: 'TO' },
+                    { type: 'input', id: 'st3-new', placeholder: 'Escriba su respuesta...', matchValue: 'calificacion' },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.colExtra = inputs['st3-new'] || 'calificacion';
+                    renderLiveTable({ mode: 'rename-column' });
+                }
+            },
+            {
+                num: 4,
+                objective: 'Seleccionar todas las columnas de "Alumno" donde "calificacion" esté entre 6 y 10 inclusive, y "nombre" comience con la letra A.',
+                tokens: [
+                    { type: 'slot', expected: 'SELECT' },
+                    { type: 'slot', expected: '*' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st4-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'input', id: 'st4-colnum', placeholder: 'Escriba su respuesta...', matchValue: 'calificacion' },
+                    { type: 'slot', expected: 'BETWEEN' },
+                    { type: 'literal', text: '6' },
+                    { type: 'slot', expected: 'AND' },
+                    { type: 'literal', text: '10' },
+                    { type: 'slot', expected: 'AND' },
+                    { type: 'input', id: 'st4-coltxt', placeholder: 'Escriba su respuesta...', matchValue: 'nombre' },
+                    { type: 'slot', expected: 'LIKE' },
+                    { type: 'input', id: 'st4-pattern', placeholder: 'Escriba su respuesta...', matchValue: "'a%'" },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'filter-rows' });
+                }
+            },
+            {
+                num: 5,
+                objective: 'Calcular la sumatoria acumulada del campo "calificacion" de la tabla "Alumno" donde "calificacion" no sea menor a 6.',
+                tokens: [
+                    { type: 'slot', expected: 'SELECT' },
+                    { type: 'slot', expected: 'SUM' },
+                    { type: 'literal', text: '(' },
+                    { type: 'input', id: 'st5-col', placeholder: 'Escriba su respuesta...', matchValue: 'calificacion' },
+                    { type: 'literal', text: ')' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st5-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'slot', expected: 'NOT' },
+                    { type: 'input', id: 'st5-col2', placeholder: 'Escriba su respuesta...', matchValue: 'calificacion' },
+                    { type: 'literal', text: '< 6;' }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'aggregate-sum' });
+                }
+            },
+            {
+                num: 6,
+                objective: 'Eliminar de la tabla "Alumno" los registros donde "calificacion" sea menor a 6 o "nombre" sea \'Bruno\'.',
+                tokens: [
+                    { type: 'slot', expected: 'DELETE' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st6-table', placeholder: 'Escriba su respuesta...', matchValue: 'Alumno' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'input', id: 'st6-colnum', placeholder: 'Escriba su respuesta...', matchValue: 'calificacion' },
+                    { type: 'literal', text: '< 6' },
+                    { type: 'slot', expected: 'OR' },
+                    { type: 'input', id: 'st6-coltxt', placeholder: 'Escriba su respuesta...', matchValue: 'nombre' },
+                    { type: 'literal', text: "= 'Bruno';" }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'delete-rows' });
+                }
+            }
+        ];
+
+        let activeSlotEl = null;
+        let timerInterval = null;
+        let stageLocked = false;
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function startStageTimer() {
+            if (timerInterval || appState.part2Finished) return;
+            updateTimerUI();
+            timerInterval = setInterval(() => {
+                if (appState.remainingSeconds > 0 && !appState.part2Finished) {
+                    appState.remainingSeconds--;
+                    updateTimerUI();
+                    saveStateToStorage();
+                    if (appState.remainingSeconds === 0) {
+                        finalizePart2();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const mins = Math.floor(appState.remainingSeconds / 60);
+            const secs = appState.remainingSeconds % 60;
+            const mmss = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timer-mmss').textContent = mmss;
+            document.getElementById('timer-secs').textContent = appState.remainingSeconds;
+
+            const badge = document.getElementById('stage-timer');
+            if (appState.remainingSeconds <= 180) {
+                badge.classList.add('urgent');
+            } else {
+                badge.classList.remove('urgent');
+            }
+        }
+
+        /**
+         * Calcula la nota final integrando el puntaje del Paso 1 con el modificador del Paso 2:
+         * - <= 2 stages correctos: -2 puntos
+         * - 3 a 4 stages correctos: -1 punto
+         * - > 4 stages correctos: +1 punto
+         * - Tiempo restante > 15 minutos (> 900 segundos): +2 puntos
+         * Nota máxima: 10 (si se excede, muestra felicitación y reconocimiento por la dedicación).
+         */
+        function renderFinalEvaluationOverlay() {
+            const baseScore = appState.part1Score;
+            const correctStages = appState.completedStages;
+            const remSecs = appState.remainingSeconds;
+
+            let stageMod = 0;
+            let stageModLabel = '';
+            if (correctStages <= 2) {
+                stageMod = -2;
+                stageModLabel = `-2 pts (${correctStages} de 6 stages correctos)`;
+            } else if (correctStages <= 4) {
+                stageMod = -1;
+                stageModLabel = `-1 pt (${correctStages} de 6 stages correctos)`;
+            } else {
+                stageMod = 1;
+                stageModLabel = `+1 pt (${correctStages} de 6 stages correctos)`;
+            }
+
+            const hasTimeBonus = remSecs > (15 * 60);
+            const timeMod = hasTimeBonus ? 2 : 0;
+            const timeModLabel = hasTimeBonus
+                ? `+2 pts (${remSecs}s restantes, > 15 min)`
+                : `0 pts (${remSecs}s restantes, ≤ 15 min)`;
+
+            const rawFinal = baseScore + stageMod + timeMod;
+            const finalCapped = Math.max(0, Math.min(10, rawFinal));
+            const exceededTen = rawFinal > 10;
+
+            const overlay = document.getElementById('stage-overlay');
+            const iconEl = document.getElementById('overlay-icon');
+            const titleEl = document.getElementById('overlay-title');
+            const gradeEl = document.getElementById('final-grade-display');
+            const breakdownEl = document.getElementById('final-breakdown-list');
+            const recognitionEl = document.getElementById('dedication-recognition');
+
+            iconEl.textContent = exceededTen ? '🌟' : (finalCapped >= 6 ? '🏆' : '📋');
+            titleEl.textContent = correctStages === STAGES.length
+                ? '¡Stages Completados · Calificación Final!'
+                : 'Paso 2 Finalizado · Calificación Final';
+
+            gradeEl.textContent = `Nota Final: ${formatScore(finalCapped)} / 10`;
+
+            breakdownEl.innerHTML = `
+                <li><span>Puntaje Paso 1 (Cuestionario):</span> <strong>${formatScore(baseScore)} pts</strong></li>
+                <li><span>Desempeño Paso 2 (Stages):</span> <strong>${stageModLabel}</strong></li>
+                <li><span>Bonificación de Tiempo (> 15 min):</span> <strong>${timeModLabel}</strong></li>
+                <li><span>Puntaje Total Acumulado:</span> <strong>${formatScore(rawFinal)} pts</strong></li>
+            `;
+
+            if (exceededTen) {
+                recognitionEl.style.display = 'block';
+                recognitionEl.innerHTML = `
+                    🎖️ <strong>¡Felicitaciones y Reconocimiento Especial por tu Dedicación!</strong><br>
+                    Tu puntaje acumulado alcanzó <strong>${formatScore(rawFinal)} puntos</strong>, superando la nota máxima de 10. Se registra la calificación máxima de <strong>10 / 10</strong> con mención destacada por tu excelencia y velocidad de resolución en SQL.
+                `;
+            } else {
+                recognitionEl.style.display = 'none';
+                recognitionEl.innerHTML = '';
+            }
+
+            overlay.classList.add('visible');
+        }
+
+        function finalizePart2() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            stageLocked = true;
+            appState.part2Finished = true;
+            renderStageDots();
+            saveStateToStorage();
+            renderFinalEvaluationOverlay();
+        }
+
+        function renderStageDots() {
+            const container = document.getElementById('stage-dots-container');
+            container.innerHTML = STAGES.map((st, idx) => {
+                let cls = 'stage-dot';
+                if (idx < appState.completedStages) cls += ' done';
+                else if (idx === appState.currentStageIdx && !appState.part2Finished) cls += ' active';
+                return `<span class="${cls}">${idx < appState.completedStages ? '✓' : st.num}</span>`;
+            }).join('');
+        }
+
+        function renderKeywordBank() {
+            const pool = document.getElementById('keyword-tags-pool');
+            const shuffled = shuffleArray(ALL_SQL_KEYWORDS);
+            pool.innerHTML = '';
+
+            shuffled.forEach((kw) => {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.className = 'kw-tag';
+                tag.textContent = kw;
+                tag.draggable = true;
+
+                tag.addEventListener('click', () => {
+                    if (stageLocked || appState.part2Finished) return;
+                    placeKeywordInActiveSlot(kw);
+                });
+
+                tag.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', kw);
+                });
+
+                pool.appendChild(tag);
+            });
+        }
+
+        function selectActiveSlot(slotEl) {
+            document.querySelectorAll('.kw-slot').forEach((s) => s.classList.remove('active-target'));
+            activeSlotEl = slotEl;
+            if (slotEl) {
+                slotEl.classList.add('active-target');
+                document.getElementById('active-slot-indicator').textContent = 'Espacio activo seleccionado';
+            } else {
+                document.getElementById('active-slot-indicator').textContent = '';
+            }
+        }
+
+        function syncStageDraftToState() {
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            if (!wrap) return;
+            const slots = Array.from(wrap.querySelectorAll('.kw-slot')).map((s) => s.dataset.value || '');
+            const inputs = {};
+            wrap.querySelectorAll('.inline-sql-input').forEach((inp) => {
+                inputs[inp.id] = inp.value;
+            });
+            appState.currentStageDraft = { slots, inputs };
+            saveStateToStorage();
+        }
+
+        function placeKeywordInActiveSlot(kw) {
+            let target = activeSlotEl;
+            if (!target) {
+                target = document.querySelector('.kw-slot:not(.filled)');
+            }
+            if (!target) return;
+
+            target.textContent = kw;
+            target.dataset.value = kw;
+            target.classList.add('filled');
+
+            syncStageDraftToState();
+
+            const nextEmpty = document.querySelector('.kw-slot:not(.filled)');
+            selectActiveSlot(nextEmpty || null);
+        }
+
+        function loadStage(idx, restoreDraft = false) {
+            appState.currentStageIdx = idx;
+            stageLocked = appState.part2Finished;
+            renderStageDots();
+            renderKeywordBank();
+
+            const stage = STAGES[idx];
+            document.getElementById('stage-label-tag').textContent = `STAGE ${stage.num}/${STAGES.length}:`;
+            document.getElementById('stage-objective-text').textContent = stage.objective;
+
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            wrap.innerHTML = '';
+
+            let slotCounter = 0;
+
+            stage.tokens.forEach((tk) => {
+                if (tk.type === 'slot') {
+                    const currentSlotIndex = slotCounter++;
+                    const slot = document.createElement('div');
+                    slot.className = 'kw-slot';
+                    slot.dataset.expected = tk.expected;
+
+                    const savedVal = (restoreDraft && appState.currentStageDraft && appState.currentStageDraft.slots)
+                        ? appState.currentStageDraft.slots[currentSlotIndex]
+                        : '';
+
+                    if (savedVal) {
+                        slot.textContent = savedVal;
+                        slot.dataset.value = savedVal;
+                        slot.classList.add('filled');
+                    } else {
+                        slot.textContent = '[ ___ ]';
+                        slot.dataset.value = '';
+                    }
+
+                    slot.addEventListener('click', () => {
+                        if (stageLocked || appState.part2Finished) return;
+                        if (slot.classList.contains('filled')) {
+                            slot.textContent = '[ ___ ]';
+                            slot.dataset.value = '';
+                            slot.classList.remove('filled');
+                            syncStageDraftToState();
+                        }
+                        selectActiveSlot(slot);
+                    });
+
+                    slot.addEventListener('dragover', (e) => e.preventDefault());
+                    slot.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        if (stageLocked || appState.part2Finished) return;
+                        const droppedKw = e.dataTransfer.getData('text/plain');
+                        if (droppedKw) {
+                            selectActiveSlot(slot);
+                            placeKeywordInActiveSlot(droppedKw);
+                        }
+                    });
+
+                    wrap.appendChild(slot);
+                } else if (tk.type === 'input') {
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.className = 'inline-sql-input';
+                    inp.id = tk.id;
+                    inp.placeholder = tk.placeholder || 'Escriba su respuesta...';
+                    inp.autocomplete = 'off';
+                    inp.spellcheck = false;
+                    if (tk.matchValue) {
+                        inp.dataset.matchValue = tk.matchValue;
+                    }
+
+                    if (restoreDraft && appState.currentStageDraft && appState.currentStageDraft.inputs && appState.currentStageDraft.inputs[tk.id] !== undefined) {
+                        inp.value = appState.currentStageDraft.inputs[tk.id];
+                    }
+
+                    inp.addEventListener('input', syncStageDraftToState);
+                    wrap.appendChild(inp);
+                } else if (tk.type === 'literal') {
+                    const span = document.createElement('span');
+                    span.className = 'sql-literal';
+                    span.textContent = tk.text;
+                    wrap.appendChild(span);
+                }
+            });
+
+            if (!restoreDraft) {
+                appState.currentStageDraft = { slots: [], inputs: {} };
+                saveStateToStorage();
+            }
+
+            const firstEmptySlot = wrap.querySelector('.kw-slot:not(.filled)');
+            selectActiveSlot(firstEmptySlot);
+
+            const msgEl = document.getElementById('stage-feedback-msg');
+            msgEl.className = 'stage-feedback-msg';
+            msgEl.textContent = 'Complete las etiquetas de palabras clave y los campos de texto, luego presione Ejecutar.';
+        }
+
+        function renderLiveTable(options) {
+            const mount = document.getElementById('live-table-mount');
+            const mode = options.mode;
+            const schema = appState.liveSchema;
+
+            const showExtraCol = (appState.completedStages >= 2 || mode === 'add-column' || mode === 'rename-column' || mode === 'filter-rows' || mode === 'aggregate-sum' || mode === 'delete-rows');
+
+            let aggBadgeHTML = '';
+            if (mode === 'aggregate-sum') {
+                const sumVal = schema.rows
+                    .filter((r) => r.extra >= 6)
+                    .reduce((acc, r) => acc + r.extra, 0);
+                aggBadgeHTML = `<span class="live-agg-badge">SUM(${escapeHTML(schema.colExtra)}) = ${sumVal}</span>`;
+            }
+
+            const rowsHTML = schema.rows.map((r) => {
+                let rowClass = '';
+                if (mode === 'filter-rows') {
+                    const matches = (r.extra >= 6 && r.extra <= 10) && r.text.toLowerCase().startsWith('a');
+                    rowClass = matches ? 'row-matched' : 'row-dimmed';
+                } else if (mode === 'aggregate-sum') {
+                    rowClass = (r.extra >= 6) ? 'row-matched' : 'row-dimmed';
+                } else if (mode === 'delete-rows') {
+                    const toDelete = (r.extra < 6) || (r.text.toLowerCase() === 'bruno');
+                    rowClass = toDelete ? 'row-deleting' : 'row-matched';
+                }
+
+                const extraCellClass = (mode === 'add-column') ? 'col-new-anim' : '';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td>${r.id}</td>
+                        <td>${escapeHTML(r.text)}</td>
+                        ${showExtraCol ? `<td class="${extraCellClass}">${r.extra}</td>` : ''}
+                    </tr>
+                `;
+            }).join('');
+
+            const extraHeaderClass = (mode === 'add-column')
+                ? 'col-new-anim'
+                : (mode === 'rename-column' ? 'col-rename-anim' : '');
+
+            const containerAnimClass = (mode === 'create') ? 'anim-slide-in' : '';
+
+            mount.innerHTML = `
+                <div class="live-table-container ${containerAnimClass}">
+                    <div class="live-table-header-bar">
+                        <span class="live-table-title">📦 Tabla: ${escapeHTML(schema.tableName)}</span>
+                        ${aggBadgeHTML}
+                    </div>
+                    <table class="live-sql-table">
+                        <thead>
+                            <tr>
+                                <th>🔑 ${escapeHTML(schema.colId)} (INT)</th>
+                                <th>${escapeHTML(schema.colText)} (VARCHAR)</th>
+                                ${showExtraCol ? `<th class="${extraHeaderClass}">${escapeHTML(schema.colExtra)} (INT)</th>` : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function evaluateCurrentStage() {
+            if (stageLocked || appState.part2Finished) return;
+
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            const slots = Array.from(wrap.querySelectorAll('.kw-slot'));
+            const inputs = Array.from(wrap.querySelectorAll('.inline-sql-input'));
+            const msgEl = document.getElementById('stage-feedback-msg');
+
+            const allKeywordsRight = slots.every((s) => (s.dataset.value || '').toUpperCase() === s.dataset.expected.toUpperCase());
+
+            const inputMap = {};
+            let allInputsRight = true;
+
+            inputs.forEach((inp) => {
+                const val = inp.value.trim();
+                inputMap[inp.id] = val;
+                if (!val) {
+                    allInputsRight = false;
+                } else if (inp.dataset.matchValue) {
+                    const normalizedUser = val.toLowerCase().replace(/"/g, "'");
+                    const normalizedExpected = inp.dataset.matchValue.toLowerCase().replace(/"/g, "'");
+                    if (normalizedUser !== normalizedExpected) {
+                        allInputsRight = false;
+                    }
+                }
+            });
+
+            if (allKeywordsRight && allInputsRight) {
+                stageLocked = true;
+                const currentStage = STAGES[appState.currentStageIdx];
+                appState.completedStages = Math.max(appState.completedStages, appState.currentStageIdx + 1);
+                currentStage.onSuccess(inputMap);
+                saveStateToStorage();
+
+                msgEl.className = 'stage-feedback-msg success';
+                msgEl.textContent = `✓ ¡Objetivo cumplido! Ejecutando animación del Stage ${currentStage.num}...`;
+
+                setTimeout(() => {
+                    if (appState.currentStageIdx + 1 < STAGES.length) {
+                        loadStage(appState.currentStageIdx + 1, false);
+                    } else {
+                        finalizePart2();
+                    }
+                }, 1450);
+            } else {
+                msgEl.style.opacity = '0';
+                setTimeout(() => {
+                    msgEl.className = 'stage-feedback-msg error';
+                    msgEl.textContent = '✗ La sentencia no cumple con el objetivo planteado. Verifique las etiquetas y los campos e intente nuevamente.';
+                    msgEl.style.opacity = '1';
+                }, 380);
+            }
+        }
+
+        /* =========================================================================
+           4. NAVEGACIÓN, EVENTOS Y RESTAURACIÓN DE PERSISTENCIA AL RECARGAR
+           ========================================================================= */
+        const tabPart1 = document.getElementById('tab-part1');
+        const tabPart2 = document.getElementById('tab-part2');
+        const btnIrParte2 = document.getElementById('btn-ir-parte2');
+
+        function switchToPart1() {
+            document.body.classList.remove('stage-mode-active');
+            tabPart1.classList.add('active');
+            tabPart2.classList.remove('active');
+            appState.activeTab = 'part1';
+            saveStateToStorage();
+        }
+
+        function switchToPart2() {
+            if (!appState.part2Unlocked) {
+                return;
+            }
+            document.body.classList.add('stage-mode-active');
+            tabPart2.classList.add('active');
+            tabPart1.classList.remove('active');
+            appState.activeTab = 'part2';
+
+            if (!appState.part2Started) {
+                appState.part2Started = true;
+                loadStage(0, false);
+            }
+            saveStateToStorage();
+            startStageTimer();
+        }
+
+        function borrarProgresoYReiniciar() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
+            window.location.reload();
+        }
+
+        // Eventos de guardado automático en el Paso 1
+        ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+            document.getElementById(`${id}-input`).addEventListener('input', syncPart1DOMToState);
+        });
+        ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+            document.querySelectorAll(`input[name="${id}"]`).forEach((el) => {
+                el.addEventListener('change', syncPart1DOMToState);
+            });
+        });
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+        document.getElementById('btn-reiniciar').addEventListener('click', borrarProgresoYReiniciar);
+
+        tabPart1.addEventListener('click', switchToPart1);
+        tabPart2.addEventListener('click', switchToPart2);
+        btnIrParte2.addEventListener('click', switchToPart2);
+
+        document.getElementById('btn-run-stage').addEventListener('click', evaluateCurrentStage);
+        document.getElementById('btn-clear-stage').addEventListener('click', () => {
+            if (!stageLocked && !appState.part2Finished) {
+                loadStage(appState.currentStageIdx, false);
+            }
+        });
+        document.getElementById('btn-finish-part2').addEventListener('click', () => {
+            if (!appState.part2Finished) {
+                finalizePart2();
+            }
+        });
+
+        // Inicialización al cargar o recargar la página
+        (function initOnLoad() {
+            const hadSavedState = loadStateFromStorage();
+            if (hadSavedState) {
+                restorePart1StateToDOM();
+                updatePart2LockUI();
+
+                if (appState.part1Evaluated) {
+                    evaluarRespuestas(false);
+                }
+
+                if (appState.part2Started) {
+                    updateTimerUI();
+                    loadStage(appState.currentStageIdx, true);
+
+                    // Si ya había completado al menos el Stage 1, reconstruir la tabla visual
+                    if (appState.completedStages >= 1) {
+                        const modesByCompleted = ['create', 'create', 'add-column', 'rename-column', 'filter-rows', 'aggregate-sum', 'delete-rows'];
+                        renderLiveTable({ mode: modesByCompleted[appState.completedStages] || 'create' });
+                    }
+
+                    if (appState.part2Finished) {
+                        renderFinalEvaluationOverlay();
+                    }
+                }
+
+                if (appState.activeTab === 'part2' && appState.part2Unlocked) {
+                    switchToPart2();
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

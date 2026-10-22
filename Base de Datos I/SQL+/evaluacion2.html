@@ -1,0 +1,3007 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación 2 SQL+ | Base de Datos I</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark Bosque Esmeralda con Paleta Pastel Agua, Salvia y Damasco */
+            --bg-deep: #07110e;
+            --bg-surface: rgba(14, 29, 25, 0.82);
+            --bg-surface-elevated: rgba(20, 42, 36, 0.88);
+            --bg-code: rgba(6, 15, 12, 0.92);
+
+            --text-primary: #f2fbf7;
+            --text-secondary: #b0cdc2;
+            --text-muted: #729387;
+
+            /* Colores Pasteles Variados (Salvia, Agua, Damasco, Rosa Suave, Limón) */
+            --pastel-lavender: #86efac; /* Verde Salvia Pastel */
+            --pastel-mint: #67e8f9;     /* Agua / Cian Pastel */
+            --pastel-peach: #fdba74;    /* Damasco Pastel */
+            --pastel-coral: #fda4af;    /* Coral Pastel */
+            --pastel-sky: #a7f3d0;      /* Esmeralda Suave Pastel */
+            --pastel-butter: #fef08a;   /* Limón Pastel */
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(134, 239, 172, 0.15);
+            --border-focus: rgba(103, 232, 249, 0.55);
+            --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(134, 239, 172, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(103, 232, 249, 0.07) 0%, transparent 45%),
+                radial-gradient(circle at 50% 85%, rgba(253, 186, 116, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body.stage-mode-active {
+            height: 100dvh;
+            max-height: 100dvh;
+            overflow: hidden;
+        }
+
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem 0.9rem 3.5rem;
+        }
+
+        body.stage-mode-active .page-wrapper {
+            height: 100dvh;
+            padding: 0.55rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .mode-switcher {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.35rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(12px);
+            flex-shrink: 0;
+        }
+
+        body.stage-mode-active .mode-switcher {
+            margin-bottom: 0;
+            padding: 0.25rem;
+        }
+
+        .mode-tab {
+            flex: 1;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.84rem;
+            font-weight: 600;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .mode-tab.active {
+            background: linear-gradient(135deg, rgba(134, 239, 172, 0.2), rgba(103, 232, 249, 0.2));
+            color: var(--pastel-mint);
+            border-color: rgba(103, 232, 249, 0.35);
+        }
+
+        .mode-tab.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: var(--text-muted);
+            background: rgba(6, 15, 12, 0.4);
+        }
+
+        /* =========================================================
+           ESTILOS PASO 1: CUESTIONARIO (10 EJERCICIOS)
+           ========================================================= */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.2rem;
+            margin-bottom: 1.25rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-lavender {
+            background: rgba(134, 239, 172, 0.14);
+            color: var(--pastel-lavender);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(103, 232, 249, 0.12);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(103, 232, 249, 0.28);
+        }
+
+        .badge-butter {
+            background: rgba(254, 240, 138, 0.12);
+            color: var(--pastel-butter);
+            border: 1px solid rgba(254, 240, 138, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-lavender), var(--pastel-mint), var(--pastel-peach));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+        }
+
+        .schema-card {
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(103, 232, 249, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 1.15rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .schema-title {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: var(--pastel-mint);
+            margin-bottom: 0.4rem;
+        }
+
+        .schema-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        .schema-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .schema-box {
+            background: var(--bg-code);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.95rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+
+        .schema-box .table-name {
+            color: var(--pastel-peach);
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            display: block;
+        }
+
+        .schema-box ul {
+            list-style: none;
+            color: var(--text-secondary);
+        }
+
+        .schema-box li {
+            padding: 0.1rem 0;
+        }
+
+        .schema-box .col-name {
+            color: var(--pastel-mint);
+        }
+
+        .schema-box .col-type {
+            color: var(--pastel-lavender);
+        }
+
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.2rem;
+            margin-bottom: 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease;
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(134, 239, 172, 0.65);
+            background: linear-gradient(180deg, rgba(134, 239, 172, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(254, 240, 138, 0.65);
+            background: linear-gradient(180deg, rgba(254, 240, 138, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.7rem;
+            gap: 0.5rem;
+        }
+
+        .q-number {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--pastel-lavender);
+            background: rgba(134, 239, 172, 0.12);
+            padding: 0.24rem 0.68rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+        }
+
+        .q-points {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .q-prompt {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 0.9rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            background: rgba(103, 232, 249, 0.13);
+            color: var(--pastel-mint);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+        }
+
+        .sql-snippet {
+            background: var(--bg-code);
+            border-left: 3px solid var(--pastel-peach);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 0.95rem;
+            margin: 0.65rem 0 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            color: var(--pastel-butter);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .sql-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1px solid rgba(134, 239, 172, 0.25);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 0.95rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+            font-size: 0.86rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-input::placeholder {
+            color: rgba(114, 147, 135, 0.6);
+        }
+
+        .sql-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.12);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            background: rgba(6, 15, 12, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .option-label:hover {
+            border-color: rgba(134, 239, 172, 0.35);
+            background: rgba(20, 42, 36, 0.65);
+            color: var(--text-primary);
+        }
+
+        .option-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid var(--pastel-lavender);
+            border-radius: 50%;
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+            display: grid;
+            place-content: center;
+        }
+
+        .option-label input[type="radio"]::before {
+            content: "";
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.16s ease-in-out;
+            background-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="radio"]:checked {
+            border-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+
+        .option-label input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid var(--pastel-lavender);
+            border-radius: 5px;
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+            display: grid;
+            place-content: center;
+        }
+
+        .option-label input[type="checkbox"]::before {
+            content: "✓";
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #07110e;
+            transform: scale(0);
+            transition: transform 0.16s ease-in-out;
+        }
+
+        .option-label input[type="checkbox"]:checked {
+            border-color: var(--pastel-mint);
+            background-color: var(--pastel-mint);
+        }
+
+        .option-label input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .option-label:has(input:checked) {
+            border-color: rgba(103, 232, 249, 0.45);
+            background: rgba(103, 232, 249, 0.08);
+            color: var(--text-primary);
+        }
+
+        .option-text {
+            flex: 1;
+        }
+
+        .option-text code {
+            font-family: var(--font-mono);
+            font-size: 0.83em;
+            color: var(--pastel-butter);
+            background: rgba(254, 240, 138, 0.1);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        .q-status-badge {
+            display: none;
+            margin-top: 0.8rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        .q-status-badge.correct {
+            display: block;
+            background: rgba(134, 239, 172, 0.12);
+            border: 1px solid rgba(134, 239, 172, 0.35);
+            color: var(--pastel-lavender);
+        }
+
+        .q-status-badge.partial {
+            display: block;
+            background: rgba(254, 240, 138, 0.12);
+            border: 1px solid rgba(254, 240, 138, 0.35);
+            color: var(--pastel-butter);
+        }
+
+        .q-status-badge.wrong {
+            display: block;
+            background: rgba(253, 164, 175, 0.12);
+            border: 1px solid rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .eval-actions {
+            margin-top: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .btn-evaluate,
+        .btn-goto-part2 {
+            width: 100%;
+            padding: 0.95rem 1.4rem;
+            border: none;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--pastel-lavender), var(--pastel-mint));
+            color: #07110e;
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(134, 239, 172, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-goto-part2 {
+            display: none;
+            background: linear-gradient(135deg, var(--pastel-peach), var(--pastel-butter));
+        }
+
+        .btn-goto-part2.unlocked {
+            display: block;
+        }
+
+        .btn-evaluate:hover,
+        .btn-goto-part2:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            width: 100%;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        #results-panel {
+            display: none;
+            margin-top: 2rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.15rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 1.25rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 118px;
+            height: 118px;
+            border-radius: 50%;
+            background: rgba(6, 15, 12, 0.8);
+            border: 3px solid var(--pastel-lavender);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--pastel-mint);
+            line-height: 1;
+        }
+
+        .score-total {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .unlock-banner {
+            margin-top: 0.9rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+        }
+
+        .unlock-banner.success {
+            background: rgba(134, 239, 172, 0.12);
+            border: 1px solid rgba(134, 239, 172, 0.38);
+            color: var(--pastel-lavender);
+        }
+
+        .unlock-banner.locked {
+            background: rgba(253, 164, 175, 0.12);
+            border: 1px solid rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .errors-heading {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--pastel-coral);
+            margin-bottom: 0.85rem;
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(6, 15, 12, 0.78);
+            border: 1px solid rgba(253, 164, 175, 0.28);
+            border-left: 4px solid var(--pastel-coral);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+        }
+
+        .error-item.partial-item {
+            border-color: rgba(254, 240, 138, 0.3);
+            border-left-color: var(--pastel-butter);
+        }
+
+        .error-item-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--pastel-peach);
+            margin-bottom: 0.5rem;
+        }
+
+        .error-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 0.65rem;
+            font-size: 0.82rem;
+        }
+
+        .user-choice-box {
+            background: rgba(253, 164, 175, 0.08);
+            border: 1px solid rgba(253, 164, 175, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.65rem;
+            color: var(--pastel-coral);
+            font-family: var(--font-mono);
+        }
+
+        .correct-choice-box {
+            background: rgba(134, 239, 172, 0.08);
+            border: 1px solid rgba(134, 239, 172, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 0.45rem 0.65rem;
+            color: var(--pastel-lavender);
+            font-family: var(--font-mono);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            padding-top: 0.4rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        }
+
+        .error-explanation strong {
+            color: var(--pastel-butter);
+        }
+
+        .perfect-banner {
+            background: rgba(134, 239, 172, 0.1);
+            border: 1px solid rgba(134, 239, 172, 0.35);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            text-align: center;
+            color: var(--pastel-lavender);
+        }
+
+        /* =========================================================
+           ESTILOS PASO 2: STAGES INTERACTIVOS EN TIEMPO REAL
+           ========================================================= */
+        #part2-view {
+            display: none;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        body.stage-mode-active #part2-view {
+            display: flex;
+        }
+
+        body.stage-mode-active #part1-view {
+            display: none;
+        }
+
+        .stage-hud {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex-shrink: 0;
+        }
+
+        .hud-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stage-progress-pills {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .stage-dot {
+            width: 1.4rem;
+            height: 1.4rem;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.25s ease;
+        }
+
+        .stage-dot.active {
+            background: rgba(134, 239, 172, 0.25);
+            color: var(--pastel-lavender);
+            border-color: var(--pastel-lavender);
+            box-shadow: 0 0 10px rgba(134, 239, 172, 0.35);
+        }
+
+        .stage-dot.done {
+            background: rgba(103, 232, 249, 0.22);
+            color: var(--pastel-mint);
+            border-color: var(--pastel-mint);
+        }
+
+        .timer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(6, 15, 12, 0.85);
+            border: 1px solid rgba(254, 240, 138, 0.35);
+            color: var(--pastel-butter);
+            padding: 0.2rem 0.65rem;
+            border-radius: 999px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .timer-badge.urgent {
+            border-color: var(--pastel-coral);
+            color: var(--pastel-coral);
+            animation: pulseUrgent 1s infinite alternate;
+        }
+
+        @keyframes pulseUrgent {
+            from { opacity: 1; }
+            to { opacity: 0.55; }
+        }
+
+        .stage-objective-box {
+            display: flex;
+            align-items: baseline;
+            gap: 0.45rem;
+            font-size: 0.84rem;
+            color: var(--text-primary);
+        }
+
+        .objective-tag {
+            color: var(--pastel-peach);
+            font-weight: 700;
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        .visual-arena {
+            flex: 1;
+            min-height: 110px;
+            background: rgba(6, 15, 12, 0.8);
+            border: 1px solid rgba(103, 232, 249, 0.22);
+            border-radius: var(--radius-md);
+            padding: 0.55rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arena-empty-placeholder {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.83rem;
+            padding: 0.5rem;
+        }
+
+        .live-table-container {
+            width: 100%;
+            max-width: 680px;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .live-table-container.anim-slide-in {
+            animation: tableSlideIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes tableSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(35px) scale(0.94);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .live-table-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(134, 239, 172, 0.14);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.28rem 0.7rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .live-table-title {
+            color: var(--pastel-peach);
+            font-weight: 700;
+        }
+
+        .live-agg-badge {
+            background: rgba(103, 232, 249, 0.18);
+            border: 1px solid var(--pastel-mint);
+            color: var(--pastel-mint);
+            padding: 0.1rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            animation: popScale 0.45s ease-out;
+        }
+
+        @keyframes popScale {
+            0% { transform: scale(0.5); opacity: 0; }
+            80% { transform: scale(1.08); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .live-sql-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            background: rgba(14, 29, 25, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+
+        .live-sql-table th {
+            background: rgba(20, 42, 36, 0.95);
+            color: var(--pastel-mint);
+            text-align: left;
+            padding: 0.3rem 0.55rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .live-sql-table td {
+            padding: 0.26rem 0.55rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.35s ease;
+        }
+
+        .col-new-anim {
+            animation: colExpandFlash 0.75s ease-out;
+        }
+
+        @keyframes colExpandFlash {
+            0% {
+                background-color: rgba(134, 239, 172, 0.45);
+                transform: translateX(18px);
+                opacity: 0;
+            }
+            100% {
+                background-color: transparent;
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .col-rename-anim {
+            animation: headerFlipGlow 0.75s ease-out;
+            color: var(--pastel-lavender) !important;
+        }
+
+        @keyframes headerFlipGlow {
+            0% {
+                transform: rotateX(90deg);
+                background-color: rgba(254, 240, 138, 0.45);
+            }
+            100% {
+                transform: rotateX(0deg);
+            }
+        }
+
+        .row-matched td {
+            background: rgba(134, 239, 172, 0.14);
+            color: var(--pastel-lavender);
+            font-weight: 600;
+        }
+
+        .row-dimmed td {
+            opacity: 0.28;
+            filter: blur(0.4px);
+        }
+
+        .row-deleting td {
+            background: rgba(253, 164, 175, 0.25);
+            color: var(--pastel-coral);
+            text-decoration: line-through;
+            animation: rowFadeOut 0.65s ease forwards;
+        }
+
+        @keyframes rowFadeOut {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0.18; transform: translateX(12px); }
+        }
+
+        .builder-zone {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.55rem 0.7rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+
+        .sentence-tokens-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.32rem;
+            background: var(--bg-code);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.6rem;
+            min-height: 44px;
+        }
+
+        .kw-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 66px;
+            height: 28px;
+            padding: 0 0.45rem;
+            border: 1.5px dashed rgba(134, 239, 172, 0.45);
+            border-radius: 6px;
+            background: rgba(134, 239, 172, 0.06);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+        }
+
+        .kw-slot.active-target {
+            border-color: var(--pastel-butter);
+            box-shadow: 0 0 0 2px rgba(254, 240, 138, 0.22);
+            color: var(--pastel-butter);
+        }
+
+        .kw-slot.filled {
+            border-style: solid;
+            border-color: var(--pastel-lavender);
+            background: rgba(134, 239, 172, 0.2);
+            color: var(--pastel-lavender);
+        }
+
+        .inline-sql-input {
+            height: 28px;
+            width: 145px;
+            background: rgba(20, 42, 36, 0.95);
+            border: 1px solid rgba(103, 232, 249, 0.4);
+            border-radius: 6px;
+            padding: 0 0.45rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            outline: none;
+        }
+
+        .inline-sql-input:focus {
+            border-color: var(--pastel-mint);
+            box-shadow: 0 0 0 2px rgba(103, 232, 249, 0.2);
+        }
+
+        .inline-sql-input::placeholder {
+            color: rgba(176, 205, 194, 0.5);
+        }
+
+        .sql-literal {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--pastel-butter);
+            font-weight: 600;
+            padding: 0 0.1rem;
+        }
+
+        .builder-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+        }
+
+        .stage-feedback-msg {
+            flex: 1;
+            font-size: 0.76rem;
+            min-height: 1.1rem;
+            color: var(--text-secondary);
+            transition: opacity 0.25s ease;
+        }
+
+        .stage-feedback-msg.error {
+            color: var(--pastel-coral);
+            font-weight: 500;
+        }
+
+        .stage-feedback-msg.success {
+            color: var(--pastel-lavender);
+            font-weight: 600;
+        }
+
+        .builder-btns {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .btn-clear-slots,
+        .btn-finish-part2 {
+            padding: 0.35rem 0.6rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.74rem;
+            cursor: pointer;
+        }
+
+        .btn-finish-part2 {
+            border-color: rgba(253, 164, 175, 0.35);
+            color: var(--pastel-coral);
+        }
+
+        .btn-run-stage {
+            padding: 0.35rem 0.85rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--pastel-lavender), var(--pastel-mint));
+            color: #07110e;
+            font-family: var(--font-sans);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .keyword-bank-zone {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.5rem 0.65rem;
+            flex-shrink: 0;
+        }
+
+        .bank-header {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .keyword-tags-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            max-height: 86px;
+            overflow-y: auto;
+        }
+
+        .kw-tag {
+            padding: 0.22rem 0.5rem;
+            border-radius: 6px;
+            background: rgba(20, 42, 36, 0.95);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+            color: var(--pastel-lavender);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+
+        .kw-tag:hover {
+            background: rgba(134, 239, 172, 0.22);
+            border-color: var(--pastel-lavender);
+            transform: translateY(-1px);
+        }
+
+        .stage-completion-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(6, 15, 12, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0.85rem 1rem;
+            overflow-y: auto;
+            animation: popScale 0.4s ease-out;
+        }
+
+        .stage-completion-overlay.visible {
+            display: flex;
+        }
+
+        .final-grade-card {
+            width: 100%;
+            max-width: 540px;
+            background: rgba(14, 29, 25, 0.92);
+            border: 1px solid rgba(134, 239, 172, 0.35);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1rem;
+        }
+
+        .final-grade-number {
+            font-family: var(--font-mono);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1.1;
+        }
+
+        .breakdown-list {
+            list-style: none;
+            text-align: left;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin: 0.55rem 0;
+            background: rgba(6, 15, 12, 0.7);
+            border-radius: var(--radius-sm);
+            padding: 0.55rem 0.75rem;
+            font-family: var(--font-mono);
+        }
+
+        .breakdown-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.15rem 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+        }
+
+        .breakdown-list li:last-child {
+            border-bottom: none;
+        }
+
+        .dedication-recognition {
+            display: none;
+            background: linear-gradient(135deg, rgba(254, 240, 138, 0.16), rgba(134, 239, 172, 0.16));
+            border: 1px solid var(--pastel-butter);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.45rem;
+            color: var(--pastel-butter);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        @media (min-width: 640px) {
+            .page-wrapper {
+                padding: 1.75rem 1.5rem 4rem;
+            }
+
+            .schema-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .eval-actions {
+                flex-direction: row;
+            }
+
+            .stage-hud {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .live-sql-table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <nav class="mode-switcher" aria-label="Secciones de la evaluación">
+            <button type="button" id="tab-part1" class="mode-tab active">
+                Paso 1: Cuestionario (10 Ejercicios)
+            </button>
+            <button type="button" id="tab-part2" class="mode-tab locked" title="Obtenga 6 o más puntos en el Paso 1 para habilitar">
+                🔒 Paso 2: Stages Interactivos (Requiere ≥ 6 pts)
+            </button>
+        </nav>
+
+        <!-- =================================================================
+             PASO 1: 10 EJERCICIOS (Librería e Inventario Editorial)
+             ================================================================= -->
+        <section id="part1-view">
+            <header class="eval-header">
+                <div class="badges-row">
+                    <span class="badge badge-lavender">Base de Datos I</span>
+                    <span class="badge badge-mint">Evaluación 2 · MySQL</span>
+                    <span class="badge badge-butter">Requisito Paso 2: ≥ 6 Puntos</span>
+                </div>
+                <h1 class="eval-title">Evaluación 2 SQL+ : Gestión Editorial</h1>
+                <p class="eval-subtitle">
+                    Complete los 10 ejercicios del Paso 1 sobre el inventario de libros y sucursales. Al obtener <strong>6 o más puntos</strong>, se habilitará el Paso 2 interactivo.
+                </p>
+            </header>
+
+            <section class="schema-card" aria-label="Esquema de referencia">
+                <h2 class="schema-title">📋 Tablas y Campos de Referencia</h2>
+                <p class="schema-desc">
+                    Utilice exactamente los identificadores de tablas y columnas listados a continuación cuando los ejercicios hagan referencia a ellos:
+                </p>
+                <div class="schema-grid">
+                    <div class="schema-box">
+                        <span class="table-name">Tabla: libros</span>
+                        <ul>
+                            <li>• <span class="col-name">id_libro</span> : <span class="col-type">entero (identificador único)</span></li>
+                            <li>• <span class="col-name">titulo</span> : <span class="col-type">texto hasta 100 caracteres</span></li>
+                            <li>• <span class="col-name">autor</span> : <span class="col-type">texto hasta 70 caracteres</span></li>
+                            <li>• <span class="col-name">genero</span> : <span class="col-type">texto hasta 40 caracteres</span></li>
+                            <li>• <span class="col-name">paginas</span> : <span class="col-type">entero</span></li>
+                            <li>• <span class="col-name">precio</span> : <span class="col-type">decimal (8 dígitos, 2 decimales)</span></li>
+                            <li>• <span class="col-name">stock</span> : <span class="col-type">entero</span></li>
+                        </ul>
+                    </div>
+                    <div class="schema-box">
+                        <span class="table-name">Tabla: sucursales</span>
+                        <ul>
+                            <li>• <span class="col-name">id_sucursal</span> : <span class="col-type">entero (identificador único)</span></li>
+                            <li>• <span class="col-name">localidad</span> : <span class="col-type">texto hasta 50 caracteres</span></li>
+                            <li>• <span class="col-name">apertura</span> : <span class="col-type">entero (año de inauguración)</span></li>
+                            <li>• <span class="col-name">facturacion_mensual</span> : <span class="col-type">decimal (12 dígitos, 2 decimales)</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <form id="sql-eval-form" novalidate>
+                <!-- Ejercicio 1 -->
+                <article class="question-card" id="card-q1">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 1 · CREATE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la sentencia completa para crear una nueva tabla llamada <code>editoriales</code> que posea exactamente dos campos en este orden: <code>cod_editorial</code> de tipo entero definido como clave primaria, y <code>razon_social</code> de tipo texto variable de hasta <code>90</code> caracteres que sea obligatorio (no admita valores nulos).
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q1-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q1"></div>
+                </article>
+
+                <!-- Ejercicio 2 -->
+                <article class="question-card" id="card-q2">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 2 · DROP</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se decidió prescindir del atributo <code>paginas</code> dentro de la tabla existente <code>libros</code>. Escriba la sentencia completa que modifica la estructura de dicha tabla para eliminar únicamente esa columna.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q2-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q2"></div>
+                </article>
+
+                <!-- Ejercicio 3 -->
+                <article class="question-card" id="card-q3">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 3 · BETWEEN</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que seleccione todas las columnas de la tabla <code>libros</code> para aquellos ejemplares cuyo <code>precio</code> se encuentre en el rango de <code>12000</code> a <code>28000</code> inclusive (utilizando el operador de rango) y cuyo <code>genero</code> no sea igual a <code>'Infantil'</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q3-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q3"></div>
+                </article>
+
+                <!-- Ejercicio 4 -->
+                <article class="question-card" id="card-q4">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 4 · LIKE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la sentencia para obtener únicamente las columnas <code>titulo</code> y <code>autor</code> (en ese orden) de la tabla <code>libros</code>, filtrando aquellos registros cuyo <code>titulo</code> finalice con la palabra <code>'Sur'</code> o cuyo <code>stock</code> sea estrictamente menor a <code>5</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q4-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q4"></div>
+                </article>
+
+                <!-- Ejercicio 5 -->
+                <article class="question-card" id="card-q5">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 5 · COUNT</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba la consulta que calcule la cantidad total de filas registradas en la tabla <code>sucursales</code> (utilizando la función de conteo sobre todas las filas) cuya <code>localidad</code> sea igual a <code>'Colon'</code> y cuyo año de <code>apertura</code> sea menor o igual a <code>2018</code>.
+                    </p>
+                    <div class="sql-input-wrap">
+                        <input type="text" id="q5-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status-badge" id="status-q5"></div>
+                </article>
+
+                <!-- Ejercicio 6 -->
+                <article class="question-card" id="card-q6">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 6 · OR</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere listar todas las columnas de los libros que pertenezcan al género <code>'Novela'</code> o al género <code>'Ensayo'</code>, pero únicamente si su <code>stock</code> es mayor o igual a <code>10</code> en cualquiera de ambos casos. Seleccione todas las consultas que resuelvan correctamente este pedido respetando la precedencia de operadores en MySQL:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> <code>SELECT * FROM libros WHERE genero = 'Novela' OR genero = 'Ensayo' AND stock &gt;= 10;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> <code>SELECT * FROM libros WHERE (genero = 'Novela' OR genero = 'Ensayo') AND stock &gt;= 10;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> <code>SELECT * FROM libros WHERE genero = 'Novela' AND genero = 'Ensayo' AND stock &gt;= 10;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> <code>SELECT * FROM libros WHERE NOT stock &lt; 10 AND (genero = 'Novela' OR genero = 'Ensayo');</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q6"></div>
+                </article>
+
+                <!-- Ejercicio 7 -->
+                <article class="question-card" id="card-q7">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 7 · ALTER</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se desean realizar cambios de estructura sobre la tabla <code>sucursales</code> en MySQL. Seleccione todas las sentencias cuya sintaxis sea válida y se ejecuten sin producir errores:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> <code>ALTER TABLE sucursales ADD encargado VARCHAR(60) NOT NULL;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> <code>ALTER TABLE sucursales MODIFY apertura anio_apertura INT;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> <code>ALTER TABLE sucursales RENAME COLUMN apertura TO anio_apertura;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> <code>ALTER TABLE sucursales ADD COLUMN telefono;</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q7"></div>
+                </article>
+
+                <!-- Ejercicio 8 -->
+                <article class="question-card" id="card-q8">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 8 · SUM</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Analice las siguientes afirmaciones técnicas acerca de comandos de estructura, comodines y funciones de agregación en MySQL, y seleccione todas las que sean verdaderas:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="A">
+                            <span class="option-text">
+                                <strong>A)</strong> La función <code>SUM(stock)</code> ignora automáticamente aquellas filas donde la columna <code>stock</code> tenga valor nulo, sumando el resto de los valores numéricos.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="B">
+                            <span class="option-text">
+                                <strong>B)</strong> El patrón <code>WHERE genero LIKE 'C____'</code> (una letra C seguida de cuatro guiones bajos) seleccionará únicamente géneros que comiencen con C y tengan exactamente 5 caracteres en total.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="C">
+                            <span class="option-text">
+                                <strong>C)</strong> El comando <code>CREATE DATABASE editoriales;</code> crea una nueva tabla llamada <code>editoriales</code> dentro de la base de datos activa.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="D">
+                            <span class="option-text">
+                                <strong>D)</strong> La sentencia <code>DROP TABLE sucursales;</code> elimina tanto las filas almacenadas como la estructura completa de la tabla <code>sucursales</code>.
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q8"></div>
+                </article>
+
+                <!-- Ejercicio 9 -->
+                <article class="question-card" id="card-q9">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 9 · LIKE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        En la tabla <code>libros</code> existen cuatro autores registrados: <code>'Borges'</code>, <code>'Bioy'</code>, <code>'Barco'</code> y <code>'Cortazar'</code>. Si se ejecuta la consulta:
+                    </p>
+                    <pre class="sql-snippet">SELECT autor FROM libros WHERE autor LIKE 'B_r%';</pre>
+                    <p class="q-prompt">
+                        Seleccione cuál de las dos opciones indica con exactitud qué autores serán devueltos y por qué:
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="radio" name="q9" value="A">
+                            <span class="option-text">
+                                <strong>Opción A:</strong> Devuelve <code>'Borges'</code>, <code>'Bioy'</code> y <code>'Barco'</code>, porque el guion bajo <code>_</code> representa cualquier cantidad de letras entre la <code>B</code> y la <code>r</code>, o incluso la ausencia de la letra <code>r</code>.
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q9" value="B">
+                            <span class="option-text">
+                                <strong>Opción B:</strong> Devuelve únicamente <code>'Borges'</code> y <code>'Barco'</code>, porque el comodín <code>_</code> exige exactamente un carácter en la segunda posición seguido obligatoriamente de la letra <code>r</code> en la tercera posición y cualquier cantidad de caracteres después.
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q9"></div>
+                </article>
+
+                <!-- Ejercicio 10 -->
+                <article class="question-card" id="card-q10">
+                    <div class="q-meta">
+                        <span class="q-number">Ejercicio 10 · DELETE</span>
+                        <span class="q-points">1.0 pt</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere eliminar de la tabla <code>sucursales</code> todos los registros cuya <code>facturacion_mensual</code> sea estrictamente menor a <code>500000</code> y cuyo año de <code>apertura</code> no esté comprendido entre <code>2020</code> y <code>2024</code> (ambos inclusive). ¿Cuál de las dos sentencias realiza correctamente esta operación?
+                    </p>
+                    <div class="options-list">
+                        <label class="option-label">
+                            <input type="radio" name="q10" value="A">
+                            <span class="option-text">
+                                <strong>Opción A:</strong> <code>DELETE FROM sucursales WHERE facturacion_mensual &lt; 500000 AND apertura NOT BETWEEN 2020 AND 2024;</code>
+                            </span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q10" value="B">
+                            <span class="option-text">
+                                <strong>Opción B:</strong> <code>DELETE sucursales WHERE facturacion_mensual &lt;= 500000 OR NOT apertura BETWEEN 2020 AND 2024;</code>
+                            </span>
+                        </label>
+                    </div>
+                    <div class="q-status-badge" id="status-q10"></div>
+                </article>
+
+                <!-- Botones de Acción -->
+                <div class="eval-actions">
+                    <button type="button" id="btn-evaluar" class="btn-evaluate">
+                        ✨ Evaluar Paso 1
+                    </button>
+                    <button type="button" id="btn-ir-parte2" class="btn-goto-part2">
+                        🔓 Avanzar al Paso 2 (Stages Interactivos)
+                    </button>
+                    <button type="button" id="btn-reiniciar" class="btn-reset">
+                        Borrar Progreso y Reiniciar
+                    </button>
+                </div>
+            </form>
+
+            <!-- Panel de Resultados y Explicación de Errores -->
+            <section id="results-panel" aria-live="polite">
+                <div class="score-summary">
+                    <div class="score-circle">
+                        <span class="score-value" id="score-number">0</span>
+                        <span class="score-total">de 10 pts</span>
+                    </div>
+                    <h3 class="score-message" id="score-title">Resultado del Paso 1</h3>
+                    <p class="score-subtext" id="score-subtitle"></p>
+                    <div id="unlock-status-banner" class="unlock-banner"></div>
+                </div>
+
+                <div id="errors-container"></div>
+            </section>
+        </section>
+
+        <!-- =================================================================
+             PASO 2: DESAFÍO INTERACTIVO EN TIEMPO REAL (6 STAGES EN 1 DISPLAY)
+             ================================================================= -->
+        <section id="part2-view" aria-label="Desafío interactivo por stages">
+            <header class="stage-hud">
+                <div class="hud-top-row">
+                    <div class="stage-progress-pills" id="stage-dots-container"></div>
+                    <div class="timer-badge" id="stage-timer">
+                        ⏱️ <span id="timer-mmss">40:00</span> (<span id="timer-secs">2400</span>s)
+                    </div>
+                </div>
+                <div class="stage-objective-box">
+                    <span class="objective-tag" id="stage-label-tag">STAGE 1/6:</span>
+                    <span id="stage-objective-text">Crear la tabla "Libro" definiendo el campo entero "codigo" como clave primaria y el campo de texto obligatorio "titulo".</span>
+                </div>
+            </header>
+
+            <div class="visual-arena" id="visual-arena">
+                <div id="live-table-mount" style="width: 100%; display: flex; justify-content: center;">
+                    <div class="arena-empty-placeholder">
+                        Complete la sentencia del <strong>Stage 1</strong> y presione <strong>Ejecutar</strong> para desplegar la tabla en tiempo real.
+                    </div>
+                </div>
+
+                <div class="stage-completion-overlay" id="stage-overlay">
+                    <div class="final-grade-card">
+                        <div style="font-size: 1.5rem;" id="overlay-icon">🏆</div>
+                        <h2 style="font-size: 1.15rem; color: var(--pastel-lavender); margin-bottom: 0.25rem;" id="overlay-title">
+                            Evaluación Finalizada
+                        </h2>
+                        <div class="final-grade-number" id="final-grade-display">10 / 10</div>
+                        <ul class="breakdown-list" id="final-breakdown-list"></ul>
+                        <div class="dedication-recognition" id="dedication-recognition"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="builder-zone">
+                <div class="sentence-tokens-wrap" id="sentence-tokens-wrap"></div>
+                <div class="builder-footer">
+                    <div class="stage-feedback-msg" id="stage-feedback-msg" aria-live="polite">
+                        Seleccione etiquetas del banco inferior para llenar los espacios punteados y complete las cajas de texto.
+                    </div>
+                    <div class="builder-btns">
+                        <button type="button" id="btn-clear-stage" class="btn-clear-slots">Limpiar</button>
+                        <button type="button" id="btn-finish-part2" class="btn-finish-part2" title="Finalizar el Paso 2 ahora y calcular nota final">Finalizar Paso 2</button>
+                        <button type="button" id="btn-run-stage" class="btn-run-stage">▶ Ejecutar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="keyword-bank-zone">
+                <div class="bank-header">
+                    <span>PALABRAS CLAVE DISPONIBLES (Toque o arrastre al espacio activo)</span>
+                    <span id="active-slot-indicator" style="color: var(--pastel-butter);"></span>
+                </div>
+                <div class="keyword-tags-pool" id="keyword-tags-pool"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           0. CLAVE DE PERSISTENCIA EN LOCALSTORAGE (EVALUACIÓN 2)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd1_sqlplus_evaluacion2_state_v1';
+
+        let appState = {
+            part1Answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [],
+                q9: '', q10: ''
+            },
+            part1Evaluated: false,
+            part1Score: 0,
+            part2Unlocked: false,
+            activeTab: 'part1',
+            currentStageIdx: 0,
+            completedStages: 0,
+            remainingSeconds: 40 * 60,
+            part2Started: false,
+            part2Finished: false,
+            currentStageDraft: {
+                slots: [],
+                inputs: {}
+            },
+            liveSchema: {
+                tableName: 'Libro',
+                colId: 'codigo',
+                colText: 'titulo',
+                colExtra: 'ejemplares',
+                rows: [
+                    { id: 501, text: 'Cronica', extra: 25 },
+                    { id: 502, text: 'Duna', extra: 4 },
+                    { id: 503, text: 'Cosmos', extra: 15 },
+                    { id: 504, text: 'Rayuela', extra: 30 }
+                ]
+            }
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {}
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    appState = Object.assign({}, appState, parsed);
+                    return true;
+                }
+            } catch (e) {
+                return false;
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           1. EFECTO DE PARTÍCULAS: POLVO Y LUZ (PALETA ESMERALDA / AGUA / DAMASCO)
+           ========================================================================= */
+        (function initDustParticles() {
+            const canvas = document.getElementById('dust-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const pastelPalette = [
+                '134, 239, 172', // Verde salvia pastel
+                '103, 232, 249', // Agua pastel
+                '253, 186, 116', // Damasco pastel
+                '254, 240, 138', // Limón pastel
+                '167, 243, 208'  // Menta suave
+            ];
+
+            const particleCount = Math.min(75, Math.floor((width * height) / 16000));
+            const particles = [];
+
+            function createParticle() {
+                const isLightOrb = Math.random() < 0.28;
+                return {
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: isLightOrb ? (Math.random() * 3.2 + 1.8) : (Math.random() * 1.4 + 0.5),
+                    color: pastelPalette[Math.floor(Math.random() * pastelPalette.length)],
+                    vx: (Math.random() - 0.5) * 0.22,
+                    vy: -Math.random() * 0.28 - 0.05,
+                    alpha: Math.random() * 0.55 + 0.15,
+                    pulseSpeed: Math.random() * 0.015 + 0.004,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    isLightOrb: isLightOrb
+                };
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+
+            function drawParticles() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.pulsePhase += p.pulseSpeed;
+
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    const currentAlpha = p.alpha * (0.65 + 0.35 * Math.sin(p.pulsePhase));
+
+                    ctx.beginPath();
+                    if (p.isLightOrb) {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 4.5);
+                        grad.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
+                        grad.addColorStop(0.4, `rgba(${p.color}, ${currentAlpha * 0.35})`);
+                        grad.addColorStop(1, `rgba(${p.color}, 0)`);
+                        ctx.fillStyle = grad;
+                        ctx.arc(p.x, p.y, p.radius * 4.5, 0, Math.PI * 2);
+                    } else {
+                        ctx.fillStyle = `rgba(${p.color}, ${currentAlpha})`;
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(drawParticles);
+            }
+
+            window.addEventListener('resize', () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            });
+
+            drawParticles();
+        })();
+
+        /* =========================================================================
+           2. PASO 1: LÓGICA DE EVALUACIÓN DE LOS 10 EJERCICIOS
+           ========================================================================= */
+        function normalizeSQL(rawInput) {
+            if (!rawInput) return '';
+            return rawInput
+                .toLowerCase()
+                .trim()
+                .replace(/`/g, '')
+                .replace(/"/g, "'")
+                .replace(/;+\s*$/g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*\(\s*/g, '(')
+                .replace(/\s*\)\s*/g, ')')
+                .replace(/\)(?=[a-z0-9_'])/g, ') ')
+                .replace(/\s*,\s*/g, ', ')
+                .replace(/\s*(>=|<=|<>|!=|=|>|<)\s*/g, ' $1 ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · CREATE',
+                canonicalAnswer: 'CREATE TABLE editoriales (cod_editorial INT PRIMARY KEY, razon_social VARCHAR(90) NOT NULL);',
+                validNormalized: [
+                    'create table editoriales(cod_editorial int primary key, razon_social varchar(90) not null)',
+                    'create table editoriales(cod_editorial int not null primary key, razon_social varchar(90) not null)',
+                    'create table editoriales(cod_editorial int primary key not null, razon_social varchar(90) not null)',
+                    'create table editoriales(cod_editorial int, razon_social varchar(90) not null, primary key(cod_editorial))',
+                    'create table editoriales(cod_editorial int not null, razon_social varchar(90) not null, primary key(cod_editorial))'
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia SQL. Debías utilizar <strong>CREATE TABLE editoriales (...)</strong> definiendo ambos campos, sus tipos y restricciones.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('create table')) {
+                        issues.push('La sentencia debe iniciar con el comando <strong>CREATE TABLE</strong>.');
+                    }
+                    if (!norm.includes('editoriales')) {
+                        issues.push('Falta indicar el nombre exacto de la tabla: <code>editoriales</code>.');
+                    }
+                    if (!norm.includes('cod_editorial') || !norm.includes('int')) {
+                        issues.push('El primer campo debe llamarse <code>cod_editorial</code> y ser de tipo <code>INT</code>.');
+                    }
+                    if (!norm.includes('primary key')) {
+                        issues.push('Omitiste definir la restricción de clave primaria <code>PRIMARY KEY</code> para <code>cod_editorial</code>.');
+                    }
+                    if (!norm.includes('razon_social') || !norm.includes('varchar(90)')) {
+                        issues.push('El segundo campo debe llamarse <code>razon_social</code> con el tipo y longitud <code>VARCHAR(90)</code>.');
+                    }
+                    if (!norm.includes('not null')) {
+                        issues.push('Faltó especificar la restricción <code>NOT NULL</code> en el campo <code>razon_social</code>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Revisa el orden de los campos, los paréntesis y la coma separadora entre <code>cod_editorial</code> y <code>razon_social</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · DROP',
+                canonicalAnswer: 'ALTER TABLE libros DROP COLUMN paginas;',
+                validNormalized: [
+                    'alter table libros drop column paginas',
+                    'alter table libros drop paginas'
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'Dejaste el campo vacío. Para eliminar una columna de una tabla existente debes usar <strong>ALTER TABLE libros DROP COLUMN paginas;</strong>.';
+                    }
+                    const issues = [];
+                    if (norm.startsWith('drop table')) {
+                        issues.push('Usaste <code>DROP TABLE</code>, lo cual destruye toda la tabla en vez de una columna. Debes usar <strong>ALTER TABLE libros DROP COLUMN paginas</strong>.');
+                    } else if (norm.startsWith('delete')) {
+                        issues.push('Usaste <code>DELETE</code>, que sirve para borrar filas de datos, no columnas de la estructura.');
+                    } else if (!norm.startsWith('alter table libros')) {
+                        issues.push('Toda modificación estructural sobre la tabla debe iniciar con <strong>ALTER TABLE libros</strong>.');
+                    }
+                    if (!norm.includes('drop')) {
+                        issues.push('Falta la cláusula <strong>DROP COLUMN</strong> (o <code>DROP</code>) seguida del nombre del campo.');
+                    }
+                    if (!norm.includes('paginas')) {
+                        issues.push('Falta especificar el nombre de la columna a eliminar: <code>paginas</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · BETWEEN',
+                canonicalAnswer: "SELECT * FROM libros WHERE precio BETWEEN 12000 AND 28000 AND NOT genero = 'Infantil';",
+                validNormalized: [
+                    "select * from libros where precio between 12000 and 28000 and not genero = 'infantil'",
+                    "select * from libros where precio between 12000 and 28000 and not(genero = 'infantil')",
+                    "select * from libros where precio between 12000 and 28000 and genero != 'infantil'",
+                    "select * from libros where precio between 12000 and 28000 and genero <> 'infantil'",
+                    "select * from libros where(precio between 12000 and 28000) and not genero = 'infantil'",
+                    "select * from libros where(precio between 12000 and 28000) and genero != 'infantil'",
+                    "select * from libros where(precio between 12000 and 28000) and genero <> 'infantil'",
+                    "select * from libros where not genero = 'infantil' and precio between 12000 and 28000",
+                    "select * from libros where genero != 'infantil' and precio between 12000 and 28000",
+                    "select * from libros where genero <> 'infantil' and precio between 12000 and 28000"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna respuesta. Debías escribir <strong>SELECT * FROM libros WHERE ...</strong> combinando <code>BETWEEN</code> y una condición de exclusión con <code>AND</code>.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('select * from libros')) {
+                        issues.push('La consulta debe seleccionar todas las columnas mediante <strong>SELECT * FROM libros</strong>.');
+                    }
+                    if (!norm.includes('between 12000 and 28000')) {
+                        issues.push('Falta especificar el rango con el operador <strong>precio BETWEEN 12000 AND 28000</strong>.');
+                    }
+                    if (norm.includes(' or ')) {
+                        issues.push('Usaste <code>OR</code> en vez de <code>AND</code>; ambas condiciones deben cumplirse a la vez.');
+                    }
+                    if (!norm.includes("'infantil'")) {
+                        issues.push("Recuerda encerrar el literal <code>'Infantil'</code> entre comillas.");
+                    }
+                    if (norm.includes("genero = 'infantil'") && !norm.includes('not')) {
+                        issues.push("Escribiste <code>genero = 'Infantil'</code> sin negarlo con <code>NOT</code> ni usar <code>&lt;&gt;</code> / <code>!=</code>.");
+                    }
+                    if (issues.length === 0) {
+                        issues.push("Revisa la condición del <code>WHERE</code>: <code>precio BETWEEN 12000 AND 28000 AND NOT genero = 'Infantil'</code>.");
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · LIKE',
+                canonicalAnswer: "SELECT titulo, autor FROM libros WHERE titulo LIKE '%Sur' OR stock < 5;",
+                validNormalized: [
+                    "select titulo, autor from libros where titulo like '%sur' or stock < 5",
+                    "select titulo, autor from libros where(titulo like '%sur') or(stock < 5)",
+                    "select titulo, autor from libros where stock < 5 or titulo like '%sur'"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías proyectar <strong>SELECT titulo, autor FROM libros</strong> filtrando con <code>LIKE</code> y <code>OR</code>.';
+                    }
+                    const issues = [];
+                    if (norm.startsWith('select *')) {
+                        issues.push('Usaste <code>SELECT *</code>, pero se solicitaron únicamente las columnas <strong>titulo, autor</strong>.');
+                    } else if (!norm.startsWith('select titulo, autor from libros')) {
+                        issues.push('Verifica el inicio de la consulta: <strong>SELECT titulo, autor FROM libros</strong>.');
+                    }
+                    if (norm.includes(' and ')) {
+                        issues.push('Utilizaste <code>AND</code> en lugar de <strong>OR</strong>.');
+                    }
+                    if (!norm.includes('like')) {
+                        issues.push('Falta el operador <strong>LIKE</strong> para evaluar cómo finaliza el título.');
+                    } else if (norm.includes("'sur%'") || norm.includes("'%sur%'") || norm.includes("'sur'")) {
+                        issues.push("Para indicar que el título finaliza con la palabra 'Sur', el comodín <code>%</code> debe colocarse antes del texto: <strong>'%Sur'</strong>.");
+                    }
+                    if (norm.includes('stock <= 5')) {
+                        issues.push('Usaste <code>&lt;= 5</code>, pero el enunciado pide que el stock sea <strong>estrictamente menor</strong> a 5 (<code>stock &lt; 5</code>).');
+                    } else if (!norm.includes('stock < 5')) {
+                        issues.push('Falta o es incorrecta la comparación <strong>stock &lt; 5</strong>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · COUNT',
+                canonicalAnswer: "SELECT COUNT(*) FROM sucursales WHERE localidad = 'Colon' AND apertura <= 2018;",
+                validNormalized: [
+                    "select count(*) from sucursales where localidad = 'colon' and apertura <= 2018",
+                    "select count(*) from sucursales where localidad = 'colón' and apertura <= 2018",
+                    "select count(id_sucursal) from sucursales where localidad = 'colon' and apertura <= 2018",
+                    "select count(id_sucursal) from sucursales where localidad = 'colón' and apertura <= 2018",
+                    "select count(*) from sucursales where apertura <= 2018 and localidad = 'colon'",
+                    "select count(id_sucursal) from sucursales where apertura <= 2018 and localidad = 'colon'"
+                ],
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías utilizar la función de conteo <strong>COUNT(*)</strong> sobre la tabla <code>sucursales</code>.';
+                    }
+                    const issues = [];
+                    if (norm.includes('sum(')) {
+                        issues.push('Utilizaste <code>SUM</code> en lugar de <strong>COUNT(*)</strong>.');
+                    } else if (!norm.startsWith('select count(')) {
+                        issues.push('La consulta debe comenzar con <strong>SELECT COUNT(*) FROM sucursales</strong>.');
+                    }
+                    if (!norm.includes("'colon'") && !norm.includes("'colón'")) {
+                        issues.push("Falta filtrar por <code>localidad = 'Colon'</code>.");
+                    }
+                    if (norm.includes(' or ')) {
+                        issues.push('Usaste <code>OR</code> en vez de <strong>AND</strong>.');
+                    }
+                    if (norm.includes('apertura < 2018')) {
+                        issues.push('Usaste <code>&lt; 2018</code>, pero la consigna pide <strong>menor o igual</strong> a 2018 (<code>apertura &lt;= 2018</code>).');
+                    } else if (!norm.includes('apertura <= 2018')) {
+                        issues.push('Falta la condición <strong>apertura &lt;= 2018</strong>.');
+                    }
+                    return issues.join(' ');
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · OR',
+                correctValues: ['B', 'D'],
+                correctLabel: 'Opciones B y D',
+                whyInvalid: {
+                    'A': "Marcaste la <strong>Opción A</strong>: al no tener paréntesis alrededor del <code>OR</code>, debido a que <code>AND</code> tiene mayor precedencia que <code>OR</code>, MySQL evalúa <code>genero = 'Novela' OR (genero = 'Ensayo' AND stock &gt;= 10)</code>, trayendo cualquier novela aunque tenga stock menor a 10.",
+                    'C': "Marcaste la <strong>Opción C</strong>: utiliza <code>genero = 'Novela' AND genero = 'Ensayo'</code>, lo cual devuelve cero filas porque un mismo registro no puede tener dos géneros distintos al mismo tiempo."
+                },
+                whyValidOmitted: {
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era válida porque los paréntesis en <code>(genero = 'Novela' OR genero = 'Ensayo')</code> fuerzan a evaluar primero la disyunción de géneros y luego exigir <code>AND stock &gt;= 10</code>.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era válida porque <code>NOT stock &lt; 10</code> es lógicamente equivalente a <code>stock &gt;= 10</code>, y está conectado mediante <code>AND</code> con el grupo entre paréntesis <code>(genero = 'Novela' OR genero = 'Ensayo')</code>."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · ALTER',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es inválida porque la cláusula <code>MODIFY</code> no permite cambiar el nombre de una columna (no admite dos identificadores seguidos); para eso debe usarse <code>CHANGE</code> o <code>RENAME COLUMN</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es inválida porque al agregar una columna con <code>ADD COLUMN</code> es obligatorio especificar su tipo de dato (por ejemplo, <code>VARCHAR(30)</code>)."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque <code>ADD encargado VARCHAR(60) NOT NULL</code> agrega correctamente el campo con su tipo y restricción.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque <code>RENAME COLUMN apertura TO anio_apertura</code> renombra la columna conservando su tipo de dato."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · SUM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque <code>CREATE DATABASE</code> crea un esquema o base de datos completa en el servidor, no una tabla (para crear una tabla se emplea <code>CREATE TABLE</code>)."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>SUM</code> ignora los valores nulos al calcular la sumatoria de una columna.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque cada guion bajo <code>_</code> representa exactamente un carácter, por lo que <code>'C____'</code> exige la letra C inicial seguida de 4 caracteres exactos (5 en total).",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque <code>DROP TABLE</code> elimina tanto los datos como la definición estructural de la tabla."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · LIKE',
+                correctValue: 'B',
+                correctLabel: "Opción B: Devuelve únicamente 'Borges' y 'Barco' porque '_' exige exactamente un carácter entre 'B' y 'r'.",
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: el comodín guion bajo (<code>_</code>) en <code>LIKE 'B_r%'</code> representa <strong>exactamente un carácter</strong> en la segunda posición, y exige que el tercer carácter sea la letra <code>'r'</code>. Por eso <code>'Bioy'</code> no cumple el patrón (su tercera letra es <code>'o'</code>, no <code>'r'</code>)."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · DELETE',
+                correctValue: 'A',
+                correctLabel: 'Opción A: DELETE FROM sucursales WHERE facturacion_mensual < 500000 AND apertura NOT BETWEEN 2020 AND 2024;',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, la cual tiene tres errores: primero, omite la palabra reservada <code>FROM</code> luego de <code>DELETE</code>; segundo, utiliza <code>&lt;= 500000</code> cuando se pidió estrictamente menor (<code>&lt; 500000</code>); y tercero, une las condiciones con <code>OR</code> en lugar de <code>AND</code>."
+                }
+            }
+        ];
+
+        function formatScore(num) {
+            return Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        function syncPart1DOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                appState.part1Answers[id] = document.getElementById(`${id}-input`).value;
+            });
+            ['q6', 'q7', 'q8'].forEach((id) => {
+                appState.part1Answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q9', 'q10'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.part1Answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restorePart1StateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.part1Answers[id] !== undefined) {
+                    el.value = appState.part1Answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8'].forEach((id) => {
+                const vals = appState.part1Answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q9', 'q10'].forEach((id) => {
+                const val = appState.part1Answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function updatePart2LockUI() {
+            const tabPart2 = document.getElementById('tab-part2');
+            const btnIrParte2 = document.getElementById('btn-ir-parte2');
+
+            if (appState.part2Unlocked) {
+                tabPart2.classList.remove('locked');
+                tabPart2.textContent = '🔓 Paso 2: Stages Interactivos (Habilitado)';
+                tabPart2.title = 'Hacer clic para ir al Paso 2';
+                btnIrParte2.classList.add('unlocked');
+            } else {
+                tabPart2.classList.add('locked');
+                tabPart2.textContent = '🔒 Paso 2: Stages Interactivos (Requiere ≥ 6 pts)';
+                tabPart2.title = 'Obtenga 6 o más puntos en el Paso 1 para habilitar';
+                btnIrParte2.classList.remove('unlocked');
+            }
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncPart1DOMToState();
+
+            let totalScore = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validNormalized.includes(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+1 pt)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+1 pt)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    totalScore += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Respuesta parcialmente correcta (+0.25 pts) — Ver detalle de errores al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: +0.25 pts)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    totalScore += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+1 pt)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            appState.part1Evaluated = true;
+            appState.part1Score = totalScore;
+            appState.part2Unlocked = (totalScore >= 6);
+            updatePart2LockUI();
+            saveStateToStorage();
+
+            if (appState.part2Finished) {
+                renderFinalEvaluationOverlay();
+            }
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const unlockBanner = document.getElementById('unlock-status-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            const formattedScore = formatScore(totalScore);
+            scoreNumber.textContent = formattedScore;
+
+            if (totalScore >= 6) {
+                scoreTitle.textContent = totalScore === 10 ? '¡Excelente trabajo! Puntaje Perfecto en Paso 1' : '¡Paso 1 Aprobado!';
+                scoreSubtitle.textContent = `Obtuviste ${formattedScore} de 10 puntos en el cuestionario inicial.`;
+                unlockBanner.className = 'unlock-banner success';
+                unlockBanner.innerHTML = '🔓 <strong>¡Paso 2 Habilitado!</strong> Al haber obtenido 6 o más puntos, ya puedes avanzar al Desafío Interactivo de Stages para definir tu nota final.';
+            } else {
+                scoreTitle.textContent = 'Puntaje insuficiente para habilitar el Paso 2';
+                scoreSubtitle.textContent = `Obtuviste ${formattedScore} de 10 puntos.`;
+                unlockBanner.className = 'unlock-banner locked';
+                unlockBanner.innerHTML = '🔒 <strong>Paso 2 Bloqueado:</strong> Necesitas alcanzar al menos <strong>6 puntos</strong> en este primer paso para habilitar los stages interactivos. Revisa los errores explicados abajo, corrige tus respuestas y vuelve a evaluar.';
+            }
+
+            if (mistakes.length === 0) {
+                errorsContainer.innerHTML = `
+                    <div class="perfect-banner">
+                        🎉 ¡No cometiste ningún error en el Paso 1! Haz clic en "Avanzar al Paso 2" para completar los stages interactivos.
+                    </div>
+                `;
+            } else {
+                const itemsHTML = mistakes.map((m) => `
+                    <div class="error-item ${m.isPartial ? 'partial-item' : ''}">
+                        <div class="error-item-header">${escapeHTML(m.title)}</div>
+                        <div class="error-comparison">
+                            <div class="user-choice-box">
+                                <strong>Tu respuesta:</strong> ${escapeHTML(m.userAnswer)}
+                            </div>
+                            <div class="correct-choice-box">
+                                <strong>Respuesta esperada:</strong> ${escapeHTML(m.correctAnswer)}
+                            </div>
+                        </div>
+                        <div class="error-explanation">
+                            <strong>Explicación del error:</strong> ${m.explanation}
+                        </div>
+                    </div>
+                `).join('');
+
+                errorsContainer.innerHTML = `
+                    <h4 class="errors-heading">🔍 Revelación y Explicación de Errores (${mistakes.length})</h4>
+                    <div class="errors-list">
+                        ${itemsHTML}
+                    </div>
+                `;
+            }
+
+            resultsPanel.style.display = 'block';
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        /* =========================================================================
+           3. PASO 2: MOTOR INTERACTIVO DE STAGES Y CÁLCULO DE NOTA FINAL
+           ========================================================================= */
+        const ALL_SQL_KEYWORDS = [
+            'CREATE', 'TABLE', 'DATABASE', 'ALTER', 'ADD', 'RENAME', 'COLUMN', 'TO',
+            'DROP', 'DELETE', 'SELECT', 'FROM', 'WHERE', 'LIKE', 'BETWEEN',
+            'AND', 'OR', 'NOT', 'COUNT', 'SUM', 'INT', 'VARCHAR(50)', 'PRIMARY KEY', 'NOT NULL', '*'
+        ];
+
+        const STAGES = [
+            {
+                num: 1,
+                objective: 'Crear la tabla "Libro" definiendo el campo entero "codigo" como clave primaria y el campo de texto obligatorio "titulo".',
+                tokens: [
+                    { type: 'slot', expected: 'CREATE' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st1-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'literal', text: '(' },
+                    { type: 'input', id: 'st1-col1', placeholder: 'Escriba su respuesta...', matchValue: 'codigo' },
+                    { type: 'slot', expected: 'INT' },
+                    { type: 'slot', expected: 'PRIMARY KEY' },
+                    { type: 'literal', text: ',' },
+                    { type: 'input', id: 'st1-col2', placeholder: 'Escriba su respuesta...', matchValue: 'titulo' },
+                    { type: 'slot', expected: 'VARCHAR(50)' },
+                    { type: 'slot', expected: 'NOT NULL' },
+                    { type: 'literal', text: ');' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.tableName = inputs['st1-table'] || 'Libro';
+                    appState.liveSchema.colId = inputs['st1-col1'] || 'codigo';
+                    appState.liveSchema.colText = inputs['st1-col2'] || 'titulo';
+                    renderLiveTable({ mode: 'create' });
+                }
+            },
+            {
+                num: 2,
+                objective: 'Modificar la estructura de la tabla "Libro" para agregar un nuevo campo entero llamado "ejemplares".',
+                tokens: [
+                    { type: 'slot', expected: 'ALTER' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st2-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'slot', expected: 'ADD' },
+                    { type: 'input', id: 'st2-col3', placeholder: 'Escriba su respuesta...', matchValue: 'ejemplares' },
+                    { type: 'slot', expected: 'INT' },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.colExtra = inputs['st2-col3'] || 'ejemplares';
+                    renderLiveTable({ mode: 'add-column' });
+                }
+            },
+            {
+                num: 3,
+                objective: 'Renombrar la columna "ejemplares" de la tabla "Libro" para que pase a llamarse "disponibles".',
+                tokens: [
+                    { type: 'slot', expected: 'ALTER' },
+                    { type: 'slot', expected: 'TABLE' },
+                    { type: 'input', id: 'st3-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'slot', expected: 'RENAME' },
+                    { type: 'slot', expected: 'COLUMN' },
+                    { type: 'input', id: 'st3-old', placeholder: 'Escriba su respuesta...', matchValue: 'ejemplares' },
+                    { type: 'slot', expected: 'TO' },
+                    { type: 'input', id: 'st3-new', placeholder: 'Escriba su respuesta...', matchValue: 'disponibles' },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function (inputs) {
+                    appState.liveSchema.colExtra = inputs['st3-new'] || 'disponibles';
+                    renderLiveTable({ mode: 'rename-column' });
+                }
+            },
+            {
+                num: 4,
+                objective: 'Seleccionar todas las columnas de "Libro" donde "disponibles" esté entre 10 y 50 inclusive, y "titulo" comience con la letra C.',
+                tokens: [
+                    { type: 'slot', expected: 'SELECT' },
+                    { type: 'slot', expected: '*' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st4-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'input', id: 'st4-colnum', placeholder: 'Escriba su respuesta...', matchValue: 'disponibles' },
+                    { type: 'slot', expected: 'BETWEEN' },
+                    { type: 'literal', text: '10' },
+                    { type: 'slot', expected: 'AND' },
+                    { type: 'literal', text: '50' },
+                    { type: 'slot', expected: 'AND' },
+                    { type: 'input', id: 'st4-coltxt', placeholder: 'Escriba su respuesta...', matchValue: 'titulo' },
+                    { type: 'slot', expected: 'LIKE' },
+                    { type: 'input', id: 'st4-pattern', placeholder: 'Escriba su respuesta...', matchValue: "'c%'" },
+                    { type: 'literal', text: ';' }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'filter-rows' });
+                }
+            },
+            {
+                num: 5,
+                objective: 'Calcular la sumatoria acumulada del campo "disponibles" de la tabla "Libro" donde "disponibles" no sea menor a 10.',
+                tokens: [
+                    { type: 'slot', expected: 'SELECT' },
+                    { type: 'slot', expected: 'SUM' },
+                    { type: 'literal', text: '(' },
+                    { type: 'input', id: 'st5-col', placeholder: 'Escriba su respuesta...', matchValue: 'disponibles' },
+                    { type: 'literal', text: ')' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st5-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'slot', expected: 'NOT' },
+                    { type: 'input', id: 'st5-col2', placeholder: 'Escriba su respuesta...', matchValue: 'disponibles' },
+                    { type: 'literal', text: '< 10;' }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'aggregate-sum' });
+                }
+            },
+            {
+                num: 6,
+                objective: 'Eliminar de la tabla "Libro" los registros donde "disponibles" sea menor a 10 o "titulo" sea \'Duna\'.',
+                tokens: [
+                    { type: 'slot', expected: 'DELETE' },
+                    { type: 'slot', expected: 'FROM' },
+                    { type: 'input', id: 'st6-table', placeholder: 'Escriba su respuesta...', matchValue: 'Libro' },
+                    { type: 'slot', expected: 'WHERE' },
+                    { type: 'input', id: 'st6-colnum', placeholder: 'Escriba su respuesta...', matchValue: 'disponibles' },
+                    { type: 'literal', text: '< 10' },
+                    { type: 'slot', expected: 'OR' },
+                    { type: 'input', id: 'st6-coltxt', placeholder: 'Escriba su respuesta...', matchValue: 'titulo' },
+                    { type: 'literal', text: "= 'Duna';" }
+                ],
+                onSuccess: function () {
+                    renderLiveTable({ mode: 'delete-rows' });
+                }
+            }
+        ];
+
+        let activeSlotEl = null;
+        let timerInterval = null;
+        let stageLocked = false;
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function startStageTimer() {
+            if (timerInterval || appState.part2Finished) return;
+            updateTimerUI();
+            timerInterval = setInterval(() => {
+                if (appState.remainingSeconds > 0 && !appState.part2Finished) {
+                    appState.remainingSeconds--;
+                    updateTimerUI();
+                    saveStateToStorage();
+                    if (appState.remainingSeconds === 0) {
+                        finalizePart2();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const mins = Math.floor(appState.remainingSeconds / 60);
+            const secs = appState.remainingSeconds % 60;
+            const mmss = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timer-mmss').textContent = mmss;
+            document.getElementById('timer-secs').textContent = appState.remainingSeconds;
+
+            const badge = document.getElementById('stage-timer');
+            if (appState.remainingSeconds <= 180) {
+                badge.classList.add('urgent');
+            } else {
+                badge.classList.remove('urgent');
+            }
+        }
+
+        function renderFinalEvaluationOverlay() {
+            const baseScore = appState.part1Score;
+            const correctStages = appState.completedStages;
+            const remSecs = appState.remainingSeconds;
+
+            let stageMod = 0;
+            let stageModLabel = '';
+            if (correctStages <= 2) {
+                stageMod = -2;
+                stageModLabel = `-2 pts (${correctStages} de 6 stages correctos)`;
+            } else if (correctStages <= 4) {
+                stageMod = -1;
+                stageModLabel = `-1 pt (${correctStages} de 6 stages correctos)`;
+            } else {
+                stageMod = 1;
+                stageModLabel = `+1 pt (${correctStages} de 6 stages correctos)`;
+            }
+
+            const hasTimeBonus = remSecs > (15 * 60);
+            const timeMod = hasTimeBonus ? 2 : 0;
+            const timeModLabel = hasTimeBonus
+                ? `+2 pts (${remSecs}s restantes, > 15 min)`
+                : `0 pts (${remSecs}s restantes, ≤ 15 min)`;
+
+            const rawFinal = baseScore + stageMod + timeMod;
+            const finalCapped = Math.max(0, Math.min(10, rawFinal));
+            const exceededTen = rawFinal > 10;
+
+            const overlay = document.getElementById('stage-overlay');
+            const iconEl = document.getElementById('overlay-icon');
+            const titleEl = document.getElementById('overlay-title');
+            const gradeEl = document.getElementById('final-grade-display');
+            const breakdownEl = document.getElementById('final-breakdown-list');
+            const recognitionEl = document.getElementById('dedication-recognition');
+
+            iconEl.textContent = exceededTen ? '🌟' : (finalCapped >= 6 ? '🏆' : '📋');
+            titleEl.textContent = correctStages === STAGES.length
+                ? '¡Stages Completados · Calificación Final!'
+                : 'Paso 2 Finalizado · Calificación Final';
+
+            gradeEl.textContent = `Nota Final: ${formatScore(finalCapped)} / 10`;
+
+            breakdownEl.innerHTML = `
+                <li><span>Puntaje Paso 1 (Cuestionario):</span> <strong>${formatScore(baseScore)} pts</strong></li>
+                <li><span>Desempeño Paso 2 (Stages):</span> <strong>${stageModLabel}</strong></li>
+                <li><span>Bonificación de Tiempo (> 15 min):</span> <strong>${timeModLabel}</strong></li>
+                <li><span>Puntaje Total Acumulado:</span> <strong>${formatScore(rawFinal)} pts</strong></li>
+            `;
+
+            if (exceededTen) {
+                recognitionEl.style.display = 'block';
+                recognitionEl.innerHTML = `
+                    🎖️ <strong>¡Felicitaciones y Reconocimiento Especial por tu Dedicación!</strong><br>
+                    Tu puntaje acumulado alcanzó <strong>${formatScore(rawFinal)} puntos</strong>, superando la nota máxima de 10. Se registra la calificación máxima de <strong>10 / 10</strong> con mención destacada por tu excelencia y velocidad de resolución en SQL.
+                `;
+            } else {
+                recognitionEl.style.display = 'none';
+                recognitionEl.innerHTML = '';
+            }
+
+            overlay.classList.add('visible');
+        }
+
+        function finalizePart2() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            stageLocked = true;
+            appState.part2Finished = true;
+            renderStageDots();
+            saveStateToStorage();
+            renderFinalEvaluationOverlay();
+        }
+
+        function renderStageDots() {
+            const container = document.getElementById('stage-dots-container');
+            container.innerHTML = STAGES.map((st, idx) => {
+                let cls = 'stage-dot';
+                if (idx < appState.completedStages) cls += ' done';
+                else if (idx === appState.currentStageIdx && !appState.part2Finished) cls += ' active';
+                return `<span class="${cls}">${idx < appState.completedStages ? '✓' : st.num}</span>`;
+            }).join('');
+        }
+
+        function renderKeywordBank() {
+            const pool = document.getElementById('keyword-tags-pool');
+            const shuffled = shuffleArray(ALL_SQL_KEYWORDS);
+            pool.innerHTML = '';
+
+            shuffled.forEach((kw) => {
+                const tag = document.createElement('button');
+                tag.type = 'button';
+                tag.className = 'kw-tag';
+                tag.textContent = kw;
+                tag.draggable = true;
+
+                tag.addEventListener('click', () => {
+                    if (stageLocked || appState.part2Finished) return;
+                    placeKeywordInActiveSlot(kw);
+                });
+
+                tag.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', kw);
+                });
+
+                pool.appendChild(tag);
+            });
+        }
+
+        function selectActiveSlot(slotEl) {
+            document.querySelectorAll('.kw-slot').forEach((s) => s.classList.remove('active-target'));
+            activeSlotEl = slotEl;
+            if (slotEl) {
+                slotEl.classList.add('active-target');
+                document.getElementById('active-slot-indicator').textContent = 'Espacio activo seleccionado';
+            } else {
+                document.getElementById('active-slot-indicator').textContent = '';
+            }
+        }
+
+        function syncStageDraftToState() {
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            if (!wrap) return;
+            const slots = Array.from(wrap.querySelectorAll('.kw-slot')).map((s) => s.dataset.value || '');
+            const inputs = {};
+            wrap.querySelectorAll('.inline-sql-input').forEach((inp) => {
+                inputs[inp.id] = inp.value;
+            });
+            appState.currentStageDraft = { slots, inputs };
+            saveStateToStorage();
+        }
+
+        function placeKeywordInActiveSlot(kw) {
+            let target = activeSlotEl;
+            if (!target) {
+                target = document.querySelector('.kw-slot:not(.filled)');
+            }
+            if (!target) return;
+
+            target.textContent = kw;
+            target.dataset.value = kw;
+            target.classList.add('filled');
+
+            syncStageDraftToState();
+
+            const nextEmpty = document.querySelector('.kw-slot:not(.filled)');
+            selectActiveSlot(nextEmpty || null);
+        }
+
+        function loadStage(idx, restoreDraft = false) {
+            appState.currentStageIdx = idx;
+            stageLocked = appState.part2Finished;
+            renderStageDots();
+            renderKeywordBank();
+
+            const stage = STAGES[idx];
+            document.getElementById('stage-label-tag').textContent = `STAGE ${stage.num}/${STAGES.length}:`;
+            document.getElementById('stage-objective-text').textContent = stage.objective;
+
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            wrap.innerHTML = '';
+
+            let slotCounter = 0;
+
+            stage.tokens.forEach((tk) => {
+                if (tk.type === 'slot') {
+                    const currentSlotIndex = slotCounter++;
+                    const slot = document.createElement('div');
+                    slot.className = 'kw-slot';
+                    slot.dataset.expected = tk.expected;
+
+                    const savedVal = (restoreDraft && appState.currentStageDraft && appState.currentStageDraft.slots)
+                        ? appState.currentStageDraft.slots[currentSlotIndex]
+                        : '';
+
+                    if (savedVal) {
+                        slot.textContent = savedVal;
+                        slot.dataset.value = savedVal;
+                        slot.classList.add('filled');
+                    } else {
+                        slot.textContent = '[ ___ ]';
+                        slot.dataset.value = '';
+                    }
+
+                    slot.addEventListener('click', () => {
+                        if (stageLocked || appState.part2Finished) return;
+                        if (slot.classList.contains('filled')) {
+                            slot.textContent = '[ ___ ]';
+                            slot.dataset.value = '';
+                            slot.classList.remove('filled');
+                            syncStageDraftToState();
+                        }
+                        selectActiveSlot(slot);
+                    });
+
+                    slot.addEventListener('dragover', (e) => e.preventDefault());
+                    slot.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        if (stageLocked || appState.part2Finished) return;
+                        const droppedKw = e.dataTransfer.getData('text/plain');
+                        if (droppedKw) {
+                            selectActiveSlot(slot);
+                            placeKeywordInActiveSlot(droppedKw);
+                        }
+                    });
+
+                    wrap.appendChild(slot);
+                } else if (tk.type === 'input') {
+                    const inp = document.createElement('input');
+                    inp.type = 'text';
+                    inp.className = 'inline-sql-input';
+                    inp.id = tk.id;
+                    inp.placeholder = tk.placeholder || 'Escriba su respuesta...';
+                    inp.autocomplete = 'off';
+                    inp.spellcheck = false;
+                    if (tk.matchValue) {
+                        inp.dataset.matchValue = tk.matchValue;
+                    }
+
+                    if (restoreDraft && appState.currentStageDraft && appState.currentStageDraft.inputs && appState.currentStageDraft.inputs[tk.id] !== undefined) {
+                        inp.value = appState.currentStageDraft.inputs[tk.id];
+                    }
+
+                    inp.addEventListener('input', syncStageDraftToState);
+                    wrap.appendChild(inp);
+                } else if (tk.type === 'literal') {
+                    const span = document.createElement('span');
+                    span.className = 'sql-literal';
+                    span.textContent = tk.text;
+                    wrap.appendChild(span);
+                }
+            });
+
+            if (!restoreDraft) {
+                appState.currentStageDraft = { slots: [], inputs: {} };
+                saveStateToStorage();
+            }
+
+            const firstEmptySlot = wrap.querySelector('.kw-slot:not(.filled)');
+            selectActiveSlot(firstEmptySlot);
+
+            const msgEl = document.getElementById('stage-feedback-msg');
+            msgEl.className = 'stage-feedback-msg';
+            msgEl.textContent = 'Complete las etiquetas de palabras clave y los campos de texto, luego presione Ejecutar.';
+        }
+
+        function renderLiveTable(options) {
+            const mount = document.getElementById('live-table-mount');
+            const mode = options.mode;
+            const schema = appState.liveSchema;
+
+            const showExtraCol = (appState.completedStages >= 2 || mode === 'add-column' || mode === 'rename-column' || mode === 'filter-rows' || mode === 'aggregate-sum' || mode === 'delete-rows');
+
+            let aggBadgeHTML = '';
+            if (mode === 'aggregate-sum') {
+                const sumVal = schema.rows
+                    .filter((r) => r.extra >= 10)
+                    .reduce((acc, r) => acc + r.extra, 0);
+                aggBadgeHTML = `<span class="live-agg-badge">SUM(${escapeHTML(schema.colExtra)}) = ${sumVal}</span>`;
+            }
+
+            const rowsHTML = schema.rows.map((r) => {
+                let rowClass = '';
+                if (mode === 'filter-rows') {
+                    const matches = (r.extra >= 10 && r.extra <= 50) && r.text.toLowerCase().startsWith('c');
+                    rowClass = matches ? 'row-matched' : 'row-dimmed';
+                } else if (mode === 'aggregate-sum') {
+                    rowClass = (r.extra >= 10) ? 'row-matched' : 'row-dimmed';
+                } else if (mode === 'delete-rows') {
+                    const toDelete = (r.extra < 10) || (r.text.toLowerCase() === 'duna');
+                    rowClass = toDelete ? 'row-deleting' : 'row-matched';
+                }
+
+                const extraCellClass = (mode === 'add-column') ? 'col-new-anim' : '';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td>${r.id}</td>
+                        <td>${escapeHTML(r.text)}</td>
+                        ${showExtraCol ? `<td class="${extraCellClass}">${r.extra}</td>` : ''}
+                    </tr>
+                `;
+            }).join('');
+
+            const extraHeaderClass = (mode === 'add-column')
+                ? 'col-new-anim'
+                : (mode === 'rename-column' ? 'col-rename-anim' : '');
+
+            const containerAnimClass = (mode === 'create') ? 'anim-slide-in' : '';
+
+            mount.innerHTML = `
+                <div class="live-table-container ${containerAnimClass}">
+                    <div class="live-table-header-bar">
+                        <span class="live-table-title">📦 Tabla: ${escapeHTML(schema.tableName)}</span>
+                        ${aggBadgeHTML}
+                    </div>
+                    <table class="live-sql-table">
+                        <thead>
+                            <tr>
+                                <th>🔑 ${escapeHTML(schema.colId)} (INT)</th>
+                                <th>${escapeHTML(schema.colText)} (VARCHAR)</th>
+                                ${showExtraCol ? `<th class="${extraHeaderClass}">${escapeHTML(schema.colExtra)} (INT)</th>` : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHTML}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function evaluateCurrentStage() {
+            if (stageLocked || appState.part2Finished) return;
+
+            const wrap = document.getElementById('sentence-tokens-wrap');
+            const slots = Array.from(wrap.querySelectorAll('.kw-slot'));
+            const inputs = Array.from(wrap.querySelectorAll('.inline-sql-input'));
+            const msgEl = document.getElementById('stage-feedback-msg');
+
+            const allKeywordsRight = slots.every((s) => (s.dataset.value || '').toUpperCase() === s.dataset.expected.toUpperCase());
+
+            const inputMap = {};
+            let allInputsRight = true;
+
+            inputs.forEach((inp) => {
+                const val = inp.value.trim();
+                inputMap[inp.id] = val;
+                if (!val) {
+                    allInputsRight = false;
+                } else if (inp.dataset.matchValue) {
+                    const normalizedUser = val.toLowerCase().replace(/"/g, "'");
+                    const normalizedExpected = inp.dataset.matchValue.toLowerCase().replace(/"/g, "'");
+                    if (normalizedUser !== normalizedExpected) {
+                        allInputsRight = false;
+                    }
+                }
+            });
+
+            if (allKeywordsRight && allInputsRight) {
+                stageLocked = true;
+                const currentStage = STAGES[appState.currentStageIdx];
+                appState.completedStages = Math.max(appState.completedStages, appState.currentStageIdx + 1);
+                currentStage.onSuccess(inputMap);
+                saveStateToStorage();
+
+                msgEl.className = 'stage-feedback-msg success';
+                msgEl.textContent = `✓ ¡Objetivo cumplido! Ejecutando animación del Stage ${currentStage.num}...`;
+
+                setTimeout(() => {
+                    if (appState.currentStageIdx + 1 < STAGES.length) {
+                        loadStage(appState.currentStageIdx + 1, false);
+                    } else {
+                        finalizePart2();
+                    }
+                }, 1450);
+            } else {
+                msgEl.style.opacity = '0';
+                setTimeout(() => {
+                    msgEl.className = 'stage-feedback-msg error';
+                    msgEl.textContent = '✗ La sentencia no cumple con el objetivo planteado. Verifique las etiquetas y los campos e intente nuevamente.';
+                    msgEl.style.opacity = '1';
+                }, 380);
+            }
+        }
+
+        /* =========================================================================
+           4. NAVEGACIÓN, EVENTOS Y RESTAURACIÓN DE PERSISTENCIA AL RECARGAR
+           ========================================================================= */
+        const tabPart1 = document.getElementById('tab-part1');
+        const tabPart2 = document.getElementById('tab-part2');
+        const btnIrParte2 = document.getElementById('btn-ir-parte2');
+
+        function switchToPart1() {
+            document.body.classList.remove('stage-mode-active');
+            tabPart1.classList.add('active');
+            tabPart2.classList.remove('active');
+            appState.activeTab = 'part1';
+            saveStateToStorage();
+        }
+
+        function switchToPart2() {
+            if (!appState.part2Unlocked) return;
+            document.body.classList.add('stage-mode-active');
+            tabPart2.classList.add('active');
+            tabPart1.classList.remove('active');
+            appState.activeTab = 'part2';
+
+            if (!appState.part2Started) {
+                appState.part2Started = true;
+                loadStage(0, false);
+            }
+            saveStateToStorage();
+            startStageTimer();
+        }
+
+        function borrarProgresoYReiniciar() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
+            window.location.reload();
+        }
+
+        ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+            document.getElementById(`${id}-input`).addEventListener('input', syncPart1DOMToState);
+        });
+        ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+            document.querySelectorAll(`input[name="${id}"]`).forEach((el) => {
+                el.addEventListener('change', syncPart1DOMToState);
+            });
+        });
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+        document.getElementById('btn-reiniciar').addEventListener('click', borrarProgresoYReiniciar);
+
+        tabPart1.addEventListener('click', switchToPart1);
+        tabPart2.addEventListener('click', switchToPart2);
+        btnIrParte2.addEventListener('click', switchToPart2);
+
+        document.getElementById('btn-run-stage').addEventListener('click', evaluateCurrentStage);
+        document.getElementById('btn-clear-stage').addEventListener('click', () => {
+            if (!stageLocked && !appState.part2Finished) {
+                loadStage(appState.currentStageIdx, false);
+            }
+        });
+        document.getElementById('btn-finish-part2').addEventListener('click', () => {
+            if (!appState.part2Finished) {
+                finalizePart2();
+            }
+        });
+
+        (function initOnLoad() {
+            const hadSavedState = loadStateFromStorage();
+            if (hadSavedState) {
+                restorePart1StateToDOM();
+                updatePart2LockUI();
+
+                if (appState.part1Evaluated) {
+                    evaluarRespuestas(false);
+                }
+
+                if (appState.part2Started) {
+                    updateTimerUI();
+                    loadStage(appState.currentStageIdx, true);
+
+                    if (appState.completedStages >= 1) {
+                        const modesByCompleted = ['create', 'create', 'add-column', 'rename-column', 'filter-rows', 'aggregate-sum', 'delete-rows'];
+                        renderLiveTable({ mode: modesByCompleted[appState.completedStages] || 'create' });
+                    }
+
+                    if (appState.part2Finished) {
+                        renderFinalEvaluationOverlay();
+                    }
+                }
+
+                if (appState.activeTab === 'part2' && appState.part2Unlocked) {
+                    switchToPart2();
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

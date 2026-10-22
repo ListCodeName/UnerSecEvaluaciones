@@ -1,0 +1,2344 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación SQL++ #3 | Base de Datos II</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark Mobile-First con Paleta Pastel (Ciruela Borgoña & Cuarzo Rosa) */
+            --bg-deep: #120812;
+            --bg-surface: rgba(30, 14, 31, 0.85);
+            --bg-surface-elevated: rgba(43, 20, 45, 0.92);
+            --bg-code: rgba(15, 6, 16, 0.95);
+
+            --text-primary: #faf2f9;
+            --text-secondary: #d4b8d1;
+            --text-muted: #987a96;
+
+            /* Acentos Pasteles */
+            --pastel-violet: #f9a8d4;
+            --pastel-cyan: #99f6e4;
+            --pastel-mint: #86efac;
+            --pastel-amber: #fcd34d;
+            --pastel-rose: #fda4af;
+            --pastel-peach: #fdba74;
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(249, 168, 212, 0.16);
+            --border-focus: rgba(153, 246, 228, 0.6);
+            --shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.52);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 14% 16%, rgba(249, 168, 212, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 86% 26%, rgba(153, 246, 228, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 88%, rgba(252, 211, 77, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas de partículas (Polvo y Luz) */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 1.1rem 0.9rem 3.8rem;
+        }
+
+        /* Cabecera de la Evaluación */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.25rem;
+            margin-bottom: 1.3rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.72rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-violet {
+            background: rgba(249, 168, 212, 0.14);
+            color: var(--pastel-violet);
+            border: 1px solid rgba(249, 168, 212, 0.32);
+        }
+
+        .badge-cyan {
+            background: rgba(153, 246, 228, 0.12);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(153, 246, 228, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(253, 186, 116, 0.12);
+            color: var(--pastel-peach);
+            border: 1px solid rgba(253, 186, 116, 0.28);
+        }
+
+        .badge-amber {
+            background: rgba(252, 211, 77, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(252, 211, 77, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan), var(--pastel-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.93rem;
+        }
+
+        /* =========================================================
+           DIAGRAMA GRÁFICO DE TABLAS RELACIONALES (CON PK Y FK)
+           ========================================================= */
+        .er-diagram-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            margin-bottom: 1.6rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .er-header-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .er-title {
+            font-size: 1.06rem;
+            font-weight: 700;
+            color: var(--pastel-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .er-subtitle {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+        }
+
+        .er-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.2rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.77rem;
+            color: var(--text-secondary);
+            background: rgba(15, 6, 16, 0.65);
+            padding: 0.28rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .key-tag {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.1rem 0.38rem;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+        }
+
+        .key-pk {
+            background: rgba(252, 211, 77, 0.16);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(252, 211, 77, 0.45);
+        }
+
+        .key-fk {
+            background: rgba(153, 246, 228, 0.15);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(153, 246, 228, 0.45);
+        }
+
+        .key-none {
+            display: inline-block;
+            width: 26px;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+
+        .er-visual-board {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            gap: 0.75rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.35rem 0.25rem 0.85rem;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .er-visual-board::-webkit-scrollbar {
+            height: 9px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-track {
+            background: rgba(15, 6, 16, 0.75);
+            border-radius: 999px;
+            border: 1px solid rgba(249, 168, 212, 0.12);
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, rgba(249, 168, 212, 0.55), rgba(153, 246, 228, 0.55));
+            border-radius: 999px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, rgba(249, 168, 212, 0.85), rgba(153, 246, 228, 0.85));
+        }
+
+        .er-table-node {
+            flex: 0 0 auto;
+            min-width: 268px;
+            width: max-content;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(249, 168, 212, 0.26);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .er-table-node:hover {
+            border-color: var(--pastel-cyan);
+        }
+
+        .er-table-head {
+            background: linear-gradient(90deg, rgba(249, 168, 212, 0.18), rgba(153, 246, 228, 0.1));
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid rgba(249, 168, 212, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .er-table-name {
+            font-family: var(--font-mono);
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: var(--pastel-violet);
+            white-space: nowrap;
+        }
+
+        .er-table-tag {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .er-table-node.is-bridge-table {
+            border-color: rgba(253, 186, 116, 0.42);
+        }
+
+        .er-table-node.is-bridge-table .er-table-head {
+            background: linear-gradient(90deg, rgba(253, 186, 116, 0.2), rgba(249, 168, 212, 0.14));
+            border-bottom-color: rgba(253, 186, 116, 0.3);
+        }
+
+        .er-table-node.is-bridge-table .er-table-name {
+            color: var(--pastel-peach);
+        }
+
+        .er-nm-tag {
+            color: var(--pastel-peach);
+            background: rgba(253, 186, 116, 0.14);
+            border: 1px solid rgba(253, 186, 116, 0.35);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .er-attr-list {
+            list-style: none;
+            padding: 0.35rem 0;
+        }
+
+        .er-attr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 0.42rem 0.9rem;
+            font-size: 0.81rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+            white-space: nowrap;
+        }
+
+        .er-attr-row:last-child {
+            border-bottom: none;
+        }
+
+        .er-attr-row.is-pk-row {
+            background: rgba(252, 211, 77, 0.05);
+        }
+
+        .er-attr-row.is-fk-row {
+            background: rgba(153, 246, 228, 0.05);
+        }
+
+        .er-attr-row[data-join-key] {
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+        }
+
+        .er-attr-row.is-pk-row.key-linked-active,
+        .er-attr-row.is-fk-row.key-linked-active {
+            background: linear-gradient(90deg, rgba(252, 211, 77, 0.24), rgba(153, 246, 228, 0.24));
+            box-shadow: inset 3px 0 0 var(--pastel-amber), inset -3px 0 0 var(--pastel-cyan), 0 0 14px rgba(153, 246, 228, 0.25);
+        }
+
+        .er-attr-row.key-linked-active .attr-name {
+            color: #ffffff !important;
+            text-shadow: 0 0 8px rgba(153, 246, 228, 0.55);
+        }
+
+        .er-attr-row.key-linked-active .key-tag {
+            transform: scale(1.08);
+            box-shadow: 0 0 10px rgba(252, 211, 77, 0.45);
+        }
+
+        .er-connector-line.connector-active {
+            border-color: var(--pastel-amber);
+            background: rgba(252, 211, 77, 0.16);
+            color: var(--pastel-amber);
+            box-shadow: 0 0 14px rgba(252, 211, 77, 0.35);
+            transform: scale(1.05);
+        }
+
+        .attr-left {
+            display: flex;
+            align-items: center;
+            gap: 0.48rem;
+            flex-shrink: 0;
+        }
+
+        .attr-name {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .is-pk-row .attr-name {
+            color: var(--pastel-amber);
+        }
+
+        .is-fk-row .attr-name {
+            color: var(--pastel-cyan);
+        }
+
+        .attr-right {
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+            flex-shrink: 0;
+        }
+
+        .attr-type {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            background: rgba(15, 6, 16, 0.7);
+            padding: 0.1rem 0.42rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+
+        /* Conectores visuales de relación entre tablas */
+        .er-connector {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.15rem 0.1rem;
+            color: var(--pastel-cyan);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+        }
+
+        .er-connector-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(15, 6, 16, 0.88);
+            border: 1px dashed rgba(153, 246, 228, 0.42);
+            padding: 0.26rem 0.55rem;
+            border-radius: 999px;
+            color: var(--pastel-cyan);
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .er-cardinality {
+            font-weight: 700;
+            color: var(--pastel-amber);
+        }
+
+        /* =========================================================
+           SECCIÓN DE PREGUNTAS (15 EJERCICIOS)
+           ========================================================= */
+        .questions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease, transform 0.2s ease;
+        }
+
+        .question-card:hover {
+            border-color: rgba(249, 168, 212, 0.32);
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(134, 239, 172, 0.65);
+            background: linear-gradient(180deg, rgba(134, 239, 172, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(252, 211, 77, 0.65);
+            background: linear-gradient(180deg, rgba(252, 211, 77, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .q-number {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--pastel-violet);
+            background: rgba(249, 168, 212, 0.12);
+            padding: 0.22rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(249, 168, 212, 0.26);
+        }
+
+        .q-prompt {
+            font-size: 0.98rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.85rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            color: var(--pastel-cyan);
+            background: rgba(15, 6, 16, 0.72);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+            border: 1px solid rgba(153, 246, 228, 0.2);
+        }
+
+        /* Fragmentos de código de referencia */
+        .code-snippet {
+            background: var(--bg-code);
+            border: 1px solid rgba(249, 168, 212, 0.22);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 0.95rem;
+            margin-bottom: 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: #faf2f9;
+            overflow-x: auto;
+            line-height: 1.55;
+        }
+
+        .code-snippet .kw {
+            color: var(--pastel-violet);
+            font-weight: 600;
+        }
+
+        .code-snippet .fn {
+            color: var(--pastel-cyan);
+        }
+
+        .code-snippet .str {
+            color: var(--pastel-amber);
+        }
+
+        .code-snippet .num {
+            color: var(--pastel-peach);
+        }
+
+        /* Inputs de texto para Completado */
+        .sql-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .sql-text-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1.5px solid rgba(249, 168, 212, 0.28);
+            border-radius: var(--radius-md);
+            padding: 0.82rem 0.95rem;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.87rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-text-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.65;
+        }
+
+        .sql-text-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(153, 246, 228, 0.14);
+        }
+
+        /* Opciones Multiple Choice y Selección Binaria */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.58rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.72rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-md);
+            padding: 0.78rem 0.92rem;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            user-select: none;
+        }
+
+        .option-label:hover {
+            background: rgba(56, 26, 58, 0.95);
+            border-color: rgba(249, 168, 212, 0.35);
+        }
+
+        .option-label input[type="checkbox"],
+        .option-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 19px;
+            height: 19px;
+            min-width: 19px;
+            border: 2px solid var(--pastel-violet);
+            background: var(--bg-code);
+            margin-top: 0.14rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.18s ease;
+        }
+
+        .option-label input[type="checkbox"] {
+            border-radius: 5px;
+        }
+
+        .option-label input[type="radio"] {
+            border-radius: 50%;
+        }
+
+        .option-label input[type="checkbox"]:checked {
+            background: var(--pastel-violet);
+            border-color: var(--pastel-violet);
+        }
+
+        .option-label input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -52%);
+            color: #120812;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .option-label input[type="radio"]:checked {
+            border-color: var(--pastel-cyan);
+        }
+
+        .option-label input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--pastel-cyan);
+        }
+
+        .option-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .option-text code {
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            color: var(--pastel-amber);
+            background: rgba(15, 6, 16, 0.72);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        /* Indicador de estado en cada tarjeta */
+        .q-status {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.52rem 0.78rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        .q-status.correct {
+            display: block;
+            background: rgba(134, 239, 172, 0.12);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+        }
+
+        .q-status.partial {
+            display: block;
+            background: rgba(252, 211, 77, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(252, 211, 77, 0.32);
+        }
+
+        .q-status.wrong {
+            display: block;
+            background: rgba(253, 164, 175, 0.12);
+            color: var(--pastel-rose);
+            border: 1px solid rgba(253, 164, 175, 0.3);
+        }
+
+        /* Botón Evaluar */
+        .actions-footer {
+            margin-top: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .btn-evaluate {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan));
+            color: #120812;
+            font-family: var(--font-sans);
+            font-size: 1.03rem;
+            font-weight: 700;
+            padding: 0.95rem 1.6rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(249, 168, 212, 0.28);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .btn-evaluate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(153, 246, 228, 0.38);
+        }
+
+        .btn-evaluate:active {
+            transform: translateY(0);
+        }
+
+        /* Panel de Resultados */
+        #results-panel {
+            display: none;
+            margin-top: 2rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.45rem 1.2rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        #results-panel.visible {
+            display: block;
+            animation: fadeInResult 0.35s ease forwards;
+        }
+
+        @keyframes fadeInResult {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.2rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 126px;
+            height: 126px;
+            border-radius: 50%;
+            background: rgba(15, 6, 16, 0.82);
+            border: 2px solid var(--pastel-violet);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 2.15rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1;
+            font-family: var(--font-mono);
+        }
+
+        .score-total {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .score-message {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .score-subtext {
+            font-size: 0.87rem;
+            color: var(--text-secondary);
+        }
+
+        .perfect-banner {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: rgba(134, 239, 172, 0.13);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.38);
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(15, 6, 16, 0.84);
+            border-left: 4px solid var(--pastel-rose);
+            border-radius: var(--radius-md);
+            padding: 0.95rem;
+        }
+
+        .error-item.partial-item {
+            border-left-color: var(--pastel-amber);
+        }
+
+        .error-item-header {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--pastel-rose);
+            margin-bottom: 0.45rem;
+        }
+
+        .error-item.partial-item .error-item-header {
+            color: var(--pastel-amber);
+        }
+
+        .error-comparison {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+
+        .ans-box {
+            padding: 0.5rem 0.7rem;
+            border-radius: var(--radius-sm);
+            word-break: break-word;
+        }
+
+        .ans-user {
+            background: rgba(253, 164, 175, 0.09);
+            border: 1px solid rgba(253, 164, 175, 0.25);
+            color: var(--pastel-rose);
+        }
+
+        .ans-expected {
+            background: rgba(134, 239, 172, 0.09);
+            border: 1px solid rgba(134, 239, 172, 0.25);
+            color: var(--pastel-mint);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .error-explanation code {
+            font-family: var(--font-mono);
+            color: var(--pastel-amber);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.08rem 0.32rem;
+            border-radius: 4px;
+        }
+
+        /* Media Queries Desktop */
+        @media (min-width: 980px) {
+            .page-wrapper {
+                padding: 2rem 1.4rem 4.2rem;
+            }
+
+            .eval-header {
+                padding: 1.85rem 2rem;
+            }
+
+            .eval-title {
+                font-size: 2rem;
+            }
+
+            .er-header-bar {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .question-card {
+                padding: 1.5rem 1.65rem;
+            }
+
+            .error-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo de partículas: Polvo y Luz -->
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <header class="eval-header">
+            <div class="badges-row">
+                <span class="badge badge-violet">Base de Datos II</span>
+                <span class="badge badge-cyan">SQL++ · Evaluación #3</span>
+                <span class="badge badge-mint">15 Ejercicios</span>
+                <span class="badge badge-amber">Calificación: 10 Puntos</span>
+            </div>
+            <h1 class="eval-title">Evaluación SQL++: Comercio Electrónico y Logística</h1>
+            <p class="eval-subtitle">
+                Resuelva los 15 ejercicios propuestos (5 de desarrollo de sentencias, 5 de selección múltiple y 5 de selección binaria). Contestando correctamente la totalidad de las consignas obtendrá la calificación máxima de <strong>10 puntos</strong>.
+            </p>
+        </header>
+
+        <!-- =================================================================
+             GUÍA GRÁFICA DE 5 TABLAS RELACIONALES (PK, FK Y TABLA INTERMEDIA N:M)
+             ================================================================= -->
+        <section class="er-diagram-section" aria-label="Esquema gráfico relacional de tablas">
+            <div class="er-header-bar">
+                <div>
+                    <h2 class="er-title">🗂️ Esquema Gráfico Relacional: Sucursales, Ventas y Artículos (5 Tablas)</h2>
+                    <p class="er-subtitle">Pase el cursor sobre cualquier atributo <strong>PK</strong> o <strong>FK</strong> para iluminar su par correspondiente. La tabla <strong>detalle_pedidos</strong> resuelve la relación muchos a muchos (<strong>N:M</strong>) entre <strong>pedidos</strong> y <strong>articulos</strong>.</p>
+                </div>
+                <div class="er-legend">
+                    <span class="legend-item">
+                        <span class="key-tag key-pk">PK</span> Clave Primaria (Identificador único)
+                    </span>
+                    <span class="legend-item">
+                        <span class="key-tag key-fk">FK</span> Clave Foránea (Atributo de unión)
+                    </span>
+                </div>
+            </div>
+
+            <div class="er-visual-board">
+                <!-- TABLA 1: sucursales -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🏪 sucursales</span>
+                        <span class="er-table-tag">Tabla 1</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_sucursal">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_sucursal</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">ciudad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">superficie_m2</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 1: sucursales (1) <-> (N) vendedores -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_sucursal">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 2: vendedores -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🧑‍💼 vendedores</span>
+                        <span class="er-table-tag">Tabla 2</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_vendedor">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_vendedor</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">apellido_vend</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">comision</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(5,2)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_sucursal">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_sucursal</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 2: vendedores (1) <-> (N) pedidos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_vendedor">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 3: pedidos -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">📦 pedidos</span>
+                        <span class="er-table-tag">Tabla 3</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_pedido">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_pedido</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">comprador</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(60)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">metodo_pago</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(30)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">envio_costo</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(8,2)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_vendedor">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_vendedor</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 3: pedidos (1) <-> (N) detalle_pedidos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_pedido">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 4 (INTERMEDIA N:M): detalle_pedidos -->
+                <article class="er-table-node is-bridge-table">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🧾 detalle_pedidos</span>
+                        <span class="er-table-tag er-nm-tag">Intermedia N:M</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_detalle">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_detalle</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_pedido">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_pedido</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_articulo">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_articulo</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">unidades</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 4: detalle_pedidos (N) <-> (1) articulos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_articulo">
+                        <span class="er-cardinality">∞</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">1</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 5: articulos -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎧 articulos</span>
+                        <span class="er-table-tag">Tabla 5</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_articulo">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_articulo</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_art</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(60)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">rubro</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(40)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">precio_lista</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(10,2)</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             FORMULARIO DE 15 EJERCICIOS (5 COMPLETAR, 5 MULTIPLE, 5 BINARIA)
+             ================================================================= -->
+        <form id="sql-eval-form" novalidate>
+            <div class="questions-list">
+
+                <!-- ===================== 1 AL 5: COMPLETAR ===================== -->
+
+                <!-- EJERCICIO 1 -->
+                <article class="question-card" id="card-q1">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 1 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una <strong>2 tablas</strong> (<code>vendedores</code> y <code>sucursales</code>) mediante su vínculo relacional para mostrar los atributos <code>apellido_vend</code>, <code>comision</code> y <code>ciudad</code> (en ese orden), filtrando únicamente aquellas sucursales cuya <code>superficie_m2</code> sea mayor o igual a <code>300</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q1-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q1"></div>
+                </article>
+
+                <!-- EJERCICIO 2 -->
+                <article class="question-card" id="card-q2">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 2 · JOIN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Redacte una sentencia que una <strong>3 tablas</strong> (<code>vendedores</code>, <code>pedidos</code> y <code>detalle_pedidos</code>) para consultar <code>apellido_vend</code>, <code>comprador</code> y <code>unidades</code> (en ese orden), filtrando los pedidos cuyo <code>metodo_pago</code> sea <code>'Tarjeta'</code> y cuyas <code>unidades</code> sean mayores a <code>5</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q2-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q2"></div>
+                </article>
+
+                <!-- EJERCICIO 3 -->
+                <article class="question-card" id="card-q3">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 3 · ON</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las <strong>3 tablas de la relación muchos a muchos</strong> (<code>pedidos</code>, la tabla intermedia <code>detalle_pedidos</code> y <code>articulos</code>) para obtener <code>comprador</code>, <code>nombre_art</code> y <code>unidades</code> (en ese orden) únicamente de los artículos cuyo <code>rubro</code> sea <code>'Informatica'</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q3-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q3"></div>
+                </article>
+
+                <!-- EJERCICIO 4 -->
+                <article class="question-card" id="card-q4">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 4 · AVG</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las tablas <code>detalle_pedidos</code> y <code>articulos</code> para calcular el promedio del campo <code>precio_lista</code> de todos los artículos incluidos en el pedido con <code>id_pedido</code> igual a <code>25</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q4-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q4"></div>
+                </article>
+
+                <!-- EJERCICIO 5 -->
+                <article class="question-card" id="card-q5">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 5 · UPDATE</span>
+                    </div>
+                    <p class="q-prompt">
+                        En una operación sobre <strong>1 sola tabla</strong>, modifique los registros de la tabla <code>articulos</code> asignando un <code>precio_lista</code> de <code>45000</code> para aquellos artículos cuyo <code>rubro</code> sea <code>'Audio'</code> y su <code>id_articulo</code> sea <code>14</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q5-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q5"></div>
+                </article>
+
+                <!-- ================= 6 AL 10: MULTIPLE CHOICE ================= -->
+
+                <!-- EJERCICIO 6 -->
+                <article class="question-card" id="card-q6">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 6 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se desea listar el <code>id_vendedor</code>, el <code>comprador</code> y el <code>apellido_vend</code> uniendo las tablas <code>pedidos</code> y <code>vendedores</code>. ¿Cuáles de las siguientes consultas son sintáctica y relacionalmente válidas sin provocar error de columna ambigua?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="A">
+                            <span class="option-text"><code>SELECT vendedores.id_vendedor, pedidos.comprador, vendedores.apellido_vend FROM pedidos INNER JOIN vendedores ON pedidos.id_vendedor = vendedores.id_vendedor;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="B">
+                            <span class="option-text"><code>SELECT v.id_vendedor, p.comprador, v.apellido_vend FROM pedidos p INNER JOIN vendedores v WHERE p.id_vendedor = v.id_vendedor;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="C">
+                            <span class="option-text"><code>SELECT v.id_vendedor, p.comprador, v.apellido_vend FROM vendedores v INNER JOIN pedidos p ON v.id_vendedor = p.id_vendedor;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="D">
+                            <span class="option-text"><code>SELECT id_vendedor, comprador, apellido_vend FROM pedidos INNER JOIN vendedores ON pedidos.id_vendedor = vendedores.id_vendedor;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q6"></div>
+                </article>
+
+                <!-- EJERCICIO 7 -->
+                <article class="question-card" id="card-q7">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 7 · FROM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Considerando el esquema de 5 tablas y la tabla intermedia <code>detalle_pedidos</code> (relación muchos a muchos entre <code>pedidos</code> y <code>articulos</code>), seleccione las afirmaciones verdaderas sobre el uso de <code>INNER JOIN</code>:
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="A">
+                            <span class="option-text">La tabla intermedia <code>detalle_pedidos</code> permite que un mismo pedido incluya varios artículos distintos y que un mismo artículo figure en múltiples pedidos.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="B">
+                            <span class="option-text">Si un artículo del catálogo nunca fue incluido en ningún pedido (no aparece en <code>detalle_pedidos</code>), no será devuelto al ejecutar un <code>INNER JOIN</code> entre <code>articulos</code> y <code>detalle_pedidos</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="C">
+                            <span class="option-text">Es posible unir directamente <code>pedidos</code> con <code>articulos</code> mediante <code>ON pedidos.id_pedido = articulos.id_articulo</code> prescindiendo de <code>detalle_pedidos</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="D">
+                            <span class="option-text">Para vincular la <code>ciudad</code> de la tabla <code>sucursales</code> con el <code>nombre_art</code> de la tabla <code>articulos</code> en una misma consulta, es necesario encadenar 4 cláusulas <code>INNER JOIN</code> a través de las 5 tablas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q7"></div>
+                </article>
+
+                <!-- EJERCICIO 8 -->
+                <article class="question-card" id="card-q8">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 8 · WHERE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere listar los pedidos (<code>comprador</code> y <code>metodo_pago</code>) junto al <code>apellido_vend</code> de su vendedor, solo para aquellos pedidos cuyo <code>metodo_pago</code> sea <code>'Transferencia'</code> o <code>'Efectivo'</code>, y donde la <code>comision</code> del vendedor esté entre <code>8</code> y <code>15</code> inclusive. ¿Cuáles consultas resuelven esto correctamente?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="A">
+                            <span class="option-text"><code>SELECT p.comprador, p.metodo_pago, v.apellido_vend FROM pedidos p INNER JOIN vendedores v ON p.id_vendedor = v.id_vendedor WHERE (p.metodo_pago = 'Transferencia' OR p.metodo_pago = 'Efectivo') AND v.comision BETWEEN 8 AND 15;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="B">
+                            <span class="option-text"><code>SELECT p.comprador, p.metodo_pago, v.apellido_vend FROM pedidos p INNER JOIN vendedores v ON p.id_vendedor = v.id_vendedor WHERE p.metodo_pago = 'Transferencia' OR p.metodo_pago = 'Efectivo' AND v.comision BETWEEN 8 AND 15;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="C">
+                            <span class="option-text"><code>SELECT pedidos.comprador, pedidos.metodo_pago, vendedores.apellido_vend FROM vendedores INNER JOIN pedidos ON vendedores.id_vendedor = pedidos.id_vendedor WHERE vendedores.comision &gt;= 8 AND vendedores.comision &lt;= 15 AND (pedidos.metodo_pago = 'Transferencia' OR pedidos.metodo_pago = 'Efectivo');</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="D">
+                            <span class="option-text"><code>SELECT p.comprador, p.metodo_pago, v.apellido_vend FROM pedidos p INNER JOIN vendedores v ON p.id_pedido = v.id_vendedor WHERE (p.metodo_pago = 'Transferencia' OR p.metodo_pago = 'Efectivo') AND v.comision BETWEEN 8 AND 15;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q8"></div>
+                </article>
+
+                <!-- EJERCICIO 9 -->
+                <article class="question-card" id="card-q9">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 9 · LIKE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se busca obtener el <code>comprador</code> y el <code>nombre_art</code> uniendo <code>pedidos</code>, <code>detalle_pedidos</code> y <code>articulos</code>, filtrando aquellos artículos cuyo <code>nombre_art</code> comience con la palabra <code>'Monitor'</code> y cuyas <code>unidades</code> en el detalle sean mayores o iguales a <code>2</code>. ¿Cuáles consultas son correctas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="A">
+                            <span class="option-text"><code>SELECT p.comprador, a.nombre_art FROM pedidos p INNER JOIN detalle_pedidos dp ON p.id_pedido = dp.id_pedido INNER JOIN articulos a ON dp.id_articulo = a.id_articulo WHERE a.nombre_art LIKE 'Monitor%' AND dp.unidades &gt;= 2;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="B">
+                            <span class="option-text"><code>SELECT p.comprador, a.nombre_art FROM pedidos p INNER JOIN detalle_pedidos dp ON p.id_pedido = dp.id_detalle INNER JOIN articulos a ON dp.id_articulo = a.id_articulo WHERE a.nombre_art LIKE 'Monitor%' AND dp.unidades &gt;= 2;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="C">
+                            <span class="option-text"><code>SELECT pedidos.comprador, articulos.nombre_art FROM articulos INNER JOIN detalle_pedidos ON articulos.id_articulo = detalle_pedidos.id_articulo INNER JOIN pedidos ON detalle_pedidos.id_pedido = pedidos.id_pedido WHERE articulos.nombre_art LIKE 'Monitor%' AND detalle_pedidos.unidades &gt;= 2;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="D">
+                            <span class="option-text"><code>SELECT p.comprador, a.nombre_art FROM pedidos p INNER JOIN detalle_pedidos dp ON p.id_pedido = dp.id_pedido INNER JOIN articulos a ON dp.id_articulo = a.id_articulo WHERE a.nombre_art LIKE '%Monitor' OR dp.unidades &gt; 2;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q9"></div>
+                </article>
+
+                <!-- EJERCICIO 10 -->
+                <article class="question-card" id="card-q10">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 10 · SUM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que en <code>detalle_pedidos</code> existen <strong>40 filas</strong> válidamente vinculadas a pedidos en <code>pedidos</code>, que en <strong>3 de esas 40 filas</strong> el pedido correspondiente tiene el campo <code>metodo_pago</code> en <code>NULL</code>, y que existen además <strong>4 pedidos nuevos</strong> en <code>pedidos</code> que todavía no tienen filas cargadas en <code>detalle_pedidos</code>. Al ejecutar una consulta con <code>FROM pedidos INNER JOIN detalle_pedidos ON pedidos.id_pedido = detalle_pedidos.id_pedido</code>, ¿cuáles afirmaciones son verdaderas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="A">
+                            <span class="option-text"><code>SELECT COUNT(*)</code> sobre ese <code>INNER JOIN</code> devolverá <code>40</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="B">
+                            <span class="option-text"><code>SELECT COUNT(pedidos.metodo_pago)</code> sobre ese <code>INNER JOIN</code> devolverá <code>37</code> porque ignora los valores <code>NULL</code> de esa columna.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="C">
+                            <span class="option-text">Los 4 pedidos que aún no tienen filas en <code>detalle_pedidos</code> se incluyen igualmente en el resultado del <code>INNER JOIN</code> sumando <code>0</code> en <code>unidades</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="D">
+                            <span class="option-text"><code>SELECT SUM(detalle_pedidos.unidades)</code> sumará el total de unidades de las 40 filas vinculadas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q10"></div>
+                </article>
+
+                <!-- ================ 11 AL 15: SELECCIÓN BINARIA ================ -->
+
+                <!-- EJERCICIO 11 -->
+                <article class="question-card" id="card-q11">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 11 · SELECT</span>
+                    </div>
+                    <p class="q-prompt">
+                        Observe la siguiente sentencia que utiliza alias de tablas:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> s.ciudad, sucursales.superficie_m2, v.apellido_vend
+<span class="kw">FROM</span> sucursales s
+<span class="kw">INNER JOIN</span> vendedores v <span class="kw">ON</span> s.id_sucursal = v.id_sucursal;</pre>
+                    <p class="q-prompt">
+                        ¿Qué resultado produce la ejecución de esta consulta en un motor SQL estándar (como MySQL / MariaDB)?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="A">
+                            <span class="option-text">Arroja un error (<code>Unknown column 'sucursales.superficie_m2'</code>), porque al asignarle el alias <code>s</code> a la tabla <code>sucursales</code> en el <code>FROM</code>, en esa consulta debe referenciarse obligatoriamente como <code>s.superficie_m2</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="B">
+                            <span class="option-text">Se ejecuta sin inconvenientes porque SQL permite alternar libremente el alias <code>s</code> y el nombre completo <code>sucursales</code> dentro del mismo <code>SELECT</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q11"></div>
+                </article>
+
+                <!-- EJERCICIO 12 -->
+                <article class="question-card" id="card-q12">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 12 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Según el diagrama relacional de 5 tablas, si se desea obtener en una misma consulta la <code>ciudad</code> (tabla <code>sucursales</code>) junto con el <code>nombre_art</code> (tabla <code>articulos</code>) de cada artículo vendido por vendedores de esa sucursal, ¿cuál es el procedimiento relacional correcto?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="A">
+                            <span class="option-text">Realizar un único <code>INNER JOIN</code> directo entre <code>sucursales</code> y <code>articulos</code> igualando <code>sucursales.id_sucursal = articulos.id_articulo</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="B">
+                            <span class="option-text">Encadenar 4 cláusulas <code>INNER JOIN</code> que recorran el camino completo de claves foráneas entre las 5 tablas (<code>sucursales</code> ↔ <code>vendedores</code> ↔ <code>pedidos</code> ↔ <code>detalle_pedidos</code> ↔ <code>articulos</code>).</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q12"></div>
+                </article>
+
+                <!-- EJERCICIO 13 -->
+                <article class="question-card" id="card-q13">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 13 · BETWEEN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Analice la siguiente consulta sobre <code>vendedores</code> y <code>pedidos</code>:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> v.apellido_vend, p.comprador, p.envio_costo
+<span class="kw">FROM</span> vendedores v
+<span class="kw">INNER JOIN</span> pedidos p <span class="kw">ON</span> v.id_vendedor = p.id_vendedor
+<span class="kw">WHERE</span> v.apellido_vend <span class="kw">LIKE</span> <span class="str">'%z'</span>
+  <span class="kw">AND</span> p.envio_costo <span class="kw">NOT BETWEEN</span> <span class="num">1500</span> <span class="kw">AND</span> <span class="num">4000</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué filas recuperará exactamente esta sentencia?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="A">
+                            <span class="option-text">Los pedidos de vendedores cuyo apellido termina con la letra <code>'z'</code> y cuyo costo de envío sea estrictamente menor a <code>1500</code> o estrictamente mayor a <code>4000</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="B">
+                            <span class="option-text">Los pedidos de vendedores cuyo apellido empieza con la letra <code>'z'</code> y cuyo costo de envío sea menor o igual a <code>1500</code> o mayor o igual a <code>4000</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q13"></div>
+                </article>
+
+                <!-- EJERCICIO 14 -->
+                <article class="question-card" id="card-q14">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 14 · SUM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que el pedido con <code>id_pedido = 9</code> tiene en la tabla <code>pedidos</code> un <code>envio_costo = 2000</code>, y dicho pedido posee <strong>3 artículos distintos</strong> cargados en la tabla intermedia <code>detalle_pedidos</code> (3 filas asociadas). Si se ejecuta:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> <span class="fn">SUM</span>(pedidos.envio_costo)
+<span class="kw">FROM</span> pedidos
+<span class="kw">INNER JOIN</span> detalle_pedidos <span class="kw">ON</span> pedidos.id_pedido = detalle_pedidos.id_pedido
+<span class="kw">WHERE</span> pedidos.id_pedido = <span class="num">9</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué valor numérico retorna la consulta y por qué?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="A">
+                            <span class="option-text">Retorna <code>6000</code>, porque el <code>INNER JOIN</code> con las 3 filas de <code>detalle_pedidos</code> repite 3 veces los datos de la cabecera del pedido 9 y <code>SUM(pedidos.envio_costo)</code> suma <code>2000</code> en cada una de las 3 filas resultantes.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="B">
+                            <span class="option-text">Retorna <code>2000</code>, porque <code>SUM</code> detecta automáticamente que <code>envio_costo</code> pertenece a la tabla cabecera <code>pedidos</code> y lo suma una sola vez por cada <code>id_pedido</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q14"></div>
+                </article>
+
+                <!-- EJERCICIO 15 -->
+                <article class="question-card" id="card-q15">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 15 · ADD</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere modificar la estructura de la tabla <code>articulos</code> para agregar una nueva columna llamada <code>stock</code> de tipo <code>INT</code> que no admita valores nulos. ¿Cuál de las siguientes sentencias es válida en MySQL / MariaDB?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="A">
+                            <span class="option-text"><code>ALTER TABLE articulos INSERT COLUMN stock INT NOT NULL;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="B">
+                            <span class="option-text"><code>ALTER TABLE articulos ADD stock INT NOT NULL;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q15"></div>
+                </article>
+
+            </div>
+
+            <div class="actions-footer">
+                <button type="button" id="btn-evaluar" class="btn-evaluate">Evaluar Respuestas</button>
+            </div>
+        </form>
+
+        <!-- =================================================================
+             PANEL DE RESULTADOS Y DIAGNÓSTICO DETALLADO
+             ================================================================= -->
+        <section id="results-panel" aria-live="polite">
+            <div class="score-summary">
+                <div class="score-circle">
+                    <span class="score-value" id="score-number">0</span>
+                    <span class="score-total">/ 10 PUNTOS</span>
+                </div>
+                <h2 class="score-message" id="score-title">Resultado de la Evaluación</h2>
+                <p class="score-subtext" id="score-subtitle"></p>
+                <div class="perfect-banner" id="perfect-banner">
+                    🌟 ¡Felicitaciones! Has resuelto correctamente los 15 ejercicios de SQL++ con INNER JOIN sobre el esquema de 5 tablas, alcanzando la calificación máxima de 10 puntos.
+                </div>
+            </div>
+
+            <div id="errors-container"></div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           1. ANIMACIÓN DE PARTÍCULAS "POLVO Y LUZ" (CANVAS)
+           ========================================================================= */
+        (function initDustCanvas() {
+            const canvas = document.getElementById('dust-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const palette = [
+                'rgba(249, 168, 212, 0.36)',
+                'rgba(153, 246, 228, 0.32)',
+                'rgba(252, 211, 77, 0.28)',
+                'rgba(253, 186, 116, 0.25)'
+            ];
+
+            const particles = Array.from({ length: 46 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.1 + 0.6,
+                vx: (Math.random() - 0.5) * 0.24,
+                vy: -Math.random() * 0.32 - 0.08,
+                color: palette[Math.floor(Math.random() * palette.length)],
+                alpha: Math.random() * 0.65 + 0.25
+            }));
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                }
+                requestAnimationFrame(render);
+            }
+            render();
+        })();
+
+        /* =========================================================================
+           2. PERSISTENCIA EN LOCALSTORAGE (SIN ARCHIVOS EXTERNOS)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd2_sqlplusplus_evaluacion3_state_v1';
+
+        const appState = {
+            answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [], q9: [], q10: [],
+                q11: '', q12: '', q13: '', q14: '', q15: ''
+            },
+            evaluated: false
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('No se pudo guardar en localStorage:', e);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && parsed.answers) {
+                    appState.answers = Object.assign(appState.answers, parsed.answers);
+                    appState.evaluated = Boolean(parsed.evaluated);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('No se pudo restaurar desde localStorage:', e);
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           3. NORMALIZACIÓN DE SQL Y REGLAS DE EVALUACIÓN (15 EJERCICIOS = 10 PUNTOS)
+           ========================================================================= */
+        function normalizeSQL(raw) {
+            if (!raw) return '';
+            let s = raw.trim().toLowerCase();
+            s = s.replace(/\s+/g, ' ');
+            s = s.replace(/\s*;\s*$/, '');
+            s = s.replace(/\s*,\s*/g, ', ');
+            s = s.replace(/\s*=\s*/g, ' = ');
+            s = s.replace(/\s*>=\s*/g, ' >= ');
+            s = s.replace(/\s*<=\s*/g, ' <= ');
+            s = s.replace(/\s*!=\s*/g, ' != ');
+            s = s.replace(/\s*<>\s*/g, ' <> ');
+            s = s.replace(/\(\s+/g, '(');
+            s = s.replace(/\s+\)/g, ')');
+            s = s.replace(/\s+/g, ' ').trim();
+            return s;
+        }
+
+        // Normaliza equivalencias en consultas con INNER JOIN (con o sin prefijo de tabla en columnas no ambiguas, JOIN vs INNER JOIN y orden del ON)
+        function canonicalizeJoinQuery(norm) {
+            let c = norm;
+            // Aceptar "join" como "inner join" cuando no tiene left/right/cross/full antes
+            c = c.replace(/(^|\s)(?<!inner\s)(?<!left\s)(?<!right\s)(?<!cross\s)(?<!full\s)join\s+/g, '$1inner join ');
+            // Estandarizar igualdad ON id_sucursal
+            c = c.replace(/sucursales\.id_sucursal\s*=\s*vendedores\.id_sucursal/g, 'vendedores.id_sucursal = sucursales.id_sucursal');
+            // Estandarizar igualdad ON id_vendedor
+            c = c.replace(/pedidos\.id_vendedor\s*=\s*vendedores\.id_vendedor/g, 'vendedores.id_vendedor = pedidos.id_vendedor');
+            // Estandarizar igualdad ON id_pedido
+            c = c.replace(/detalle_pedidos\.id_pedido\s*=\s*pedidos\.id_pedido/g, 'pedidos.id_pedido = detalle_pedidos.id_pedido');
+            // Estandarizar igualdad ON id_articulo
+            c = c.replace(/articulos\.id_articulo\s*=\s*detalle_pedidos\.id_articulo/g, 'detalle_pedidos.id_articulo = articulos.id_articulo');
+            // Quitar prefijos de tabla en atributos que no son ambiguos para aceptar tanto tabla.campo como campo directo
+            c = c.replace(/\b(sucursales|vendedores|pedidos|detalle_pedidos|articulos)\.(ciudad|superficie_m2|apellido_vend|comision|comprador|metodo_pago|envio_costo|unidades|nombre_art|rubro|precio_lista)\b/g, '$2');
+            return c.replace(/\s+/g, ' ').trim();
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatScore(num) {
+            const rounded = Math.round(num * 100) / 100;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · INNER',
+                canonicalAnswer: "SELECT vendedores.apellido_vend, vendedores.comision, sucursales.ciudad FROM vendedores INNER JOIN sucursales ON vendedores.id_sucursal = sucursales.id_sucursal WHERE sucursales.superficie_m2 >= 300;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validForms = [
+                        "select apellido_vend, comision, ciudad from vendedores inner join sucursales on vendedores.id_sucursal = sucursales.id_sucursal where superficie_m2 >= 300",
+                        "select apellido_vend, comision, ciudad from sucursales inner join vendedores on vendedores.id_sucursal = sucursales.id_sucursal where superficie_m2 >= 300"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('select ')) return "La consulta debe iniciar con la cláusula <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta la cláusula <code>INNER JOIN</code> para vincular las tablas <code>vendedores</code> y <code>sucursales</code>.";
+                    if (!norm.includes(' on ')) return "Falta la palabra clave <code>ON</code> para indicar la condición de unión entre clave primaria y foránea.";
+                    if (!norm.includes('vendedores.id_sucursal') || !norm.includes('sucursales.id_sucursal')) return "En el <code>ON</code> debes igualar <code>vendedores.id_sucursal = sucursales.id_sucursal</code>.";
+                    if (!norm.includes('where')) return "Falta la cláusula <code>WHERE</code> para filtrar por <code>superficie_m2 &gt;= 300</code>.";
+                    if (!norm.includes('>= 300')) return "Para 'mayor o igual a 300' debes utilizar el operador <code>&gt;= 300</code> sobre el campo <code>superficie_m2</code>.";
+                    return "Revisa que los campos en el <code>SELECT</code> sean exactamente <code>apellido_vend, comision, ciudad</code> y que las tablas unidas sean <code>vendedores</code> y <code>sucursales</code>.";
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · JOIN',
+                canonicalAnswer: "SELECT vendedores.apellido_vend, pedidos.comprador, detalle_pedidos.unidades FROM vendedores INNER JOIN pedidos ON vendedores.id_vendedor = pedidos.id_vendedor INNER JOIN detalle_pedidos ON pedidos.id_pedido = detalle_pedidos.id_pedido WHERE pedidos.metodo_pago = 'Tarjeta' AND detalle_pedidos.unidades > 5;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm).replace(/"tarjeta"/g, "'tarjeta'");
+                    const validSelectAndJoins = [
+                        "select apellido_vend, comprador, unidades from vendedores inner join pedidos on vendedores.id_vendedor = pedidos.id_vendedor inner join detalle_pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido",
+                        "select apellido_vend, comprador, unidades from pedidos inner join vendedores on vendedores.id_vendedor = pedidos.id_vendedor inner join detalle_pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido",
+                        "select apellido_vend, comprador, unidades from detalle_pedidos inner join pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido inner join vendedores on vendedores.id_vendedor = pedidos.id_vendedor"
+                    ];
+                    const validWhere = [
+                        "where metodo_pago = 'tarjeta' and unidades > 5",
+                        "where unidades > 5 and metodo_pago = 'tarjeta'"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        for (const w of validWhere) {
+                            if (c === `${sj} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Al tratarse de <strong>3 tablas</strong> (<code>vendedores</code>, <code>pedidos</code> y <code>detalle_pedidos</code>), necesitas encadenar <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('vendedores.id_vendedor') || !norm.includes('pedidos.id_vendedor')) return "Falta igualar la relación entre vendedores y pedidos: <code>ON vendedores.id_vendedor = pedidos.id_vendedor</code>.";
+                    if (!norm.includes('pedidos.id_pedido') || !norm.includes('detalle_pedidos.id_pedido')) return "Falta igualar la relación entre pedidos y detalle_pedidos: <code>ON pedidos.id_pedido = detalle_pedidos.id_pedido</code>.";
+                    if (!norm.includes("'tarjeta'") && !norm.includes('"tarjeta"')) return "Recuerda filtrar <code>metodo_pago = 'Tarjeta'</code> encerrando el texto entre comillas simples.";
+                    if (!norm.includes(' and ') || !norm.includes('> 5')) return "Debes combinar ambas condiciones en el <code>WHERE</code> mediante <code>AND</code> y verificar <code>unidades &gt; 5</code>.";
+                    return "Verifica el orden de las columnas (<code>apellido_vend, comprador, unidades</code>) y las dos uniones <code>INNER JOIN</code>.";
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · ON',
+                canonicalAnswer: "SELECT pedidos.comprador, articulos.nombre_art, detalle_pedidos.unidades FROM pedidos INNER JOIN detalle_pedidos ON pedidos.id_pedido = detalle_pedidos.id_pedido INNER JOIN articulos ON detalle_pedidos.id_articulo = articulos.id_articulo WHERE articulos.rubro = 'Informatica';",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm)
+                        .replace(/['"]informática['"]/g, "'informatica'")
+                        .replace(/['"]informatica['"]/g, "'informatica'");
+                    const validSelectAndJoins = [
+                        "select comprador, nombre_art, unidades from pedidos inner join detalle_pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido inner join articulos on detalle_pedidos.id_articulo = articulos.id_articulo",
+                        "select comprador, nombre_art, unidades from detalle_pedidos inner join pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido inner join articulos on detalle_pedidos.id_articulo = articulos.id_articulo",
+                        "select comprador, nombre_art, unidades from articulos inner join detalle_pedidos on detalle_pedidos.id_articulo = articulos.id_articulo inner join pedidos on pedidos.id_pedido = detalle_pedidos.id_pedido"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        if (c === `${sj} where rubro = 'informatica'`) return true;
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Para unir la relación muchos a muchos entre <code>pedidos</code> y <code>articulos</code> debes pasar por la tabla intermedia <code>detalle_pedidos</code> usando <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('pedidos.id_pedido') || !norm.includes('detalle_pedidos.id_pedido')) return "Falta la condición de unión <code>ON pedidos.id_pedido = detalle_pedidos.id_pedido</code>.";
+                    if (!norm.includes('detalle_pedidos.id_articulo') || !norm.includes('articulos.id_articulo')) return "Falta la condición de unión <code>ON detalle_pedidos.id_articulo = articulos.id_articulo</code>.";
+                    if (!norm.includes('where') || (!norm.includes("'informatica'") && !norm.includes("'informática'"))) return "Falta filtrar en el <code>WHERE</code> por <code>rubro = 'Informatica'</code>.";
+                    return "Revisa que las columnas seleccionadas sean <code>comprador, nombre_art, unidades</code> (en ese orden) y que ambas uniones <code>INNER JOIN</code> estén completas.";
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · AVG',
+                canonicalAnswer: "SELECT AVG(articulos.precio_lista) FROM detalle_pedidos INNER JOIN articulos ON detalle_pedidos.id_articulo = articulos.id_articulo WHERE detalle_pedidos.id_pedido = 25;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validForms = [
+                        "select avg(precio_lista) from detalle_pedidos inner join articulos on detalle_pedidos.id_articulo = articulos.id_articulo where detalle_pedidos.id_pedido = 25",
+                        "select avg(precio_lista) from detalle_pedidos inner join articulos on detalle_pedidos.id_articulo = articulos.id_articulo where id_pedido = 25",
+                        "select avg(precio_lista) from articulos inner join detalle_pedidos on detalle_pedidos.id_articulo = articulos.id_articulo where detalle_pedidos.id_pedido = 25",
+                        "select avg(precio_lista) from articulos inner join detalle_pedidos on detalle_pedidos.id_articulo = articulos.id_articulo where id_pedido = 25"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.includes('avg(') || !norm.includes('precio_lista')) return "Debes utilizar la función de agregación <code>AVG(articulos.precio_lista)</code> en el <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta unir las tablas <code>detalle_pedidos</code> y <code>articulos</code> mediante <code>INNER JOIN</code>.";
+                    if (!norm.includes('detalle_pedidos.id_articulo') || !norm.includes('articulos.id_articulo')) return "La condición de unión debe ser <code>ON detalle_pedidos.id_articulo = articulos.id_articulo</code>.";
+                    if (!norm.includes('id_pedido = 25')) return "Falta filtrar en el <code>WHERE</code> por <code>id_pedido = 25</code>.";
+                    return "Verifica la sintaxis general: <code>SELECT AVG(articulos.precio_lista) FROM detalle_pedidos INNER JOIN articulos ON detalle_pedidos.id_articulo = articulos.id_articulo WHERE detalle_pedidos.id_pedido = 25;</code>.";
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · UPDATE',
+                canonicalAnswer: "UPDATE articulos SET precio_lista = 45000 WHERE rubro = 'Audio' AND id_articulo = 14;",
+                validate: (norm) => {
+                    const c = norm.replace(/\barticulos\./g, '').replace(/"audio"/g, "'audio'");
+                    return (
+                        c === "update articulos set precio_lista = 45000 where rubro = 'audio' and id_articulo = 14" ||
+                        c === "update articulos set precio_lista = 45000 where id_articulo = 14 and rubro = 'audio'"
+                    );
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('update articulos')) return "Para actualizar registros en la tabla debes comenzar con <code>UPDATE articulos</code>.";
+                    if (!norm.includes('set precio_lista = 45000')) return "Falta la cláusula <code>SET precio_lista = 45000</code>.";
+                    if (!norm.includes('where')) return "Falta la cláusula <code>WHERE</code> para acotar la modificación.";
+                    if (!norm.includes("'audio'") && !norm.includes('"audio"')) return "Debes especificar la condición <code>rubro = 'Audio'</code> entre comillas.";
+                    if (!norm.includes('id_articulo = 14') || !norm.includes(' and ')) return "Debes combinar ambas condiciones en el <code>WHERE</code> usando <code>AND id_articulo = 14</code>.";
+                    return "Revisa la estructura: <code>UPDATE articulos SET precio_lista = 45000 WHERE rubro = 'Audio' AND id_articulo = 14;</code>.";
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · INNER',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es inválida porque utiliza <code>WHERE</code> inmediatamente después de <code>INNER JOIN</code> omitiendo la cláusula obligatoria <code>ON</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: provoca un error de ambigüedad (<code>Column 'id_vendedor' in field list is ambiguous</code>) porque <code>id_vendedor</code> existe tanto en <code>pedidos</code> como en <code>vendedores</code> y no fue prefijada en el <code>SELECT</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque desambigua <code>vendedores.id_vendedor</code> y une correctamente con <code>ON</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque define los alias <code>v</code> y <code>p</code> y los aplica consistentemente."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · FROM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque igualar <code>pedidos.id_pedido = articulos.id_articulo</code> compara identificadores de entidades distintas sin relación directa; toda consulta entre pedidos y artículos debe pasar por la tabla intermedia <code>detalle_pedidos</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>detalle_pedidos</code> modela la relación muchos a muchos (N:M) entre pedidos y artículos.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>INNER JOIN</code> excluye los artículos que no tienen coincidencias en <code>detalle_pedidos</code>.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque conectar <code>sucursales</code> con <code>articulos</code> requiere recorrer las 5 tablas mediante 4 cláusulas <code>INNER JOIN</code>."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · WHERE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque al no usar paréntesis alrededor del <code>OR</code>, el operador <code>AND</code> se evalúa primero y traería todos los pedidos con <code>'Transferencia'</code> sin importar la comisión del vendedor.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque la condición <code>ON p.id_pedido = v.id_vendedor</code> compara la clave primaria del pedido con la del vendedor en vez de usar la clave foránea <code>p.id_vendedor</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque agrupa el <code>OR</code> entre paréntesis y verifica la comisión con <code>BETWEEN 8 AND 15</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une por <code>id_vendedor</code> y expresa el rango con <code>&gt;= 8 AND &lt;= 15</code> junto con el bloque <code>OR</code> entre paréntesis."
+                }
+            },
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · LIKE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque en el primer <code>INNER JOIN</code> iguala <code>p.id_pedido = dp.id_detalle</code> en lugar de usar la clave foránea <code>dp.id_pedido</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque <code>LIKE '%Monitor'</code> busca textos que terminen en Monitor (en vez de comenzar con Monitor), usa <code>OR</code> en vez de <code>AND</code> y usa <code>&gt; 2</code> excluyendo el valor 2."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque une las 3 tablas por sus claves correctas y filtra con <code>LIKE 'Monitor%' AND dp.unidades &gt;= 2</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque recorre desde <code>articulos</code> hacia <code>pedidos</code> pasando por <code>detalle_pedidos</code> con las mismas condiciones."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · SUM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque <code>INNER JOIN</code> descarta por completo los 4 pedidos que no poseen filas asociadas en <code>detalle_pedidos</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>COUNT(*)</code> cuenta las 40 filas resultantes del <code>INNER JOIN</code>.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>COUNT(pedidos.metodo_pago)</code> ignora las 3 filas donde <code>metodo_pago</code> es <code>NULL</code> ($40 - 3 = 37$).",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque <code>SUM(detalle_pedidos.unidades)</code> acumula las unidades de las 40 filas vinculadas."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q11',
+                number: 11,
+                title: 'Ejercicio 11 · SELECT',
+                correctValue: 'A',
+                correctLabel: "Opción A: Arroja un error (Unknown column 'sucursales.superficie_m2'), porque al definir el alias 's' es obligatorio usar s.superficie_m2.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: una vez declarado un alias para una tabla en el <code>FROM</code>, dicho alias reemplaza al nombre original de la tabla en todas las cláusulas de esa consulta (<code>SELECT</code>, <code>ON</code>, <code>WHERE</code>)."
+                }
+            },
+            {
+                id: 'q12',
+                number: 12,
+                title: 'Ejercicio 12 · INNER',
+                correctValue: 'B',
+                correctLabel: 'Opción B: Encadenar 4 cláusulas INNER JOIN que recorran las 5 tablas (sucursales ↔ vendedores ↔ pedidos ↔ detalle_pedidos ↔ articulos).',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: no existe relación directa entre <code>sucursales</code> y <code>articulos</code>; es obligatorio recorrer la cadena relacional a través de <code>vendedores</code>, <code>pedidos</code> y <code>detalle_pedidos</code>."
+                }
+            },
+            {
+                id: 'q13',
+                number: 13,
+                title: 'Ejercicio 13 · BETWEEN',
+                correctValue: 'A',
+                correctLabel: "Opción A: Pedidos de vendedores cuyo apellido termina con 'z' y cuyo costo de envío sea estrictamente menor a 1500 o estrictamente mayor a 4000.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: el comodín <code>'%z'</code> exige que el texto termine en <code>'z'</code>, y <code>NOT BETWEEN 1500 AND 4000</code> excluye los extremos 1500 y 4000 (equivale a <code>&lt; 1500 OR &gt; 4000</code>)."
+                }
+            },
+            {
+                id: 'q14',
+                number: 14,
+                title: 'Ejercicio 14 · SUM',
+                correctValue: 'A',
+                correctLabel: 'Opción A: Retorna 6000, porque el INNER JOIN genera 3 filas para el pedido 9 y SUM acumula 2000 en cada fila.',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: como el pedido 9 tiene 3 filas en <code>detalle_pedidos</code>, el resultado del <code>INNER JOIN</code> contiene 3 filas donde se repite su <code>envio_costo</code> de <code>2000</code>, sumando <code>6000</code>."
+                }
+            },
+            {
+                id: 'q15',
+                number: 15,
+                title: 'Ejercicio 15 · ADD',
+                correctValue: 'B',
+                correctLabel: 'Opción B: ALTER TABLE articulos ADD stock INT NOT NULL;',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: <code>INSERT COLUMN</code> no existe en SQL; para añadir una columna a una tabla existente con <code>ALTER TABLE</code> se utiliza la cláusula <code>ADD</code>."
+                }
+            }
+        ];
+
+        /* =========================================================================
+           4. SINCRONIZACIÓN DOM <-> ESTADO Y FUNCIÓN EVALUADORA (ESCALA 10 PUNTOS)
+           ========================================================================= */
+        function syncDOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el) appState.answers[id] = el.value;
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                appState.answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restoreStateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.answers[id] !== undefined) {
+                    el.value = appState.answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                const vals = appState.answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const val = appState.answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncDOMToState();
+
+            let rawUnits = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validate(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+0.67 pts)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    rawUnits += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Parcialmente correcta (25% del ítem: +0.17 pts) — Ver detalle al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: 25% del ejercicio)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            const gradeOutOf10 = Math.round(((rawUnits / 15) * 10) * 100) / 100;
+
+            appState.evaluated = true;
+            saveStateToStorage();
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const perfectBanner = document.getElementById('perfect-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            scoreNumber.textContent = formatScore(gradeOutOf10);
+            scoreSubtitle.textContent = `Nota final: ${formatScore(gradeOutOf10)} / 10 pts (${formatScore(rawUnits)} de 15 ejercicios equivalentes correctos).`;
+
+            if (rawUnits === 15) {
+                scoreTitle.textContent = '¡Calificación Perfecta (10 / 10)!';
+                perfectBanner.style.display = 'block';
+                errorsContainer.innerHTML = '';
+            } else {
+                perfectBanner.style.display = 'none';
+                if (gradeOutOf10 >= 8) {
+                    scoreTitle.textContent = '¡Muy buen desempeño!';
+                } else if (gradeOutOf10 >= 6) {
+                    scoreTitle.textContent = 'Evaluación Aprobada — Revisa las correcciones';
+                } else {
+                    scoreTitle.textContent = 'Necesitas repasar los conceptos de INNER JOIN y SQL';
+                }
+
+                let errorsHTML = '<div class="errors-list">';
+                mistakes.forEach((m) => {
+                    const partialClass = m.isPartial ? 'partial-item' : '';
+                    const icon = m.isPartial ? '◐' : '✗';
+                    errorsHTML += `
+                        <div class="error-item ${partialClass}">
+                            <div class="error-item-header">${icon} ${escapeHTML(m.title)}</div>
+                            <div class="error-comparison">
+                                <div class="ans-box ans-user">
+                                    <strong>Tu respuesta:</strong><br>${escapeHTML(m.userAnswer)}
+                                </div>
+                                <div class="ans-box ans-expected">
+                                    <strong>Respuesta esperada:</strong><br>${escapeHTML(m.correctAnswer)}
+                                </div>
+                            </div>
+                            <p class="error-explanation">
+                                <strong>Por qué estuvo mal:</strong> ${m.explanation}
+                            </p>
+                        </div>
+                    `;
+                });
+                errorsHTML += '</div>';
+                errorsContainer.innerHTML = errorsHTML;
+            }
+
+            resultsPanel.classList.add('visible');
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+
+        document.getElementById('sql-eval-form').addEventListener('input', () => {
+            syncDOMToState();
+        });
+        document.getElementById('sql-eval-form').addEventListener('change', () => {
+            syncDOMToState();
+        });
+
+        // Interacción Hover sobre campos PK y FK para iluminar su par correspondiente
+        (function initKeyHoverHighlight() {
+            const keyRows = document.querySelectorAll('.er-attr-row[data-join-key]');
+
+            function setHighlightByJoinKey(joinKey, isActive) {
+                if (!joinKey) return;
+                document.querySelectorAll(`.er-attr-row[data-join-key="${joinKey}"]`).forEach((row) => {
+                    row.classList.toggle('key-linked-active', isActive);
+                });
+                document.querySelectorAll(`.er-connector-line[data-join-connector="${joinKey}"]`).forEach((conn) => {
+                    conn.classList.toggle('connector-active', isActive);
+                });
+            }
+
+            keyRows.forEach((row) => {
+                const joinKey = row.getAttribute('data-join-key');
+                row.addEventListener('mouseenter', () => setHighlightByJoinKey(joinKey, true));
+                row.addEventListener('mouseleave', () => setHighlightByJoinKey(joinKey, false));
+            });
+        })();
+
+        // Restaurar estado al cargar la página
+        (function bootstrapApp() {
+            const hadSaved = loadStateFromStorage();
+            if (hadSaved) {
+                restoreStateToDOM();
+                if (appState.evaluated) {
+                    evaluarRespuestas(false);
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

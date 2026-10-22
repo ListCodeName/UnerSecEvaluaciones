@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación SQL++ #4 | Base de Datos II</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark Mobile-First con Paleta Pastel (Océano Medianoche & Azul Hielo / Lima) */
+            --bg-deep: #070f18;
+            --bg-surface: rgba(13, 25, 40, 0.85);
+            --bg-surface-elevated: rgba(19, 36, 56, 0.92);
+            --bg-code: rgba(5, 12, 20, 0.95);
+
+            --text-primary: #f0f7ff;
+            --text-secondary: #b4cbe4;
+            --text-muted: #7390ad;
+
+            /* Acentos Pasteles */
+            --pastel-violet: #7dd3fc;
+            --pastel-cyan: #bef264;
+            --pastel-mint: #6ee7b7;
+            --pastel-amber: #fde68a;
+            --pastel-rose: #fda4af;
+            --pastel-peach: #a5b4fc;
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(125, 211, 252, 0.16);
+            --border-focus: rgba(190, 242, 100, 0.6);
+            --shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.52);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 14% 16%, rgba(125, 211, 252, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 86% 26%, rgba(190, 242, 100, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 88%, rgba(165, 180, 252, 0.07) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas de partículas (Polvo y Luz) */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 1.1rem 0.9rem 3.8rem;
+        }
+
+        /* Cabecera de la Evaluación */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.25rem;
+            margin-bottom: 1.3rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.72rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-violet {
+            background: rgba(125, 211, 252, 0.14);
+            color: var(--pastel-violet);
+            border: 1px solid rgba(125, 211, 252, 0.32);
+        }
+
+        .badge-cyan {
+            background: rgba(190, 242, 100, 0.12);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(190, 242, 100, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(165, 180, 252, 0.12);
+            color: var(--pastel-peach);
+            border: 1px solid rgba(165, 180, 252, 0.28);
+        }
+
+        .badge-amber {
+            background: rgba(253, 230, 138, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(253, 230, 138, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan), var(--pastel-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.93rem;
+        }
+
+        /* =========================================================
+           DIAGRAMA GRÁFICO DE TABLAS RELACIONALES (CON PK Y FK)
+           ========================================================= */
+        .er-diagram-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            margin-bottom: 1.6rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .er-header-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .er-title {
+            font-size: 1.06rem;
+            font-weight: 700;
+            color: var(--pastel-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .er-subtitle {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+        }
+
+        .er-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.2rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.77rem;
+            color: var(--text-secondary);
+            background: rgba(5, 12, 20, 0.65);
+            padding: 0.28rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .key-tag {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.1rem 0.38rem;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+        }
+
+        .key-pk {
+            background: rgba(253, 230, 138, 0.16);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(253, 230, 138, 0.45);
+        }
+
+        .key-fk {
+            background: rgba(190, 242, 100, 0.15);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(190, 242, 100, 0.45);
+        }
+
+        .key-none {
+            display: inline-block;
+            width: 26px;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+
+        .er-visual-board {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            gap: 0.75rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.35rem 0.25rem 0.85rem;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .er-visual-board::-webkit-scrollbar {
+            height: 9px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-track {
+            background: rgba(5, 12, 20, 0.75);
+            border-radius: 999px;
+            border: 1px solid rgba(125, 211, 252, 0.12);
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, rgba(125, 211, 252, 0.55), rgba(190, 242, 100, 0.55));
+            border-radius: 999px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, rgba(125, 211, 252, 0.85), rgba(190, 242, 100, 0.85));
+        }
+
+        .er-table-node {
+            flex: 0 0 auto;
+            min-width: 268px;
+            width: max-content;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(125, 211, 252, 0.26);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .er-table-node:hover {
+            border-color: var(--pastel-cyan);
+        }
+
+        .er-table-head {
+            background: linear-gradient(90deg, rgba(125, 211, 252, 0.18), rgba(190, 242, 100, 0.1));
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid rgba(125, 211, 252, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .er-table-name {
+            font-family: var(--font-mono);
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: var(--pastel-violet);
+            white-space: nowrap;
+        }
+
+        .er-table-tag {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .er-table-node.is-bridge-table {
+            border-color: rgba(165, 180, 252, 0.42);
+        }
+
+        .er-table-node.is-bridge-table .er-table-head {
+            background: linear-gradient(90deg, rgba(165, 180, 252, 0.22), rgba(125, 211, 252, 0.14));
+            border-bottom-color: rgba(165, 180, 252, 0.32);
+        }
+
+        .er-table-node.is-bridge-table .er-table-name {
+            color: var(--pastel-peach);
+        }
+
+        .er-nm-tag {
+            color: var(--pastel-peach);
+            background: rgba(165, 180, 252, 0.14);
+            border: 1px solid rgba(165, 180, 252, 0.35);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .er-attr-list {
+            list-style: none;
+            padding: 0.35rem 0;
+        }
+
+        .er-attr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 0.42rem 0.9rem;
+            font-size: 0.81rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+            white-space: nowrap;
+        }
+
+        .er-attr-row:last-child {
+            border-bottom: none;
+        }
+
+        .er-attr-row.is-pk-row {
+            background: rgba(253, 230, 138, 0.05);
+        }
+
+        .er-attr-row.is-fk-row {
+            background: rgba(190, 242, 100, 0.05);
+        }
+
+        .er-attr-row[data-join-key] {
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+        }
+
+        .er-attr-row.is-pk-row.key-linked-active,
+        .er-attr-row.is-fk-row.key-linked-active {
+            background: linear-gradient(90deg, rgba(253, 230, 138, 0.24), rgba(190, 242, 100, 0.24));
+            box-shadow: inset 3px 0 0 var(--pastel-amber), inset -3px 0 0 var(--pastel-cyan), 0 0 14px rgba(190, 242, 100, 0.25);
+        }
+
+        .er-attr-row.key-linked-active .attr-name {
+            color: #ffffff !important;
+            text-shadow: 0 0 8px rgba(190, 242, 100, 0.55);
+        }
+
+        .er-attr-row.key-linked-active .key-tag {
+            transform: scale(1.08);
+            box-shadow: 0 0 10px rgba(253, 230, 138, 0.45);
+        }
+
+        .er-connector-line.connector-active {
+            border-color: var(--pastel-amber);
+            background: rgba(253, 230, 138, 0.16);
+            color: var(--pastel-amber);
+            box-shadow: 0 0 14px rgba(253, 230, 138, 0.35);
+            transform: scale(1.05);
+        }
+
+        .attr-left {
+            display: flex;
+            align-items: center;
+            gap: 0.48rem;
+            flex-shrink: 0;
+        }
+
+        .attr-name {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .is-pk-row .attr-name {
+            color: var(--pastel-amber);
+        }
+
+        .is-fk-row .attr-name {
+            color: var(--pastel-cyan);
+        }
+
+        .attr-right {
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+            flex-shrink: 0;
+        }
+
+        .attr-type {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            background: rgba(5, 12, 20, 0.7);
+            padding: 0.1rem 0.42rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+
+        /* Conectores visuales de relación entre tablas */
+        .er-connector {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.15rem 0.1rem;
+            color: var(--pastel-cyan);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+        }
+
+        .er-connector-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(5, 12, 20, 0.88);
+            border: 1px dashed rgba(190, 242, 100, 0.42);
+            padding: 0.26rem 0.55rem;
+            border-radius: 999px;
+            color: var(--pastel-cyan);
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .er-cardinality {
+            font-weight: 700;
+            color: var(--pastel-amber);
+        }
+
+        /* =========================================================
+           SECCIÓN DE PREGUNTAS (15 EJERCICIOS)
+           ========================================================= */
+        .questions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease, transform 0.2s ease;
+        }
+
+        .question-card:hover {
+            border-color: rgba(125, 211, 252, 0.32);
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(110, 231, 183, 0.65);
+            background: linear-gradient(180deg, rgba(110, 231, 183, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(253, 230, 138, 0.65);
+            background: linear-gradient(180deg, rgba(253, 230, 138, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .q-number {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--pastel-violet);
+            background: rgba(125, 211, 252, 0.12);
+            padding: 0.22rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(125, 211, 252, 0.26);
+        }
+
+        .q-prompt {
+            font-size: 0.98rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.85rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            color: var(--pastel-cyan);
+            background: rgba(5, 12, 20, 0.72);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+            border: 1px solid rgba(190, 242, 100, 0.2);
+        }
+
+        /* Fragmentos de código de referencia */
+        .code-snippet {
+            background: var(--bg-code);
+            border: 1px solid rgba(125, 211, 252, 0.22);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 0.95rem;
+            margin-bottom: 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: #f0f7ff;
+            overflow-x: auto;
+            line-height: 1.55;
+        }
+
+        .code-snippet .kw {
+            color: var(--pastel-violet);
+            font-weight: 600;
+        }
+
+        .code-snippet .fn {
+            color: var(--pastel-cyan);
+        }
+
+        .code-snippet .str {
+            color: var(--pastel-amber);
+        }
+
+        .code-snippet .num {
+            color: var(--pastel-peach);
+        }
+
+        /* Inputs de texto para Completado */
+        .sql-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .sql-text-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1.5px solid rgba(125, 211, 252, 0.28);
+            border-radius: var(--radius-md);
+            padding: 0.82rem 0.95rem;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.87rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-text-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.65;
+        }
+
+        .sql-text-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(190, 242, 100, 0.14);
+        }
+
+        /* Opciones Multiple Choice y Selección Binaria */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.58rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.72rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-md);
+            padding: 0.78rem 0.92rem;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            user-select: none;
+        }
+
+        .option-label:hover {
+            background: rgba(25, 48, 74, 0.95);
+            border-color: rgba(125, 211, 252, 0.35);
+        }
+
+        .option-label input[type="checkbox"],
+        .option-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 19px;
+            height: 19px;
+            min-width: 19px;
+            border: 2px solid var(--pastel-violet);
+            background: var(--bg-code);
+            margin-top: 0.14rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.18s ease;
+        }
+
+        .option-label input[type="checkbox"] {
+            border-radius: 5px;
+        }
+
+        .option-label input[type="radio"] {
+            border-radius: 50%;
+        }
+
+        .option-label input[type="checkbox"]:checked {
+            background: var(--pastel-violet);
+            border-color: var(--pastel-violet);
+        }
+
+        .option-label input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -52%);
+            color: #070f18;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .option-label input[type="radio"]:checked {
+            border-color: var(--pastel-cyan);
+        }
+
+        .option-label input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--pastel-cyan);
+        }
+
+        .option-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .option-text code {
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            color: var(--pastel-amber);
+            background: rgba(5, 12, 20, 0.72);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        /* Indicador de estado en cada tarjeta */
+        .q-status {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.52rem 0.78rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        .q-status.correct {
+            display: block;
+            background: rgba(110, 231, 183, 0.12);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(110, 231, 183, 0.3);
+        }
+
+        .q-status.partial {
+            display: block;
+            background: rgba(253, 230, 138, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(253, 230, 138, 0.32);
+        }
+
+        .q-status.wrong {
+            display: block;
+            background: rgba(253, 164, 175, 0.12);
+            color: var(--pastel-rose);
+            border: 1px solid rgba(253, 164, 175, 0.3);
+        }
+
+        /* Botón Evaluar */
+        .actions-footer {
+            margin-top: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .btn-evaluate {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan));
+            color: #070f18;
+            font-family: var(--font-sans);
+            font-size: 1.03rem;
+            font-weight: 700;
+            padding: 0.95rem 1.6rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(125, 211, 252, 0.28);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .btn-evaluate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(190, 242, 100, 0.38);
+        }
+
+        .btn-evaluate:active {
+            transform: translateY(0);
+        }
+
+        /* Panel de Resultados */
+        #results-panel {
+            display: none;
+            margin-top: 2rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.45rem 1.2rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        #results-panel.visible {
+            display: block;
+            animation: fadeInResult 0.35s ease forwards;
+        }
+
+        @keyframes fadeInResult {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.2rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 126px;
+            height: 126px;
+            border-radius: 50%;
+            background: rgba(5, 12, 20, 0.82);
+            border: 2px solid var(--pastel-violet);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 2.15rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1;
+            font-family: var(--font-mono);
+        }
+
+        .score-total {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .score-message {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .score-subtext {
+            font-size: 0.87rem;
+            color: var(--text-secondary);
+        }
+
+        .perfect-banner {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: rgba(110, 231, 183, 0.13);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(110, 231, 183, 0.38);
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(5, 12, 20, 0.84);
+            border-left: 4px solid var(--pastel-rose);
+            border-radius: var(--radius-md);
+            padding: 0.95rem;
+        }
+
+        .error-item.partial-item {
+            border-left-color: var(--pastel-amber);
+        }
+
+        .error-item-header {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--pastel-rose);
+            margin-bottom: 0.45rem;
+        }
+
+        .error-item.partial-item .error-item-header {
+            color: var(--pastel-amber);
+        }
+
+        .error-comparison {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+
+        .ans-box {
+            padding: 0.5rem 0.7rem;
+            border-radius: var(--radius-sm);
+            word-break: break-word;
+        }
+
+        .ans-user {
+            background: rgba(253, 164, 175, 0.09);
+            border: 1px solid rgba(253, 164, 175, 0.25);
+            color: var(--pastel-rose);
+        }
+
+        .ans-expected {
+            background: rgba(110, 231, 183, 0.09);
+            border: 1px solid rgba(110, 231, 183, 0.25);
+            color: var(--pastel-mint);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .error-explanation code {
+            font-family: var(--font-mono);
+            color: var(--pastel-amber);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.08rem 0.32rem;
+            border-radius: 4px;
+        }
+
+        /* Media Queries Desktop */
+        @media (min-width: 980px) {
+            .page-wrapper {
+                padding: 2rem 1.4rem 4.2rem;
+            }
+
+            .eval-header {
+                padding: 1.85rem 2rem;
+            }
+
+            .eval-title {
+                font-size: 2rem;
+            }
+
+            .er-header-bar {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .question-card {
+                padding: 1.5rem 1.65rem;
+            }
+
+            .error-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo de partículas: Polvo y Luz -->
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <header class="eval-header">
+            <div class="badges-row">
+                <span class="badge badge-violet">Base de Datos II</span>
+                <span class="badge badge-cyan">SQL++ · Evaluación #4</span>
+                <span class="badge badge-mint">15 Ejercicios</span>
+                <span class="badge badge-amber">Calificación: 10 Puntos</span>
+            </div>
+            <h1 class="eval-title">Evaluación SQL++: Gestión Académica Universitaria</h1>
+            <p class="eval-subtitle">
+                Resuelva los 15 ejercicios propuestos (5 de desarrollo de sentencias, 5 de selección múltiple y 5 de selección binaria). Contestando correctamente la totalidad de las consignas obtendrá la calificación máxima de <strong>10 puntos</strong>.
+            </p>
+        </header>
+
+        <!-- =================================================================
+             GUÍA GRÁFICA DE 4 TABLAS RELACIONALES (PK, FK Y TABLA INTERMEDIA N:M)
+             ================================================================= -->
+        <section class="er-diagram-section" aria-label="Esquema gráfico relacional de tablas">
+            <div class="er-header-bar">
+                <div>
+                    <h2 class="er-title">🗂️ Esquema Gráfico Relacional: Facultades, Alumnos y Materias (4 Tablas)</h2>
+                    <p class="er-subtitle">Pase el cursor sobre cualquier atributo <strong>PK</strong> o <strong>FK</strong> para iluminar su par correspondiente. La tabla <strong>inscripciones</strong> resuelve la relación muchos a muchos (<strong>N:M</strong>) entre <strong>alumnos</strong> y <strong>materias</strong>.</p>
+                </div>
+                <div class="er-legend">
+                    <span class="legend-item">
+                        <span class="key-tag key-pk">PK</span> Clave Primaria (Identificador único)
+                    </span>
+                    <span class="legend-item">
+                        <span class="key-tag key-fk">FK</span> Clave Foránea (Atributo de unión)
+                    </span>
+                </div>
+            </div>
+
+            <div class="er-visual-board">
+                <!-- TABLA 1: facultades -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🏛️ facultades</span>
+                        <span class="er-table-tag">Tabla 1</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_facultad">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_facultad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_fac</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(60)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">sede</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(40)</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 1: facultades (1) <-> (N) alumnos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_facultad">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 2: alumnos -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎓 alumnos</span>
+                        <span class="er-table-tag">Tabla 2</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_alumno">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_alumno</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">apellido_alum</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">ingreso_anio</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">promedio</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(4,2)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_facultad">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_facultad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 2: alumnos (1) <-> (N) inscripciones -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_alumno">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 3 (INTERMEDIA N:M): inscripciones -->
+                <article class="er-table-node is-bridge-table">
+                    <div class="er-table-head">
+                        <span class="er-table-name">📝 inscripciones</span>
+                        <span class="er-table-tag er-nm-tag">Intermedia N:M</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_inscripcion">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_inscripcion</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_alumno">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_alumno</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_materia">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_materia</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nota_final</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 3: inscripciones (N) <-> (1) materias -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_materia">
+                        <span class="er-cardinality">∞</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">1</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 4: materias -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">📚 materias</span>
+                        <span class="er-table-tag">Tabla 4</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_materia">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_materia</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_mat</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(60)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">regimen</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(30)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">carga_horaria</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             FORMULARIO DE 15 EJERCICIOS (5 COMPLETAR, 5 MULTIPLE, 5 BINARIA)
+             ================================================================= -->
+        <form id="sql-eval-form" novalidate>
+            <div class="questions-list">
+
+                <!-- ===================== 1 AL 5: COMPLETAR ===================== -->
+
+                <!-- EJERCICIO 1 -->
+                <article class="question-card" id="card-q1">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 1 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una <strong>2 tablas</strong> (<code>alumnos</code> y <code>facultades</code>) mediante su vínculo relacional para mostrar los atributos <code>apellido_alum</code>, <code>promedio</code> y <code>nombre_fac</code> (en ese orden), filtrando únicamente los alumnos cuyo <code>ingreso_anio</code> sea mayor o igual a <code>2023</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q1-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q1"></div>
+                </article>
+
+                <!-- EJERCICIO 2 -->
+                <article class="question-card" id="card-q2">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 2 · JOIN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Redacte una sentencia que una <strong>3 tablas</strong> (<code>facultades</code>, <code>alumnos</code> e <code>inscripciones</code>) para listar <code>nombre_fac</code>, <code>apellido_alum</code> y <code>nota_final</code> (en ese orden), filtrando aquellas facultades cuya <code>sede</code> sea <code>'Concepcion'</code> y donde la <code>nota_final</code> sea mayor o igual a <code>6</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q2-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q2"></div>
+                </article>
+
+                <!-- EJERCICIO 3 -->
+                <article class="question-card" id="card-q3">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 3 · ON</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las <strong>3 tablas de la relación muchos a muchos</strong> (<code>alumnos</code>, la tabla intermedia <code>inscripciones</code> y <code>materias</code>) para obtener <code>apellido_alum</code>, <code>nombre_mat</code> y <code>nota_final</code> (en ese orden) únicamente para las materias cuyo <code>regimen</code> sea <code>'Cuatrimestral'</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q3-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q3"></div>
+                </article>
+
+                <!-- EJERCICIO 4 -->
+                <article class="question-card" id="card-q4">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 4 · MAX</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las tablas <code>inscripciones</code> y <code>materias</code> para obtener la calificación más alta del campo <code>nota_final</code> registrada en aquellas materias cuya <code>carga_horaria</code> sea igual a <code>96</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q4-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q4"></div>
+                </article>
+
+                <!-- EJERCICIO 5 -->
+                <article class="question-card" id="card-q5">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 5 · DELETE</span>
+                    </div>
+                    <p class="q-prompt">
+                        En una operación sobre <strong>1 sola tabla</strong>, elimine de la tabla <code>inscripciones</code> aquellos registros que correspondan al alumno con <code>id_alumno</code> igual a <code>18</code> y cuya <code>nota_final</code> sea estrictamente menor a <code>4</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q5-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q5"></div>
+                </article>
+
+                <!-- ================= 6 AL 10: MULTIPLE CHOICE ================= -->
+
+                <!-- EJERCICIO 6 -->
+                <article class="question-card" id="card-q6">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 6 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se desea listar el <code>id_facultad</code>, el <code>apellido_alum</code> y la <code>sede</code> uniendo las tablas <code>alumnos</code> y <code>facultades</code>. ¿Cuáles de las siguientes consultas son válidas y no generan error de ambigüedad?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="A">
+                            <span class="option-text"><code>SELECT facultades.id_facultad, alumnos.apellido_alum, facultades.sede FROM alumnos INNER JOIN facultades ON alumnos.id_facultad = facultades.id_facultad;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="B">
+                            <span class="option-text"><code>SELECT f.id_facultad, a.apellido_alum, f.sede FROM alumnos a INNER JOIN facultades f WHERE a.id_facultad = f.id_facultad;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="C">
+                            <span class="option-text"><code>SELECT f.id_facultad, a.apellido_alum, f.sede FROM facultades f INNER JOIN alumnos a ON f.id_facultad = a.id_facultad;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="D">
+                            <span class="option-text"><code>SELECT id_facultad, apellido_alum, sede FROM alumnos INNER JOIN facultades ON alumnos.id_facultad = facultades.id_facultad;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q6"></div>
+                </article>
+
+                <!-- EJERCICIO 7 -->
+                <article class="question-card" id="card-q7">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 7 · FROM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Respecto a la tabla intermedia <code>inscripciones</code> (que modela la relación muchos a muchos entre <code>alumnos</code> y <code>materias</code>) y el esquema de 4 tablas, seleccione las afirmaciones verdaderas sobre <code>INNER JOIN</code>:
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="A">
+                            <span class="option-text">La tabla <code>inscripciones</code> permite que un alumno se inscriba en múltiples materias y que una materia tenga múltiples alumnos inscriptos.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="B">
+                            <span class="option-text">Si un alumno recién ingresado todavía no tiene registros en <code>inscripciones</code>, no aparecerá al realizar un <code>INNER JOIN</code> entre <code>alumnos</code> e <code>inscripciones</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="C">
+                            <span class="option-text">Para saber qué materias cursa cada alumno basta con hacer <code>FROM alumnos INNER JOIN materias ON alumnos.id_alumno = materias.id_materia</code> sin usar <code>inscripciones</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="D">
+                            <span class="option-text">Para mostrar en una misma consulta el <code>nombre_fac</code> de la facultad y el <code>nombre_mat</code> de las materias cursadas por sus alumnos, se deben encadenar 3 cláusulas <code>INNER JOIN</code> uniendo las 4 tablas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q7"></div>
+                </article>
+
+                <!-- EJERCICIO 8 -->
+                <article class="question-card" id="card-q8">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 8 · WHERE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere listar el <code>apellido_alum</code>, el <code>promedio</code> y la <code>sede</code> uniendo <code>alumnos</code> y <code>facultades</code>, filtrando aquellos alumnos que estudien en la sede <code>'Parana'</code> o en la sede <code>'Concordia'</code>, y cuyo <code>promedio</code> se encuentre entre <code>7</code> y <code>10</code> inclusive. ¿Cuáles consultas son correctas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="A">
+                            <span class="option-text"><code>SELECT a.apellido_alum, a.promedio, f.sede FROM alumnos a INNER JOIN facultades f ON a.id_facultad = f.id_facultad WHERE (f.sede = 'Parana' OR f.sede = 'Concordia') AND a.promedio BETWEEN 7 AND 10;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="B">
+                            <span class="option-text"><code>SELECT a.apellido_alum, a.promedio, f.sede FROM alumnos a INNER JOIN facultades f ON a.id_facultad = f.id_facultad WHERE f.sede = 'Parana' OR f.sede = 'Concordia' AND a.promedio BETWEEN 7 AND 10;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="C">
+                            <span class="option-text"><code>SELECT alumnos.apellido_alum, alumnos.promedio, facultades.sede FROM facultades INNER JOIN alumnos ON facultades.id_facultad = alumnos.id_facultad WHERE alumnos.promedio &gt;= 7 AND alumnos.promedio &lt;= 10 AND (facultades.sede = 'Parana' OR facultades.sede = 'Concordia');</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="D">
+                            <span class="option-text"><code>SELECT a.apellido_alum, a.promedio, f.sede FROM alumnos a INNER JOIN facultades f ON a.id_alumno = f.id_facultad WHERE (f.sede = 'Parana' OR f.sede = 'Concordia') AND a.promedio BETWEEN 7 AND 10;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q8"></div>
+                </article>
+
+                <!-- EJERCICIO 9 -->
+                <article class="question-card" id="card-q9">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 9 · LIKE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se busca mostrar el <code>apellido_alum</code> y el <code>nombre_mat</code> uniendo <code>alumnos</code>, <code>inscripciones</code> y <code>materias</code>, filtrando aquellas materias cuyo <code>nombre_mat</code> contenga la palabra <code>'Datos'</code> en cualquier posición y donde la <code>nota_final</code> sea mayor o igual a <code>7</code>. ¿Cuáles consultas lo resuelven correctamente?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="A">
+                            <span class="option-text"><code>SELECT a.apellido_alum, m.nombre_mat FROM alumnos a INNER JOIN inscripciones i ON a.id_alumno = i.id_alumno INNER JOIN materias m ON i.id_materia = m.id_materia WHERE m.nombre_mat LIKE '%Datos%' AND i.nota_final &gt;= 7;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="B">
+                            <span class="option-text"><code>SELECT a.apellido_alum, m.nombre_mat FROM alumnos a INNER JOIN inscripciones i ON a.id_alumno = i.id_inscripcion INNER JOIN materias m ON i.id_materia = m.id_materia WHERE m.nombre_mat LIKE '%Datos%' AND i.nota_final &gt;= 7;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="C">
+                            <span class="option-text"><code>SELECT alumnos.apellido_alum, materias.nombre_mat FROM materias INNER JOIN inscripciones ON materias.id_materia = inscripciones.id_materia INNER JOIN alumnos ON inscripciones.id_alumno = alumnos.id_alumno WHERE materias.nombre_mat LIKE '%Datos%' AND inscripciones.nota_final &gt;= 7;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="D">
+                            <span class="option-text"><code>SELECT a.apellido_alum, m.nombre_mat FROM alumnos a INNER JOIN inscripciones i ON a.id_alumno = i.id_alumno INNER JOIN materias m ON i.id_materia = m.id_materia WHERE m.nombre_mat LIKE 'Datos%' OR i.nota_final &gt; 7;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q9"></div>
+                </article>
+
+                <!-- EJERCICIO 10 -->
+                <article class="question-card" id="card-q10">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 10 · COUNT</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que en <code>inscripciones</code> existen <strong>30 filas</strong> válidamente vinculadas a materias en <code>materias</code>, que en <strong>2 de esas 30 filas</strong> la columna <code>nota_final</code> es <code>NULL</code> (alumnos que aún no rindieron examen final), y que existen además <strong>5 materias optativas nuevas</strong> en <code>materias</code> sin ningún alumno inscripto en <code>inscripciones</code>. Al evaluar una consulta con <code>FROM materias INNER JOIN inscripciones ON materias.id_materia = inscripciones.id_materia</code>, ¿cuáles afirmaciones son verdaderas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="A">
+                            <span class="option-text"><code>SELECT COUNT(*)</code> sobre ese <code>INNER JOIN</code> devolverá <code>30</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="B">
+                            <span class="option-text"><code>SELECT COUNT(inscripciones.nota_final)</code> sobre ese <code>INNER JOIN</code> devolverá <code>28</code> porque ignora las 2 filas con valor <code>NULL</code> en esa columna.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="C">
+                            <span class="option-text">Las 5 materias optativas sin alumnos inscriptos aparecen igualmente en el resultado del <code>INNER JOIN</code> con <code>nota_final</code> en cero.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="D">
+                            <span class="option-text"><code>SELECT MIN(inscripciones.nota_final)</code> devolverá la calificación más baja entre las 28 inscripciones que poseen nota cargada.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q10"></div>
+                </article>
+
+                <!-- ================ 11 AL 15: SELECCIÓN BINARIA ================ -->
+
+                <!-- EJERCICIO 11 -->
+                <article class="question-card" id="card-q11">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 11 · SELECT</span>
+                    </div>
+                    <p class="q-prompt">
+                        Observe la siguiente sentencia con alias de tablas:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> f.nombre_fac, facultades.sede, a.apellido_alum
+<span class="kw">FROM</span> facultades f
+<span class="kw">INNER JOIN</span> alumnos a <span class="kw">ON</span> f.id_facultad = a.id_facultad;</pre>
+                    <p class="q-prompt">
+                        ¿Qué ocurre al ejecutar esta consulta en MySQL / MariaDB?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="A">
+                            <span class="option-text">Arroja un error (<code>Unknown column 'facultades.sede'</code>), porque al definir el alias <code>f</code> para <code>facultades</code> en el <code>FROM</code>, es obligatorio usar el alias <code>f.sede</code> en toda la consulta.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="B">
+                            <span class="option-text">Funciona correctamente porque el motor permite mezclar el alias <code>f</code> y el nombre original <code>facultades</code> en el mismo <code>SELECT</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q11"></div>
+                </article>
+
+                <!-- EJERCICIO 12 -->
+                <article class="question-card" id="card-q12">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 12 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Según el diagrama relacional de 4 tablas, si se desea listar la <code>sede</code> (tabla <code>facultades</code>) junto con el <code>nombre_mat</code> (tabla <code>materias</code>) de las asignaturas que cursan los alumnos de dicha sede, ¿cuál es el procedimiento relacional correcto?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="A">
+                            <span class="option-text">Realizar un único <code>INNER JOIN</code> directo entre <code>facultades</code> y <code>materias</code> usando <code>ON facultades.id_facultad = materias.id_materia</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="B">
+                            <span class="option-text">Encadenar 3 cláusulas <code>INNER JOIN</code> conectando las 4 tablas (<code>facultades</code> ↔ <code>alumnos</code> ↔ <code>inscripciones</code> ↔ <code>materias</code>) a través de sus claves primarias y foráneas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q12"></div>
+                </article>
+
+                <!-- EJERCICIO 13 -->
+                <article class="question-card" id="card-q13">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 13 · BETWEEN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Analice la siguiente consulta sobre <code>alumnos</code> e <code>inscripciones</code>:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> a.apellido_alum, i.nota_final
+<span class="kw">FROM</span> alumnos a
+<span class="kw">INNER JOIN</span> inscripciones i <span class="kw">ON</span> a.id_alumno = i.id_alumno
+<span class="kw">WHERE</span> a.apellido_alum <span class="kw">LIKE</span> <span class="str">'M_%'</span>
+  <span class="kw">AND</span> i.nota_final <span class="kw">NOT BETWEEN</span> <span class="num">4</span> <span class="kw">AND</span> <span class="num">7</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué registros devuelve exactamente esta consulta?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="A">
+                            <span class="option-text">Inscripciones de alumnos cuyo apellido comienza con <code>'M'</code> y tiene al menos 2 caracteres, con <code>nota_final</code> estrictamente menor a <code>4</code> o estrictamente mayor a <code>7</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="B">
+                            <span class="option-text">Inscripciones de cualquier alumno cuyo apellido contenga la letra <code>'M'</code>, con <code>nota_final</code> menor o igual a <code>4</code> o mayor o igual a <code>7</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q13"></div>
+                </article>
+
+                <!-- EJERCICIO 14 -->
+                <article class="question-card" id="card-q14">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 14 · SUM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que la materia con <code>id_materia = 4</code> tiene en la tabla <code>materias</code> una <code>carga_horaria = 80</code>, y que actualmente existen <strong>5 alumnos inscriptos</strong> en esa materia dentro de la tabla <code>inscripciones</code> (5 filas con <code>id_materia = 4</code>). Si se ejecuta:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> <span class="fn">SUM</span>(materias.carga_horaria)
+<span class="kw">FROM</span> materias
+<span class="kw">INNER JOIN</span> inscripciones <span class="kw">ON</span> materias.id_materia = inscripciones.id_materia
+<span class="kw">WHERE</span> materias.id_materia = <span class="num">4</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué valor numérico devuelve la consulta y por qué?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="A">
+                            <span class="option-text">Devuelve <code>400</code>, porque el <code>INNER JOIN</code> con las 5 filas de <code>inscripciones</code> genera 5 filas para la materia 4 y <code>SUM(materias.carga_horaria)</code> suma <code>80</code> en cada una de las 5 filas.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="B">
+                            <span class="option-text">Devuelve <code>80</code>, porque <code>SUM</code> no repite el valor de una columna perteneciente a la tabla de clave primaria <code>materias</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q14"></div>
+                </article>
+
+                <!-- EJERCICIO 15 -->
+                <article class="question-card" id="card-q15">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 15 · DROP</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere eliminar de forma permanente la columna <code>regimen</code> de la estructura de la tabla <code>materias</code>. ¿Cuál de las siguientes sentencias <code>ALTER TABLE</code> es sintácticamente válida en SQL?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="A">
+                            <span class="option-text"><code>ALTER TABLE materias DELETE COLUMN regimen;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="B">
+                            <span class="option-text"><code>ALTER TABLE materias DROP COLUMN regimen;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q15"></div>
+                </article>
+
+            </div>
+
+            <div class="actions-footer">
+                <button type="button" id="btn-evaluar" class="btn-evaluate">Evaluar Respuestas</button>
+            </div>
+        </form>
+
+        <!-- =================================================================
+             PANEL DE RESULTADOS Y DIAGNÓSTICO DETALLADO
+             ================================================================= -->
+        <section id="results-panel" aria-live="polite">
+            <div class="score-summary">
+                <div class="score-circle">
+                    <span class="score-value" id="score-number">0</span>
+                    <span class="score-total">/ 10 PUNTOS</span>
+                </div>
+                <h2 class="score-message" id="score-title">Resultado de la Evaluación</h2>
+                <p class="score-subtext" id="score-subtitle"></p>
+                <div class="perfect-banner" id="perfect-banner">
+                    🌟 ¡Felicitaciones! Has resuelto correctamente los 15 ejercicios de SQL++ con INNER JOIN sobre el esquema de 4 tablas, alcanzando la calificación máxima de 10 puntos.
+                </div>
+            </div>
+
+            <div id="errors-container"></div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           1. ANIMACIÓN DE PARTÍCULAS "POLVO Y LUZ" (CANVAS)
+           ========================================================================= */
+        (function initDustCanvas() {
+            const canvas = document.getElementById('dust-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const palette = [
+                'rgba(125, 211, 252, 0.36)',
+                'rgba(190, 242, 100, 0.32)',
+                'rgba(253, 230, 138, 0.28)',
+                'rgba(165, 180, 252, 0.28)'
+            ];
+
+            const particles = Array.from({ length: 46 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.1 + 0.6,
+                vx: (Math.random() - 0.5) * 0.24,
+                vy: -Math.random() * 0.32 - 0.08,
+                color: palette[Math.floor(Math.random() * palette.length)],
+                alpha: Math.random() * 0.65 + 0.25
+            }));
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                }
+                requestAnimationFrame(render);
+            }
+            render();
+        })();
+
+        /* =========================================================================
+           2. PERSISTENCIA EN LOCALSTORAGE (SIN ARCHIVOS EXTERNOS)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd2_sqlplusplus_evaluacion4_state_v1';
+
+        const appState = {
+            answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [], q9: [], q10: [],
+                q11: '', q12: '', q13: '', q14: '', q15: ''
+            },
+            evaluated: false
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('No se pudo guardar en localStorage:', e);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && parsed.answers) {
+                    appState.answers = Object.assign(appState.answers, parsed.answers);
+                    appState.evaluated = Boolean(parsed.evaluated);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('No se pudo restaurar desde localStorage:', e);
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           3. NORMALIZACIÓN DE SQL Y REGLAS DE EVALUACIÓN (15 EJERCICIOS = 10 PUNTOS)
+           ========================================================================= */
+        function normalizeSQL(raw) {
+            if (!raw) return '';
+            let s = raw.trim().toLowerCase();
+            s = s.replace(/\s+/g, ' ');
+            s = s.replace(/\s*;\s*$/, '');
+            s = s.replace(/\s*,\s*/g, ', ');
+            s = s.replace(/\s*=\s*/g, ' = ');
+            s = s.replace(/\s*>=\s*/g, ' >= ');
+            s = s.replace(/\s*<=\s*/g, ' <= ');
+            s = s.replace(/\s*!=\s*/g, ' != ');
+            s = s.replace(/\s*<>\s*/g, ' <> ');
+            s = s.replace(/\(\s+/g, '(');
+            s = s.replace(/\s+\)/g, ')');
+            s = s.replace(/\s+/g, ' ').trim();
+            return s;
+        }
+
+        // Normaliza equivalencias en consultas con INNER JOIN (con o sin prefijo de tabla en columnas no ambiguas, JOIN vs INNER JOIN y orden del ON)
+        function canonicalizeJoinQuery(norm) {
+            let c = norm;
+            // Aceptar "join" como "inner join" cuando no tiene left/right/cross/full antes
+            c = c.replace(/(^|\s)(?<!inner\s)(?<!left\s)(?<!right\s)(?<!cross\s)(?<!full\s)join\s+/g, '$1inner join ');
+            // Estandarizar igualdad ON id_facultad
+            c = c.replace(/facultades\.id_facultad\s*=\s*alumnos\.id_facultad/g, 'alumnos.id_facultad = facultades.id_facultad');
+            // Estandarizar igualdad ON id_alumno
+            c = c.replace(/inscripciones\.id_alumno\s*=\s*alumnos\.id_alumno/g, 'alumnos.id_alumno = inscripciones.id_alumno');
+            // Estandarizar igualdad ON id_materia
+            c = c.replace(/materias\.id_materia\s*=\s*inscripciones\.id_materia/g, 'inscripciones.id_materia = materias.id_materia');
+            // Quitar prefijos de tabla en atributos que no son ambiguos para aceptar tanto tabla.campo como campo directo
+            c = c.replace(/\b(facultades|alumnos|inscripciones|materias)\.(nombre_fac|sede|apellido_alum|ingreso_anio|promedio|nota_final|nombre_mat|regimen|carga_horaria)\b/g, '$2');
+            return c.replace(/\s+/g, ' ').trim();
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatScore(num) {
+            const rounded = Math.round(num * 100) / 100;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · INNER',
+                canonicalAnswer: "SELECT alumnos.apellido_alum, alumnos.promedio, facultades.nombre_fac FROM alumnos INNER JOIN facultades ON alumnos.id_facultad = facultades.id_facultad WHERE alumnos.ingreso_anio >= 2023;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validForms = [
+                        "select apellido_alum, promedio, nombre_fac from alumnos inner join facultades on alumnos.id_facultad = facultades.id_facultad where ingreso_anio >= 2023",
+                        "select apellido_alum, promedio, nombre_fac from facultades inner join alumnos on alumnos.id_facultad = facultades.id_facultad where ingreso_anio >= 2023"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('select ')) return "La consulta debe iniciar con la cláusula <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta la cláusula <code>INNER JOIN</code> para vincular las tablas <code>alumnos</code> y <code>facultades</code>.";
+                    if (!norm.includes(' on ')) return "Falta la palabra clave <code>ON</code> para definir la condición de unión.";
+                    if (!norm.includes('alumnos.id_facultad') || !norm.includes('facultades.id_facultad')) return "En el <code>ON</code> debes igualar <code>alumnos.id_facultad = facultades.id_facultad</code>.";
+                    if (!norm.includes('where')) return "Falta la cláusula <code>WHERE</code> para filtrar por <code>ingreso_anio &gt;= 2023</code>.";
+                    if (!norm.includes('>= 2023')) return "Para 'mayor o igual a 2023' debes utilizar el operador <code>&gt;= 2023</code> sobre el atributo <code>ingreso_anio</code>.";
+                    return "Revisa que los atributos en el <code>SELECT</code> sean exactamente <code>apellido_alum, promedio, nombre_fac</code> y que las tablas unidas sean <code>alumnos</code> y <code>facultades</code>.";
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · JOIN',
+                canonicalAnswer: "SELECT facultades.nombre_fac, alumnos.apellido_alum, inscripciones.nota_final FROM facultades INNER JOIN alumnos ON facultades.id_facultad = alumnos.id_facultad INNER JOIN inscripciones ON alumnos.id_alumno = inscripciones.id_alumno WHERE facultades.sede = 'Concepcion' AND inscripciones.nota_final >= 6;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm)
+                        .replace(/['"]concepci[oó]n['"]/g, "'concepcion'");
+                    const validSelectAndJoins = [
+                        "select nombre_fac, apellido_alum, nota_final from facultades inner join alumnos on alumnos.id_facultad = facultades.id_facultad inner join inscripciones on alumnos.id_alumno = inscripciones.id_alumno",
+                        "select nombre_fac, apellido_alum, nota_final from alumnos inner join facultades on alumnos.id_facultad = facultades.id_facultad inner join inscripciones on alumnos.id_alumno = inscripciones.id_alumno",
+                        "select nombre_fac, apellido_alum, nota_final from inscripciones inner join alumnos on alumnos.id_alumno = inscripciones.id_alumno inner join facultades on alumnos.id_facultad = facultades.id_facultad"
+                    ];
+                    const validWhere = [
+                        "where sede = 'concepcion' and nota_final >= 6",
+                        "where nota_final >= 6 and sede = 'concepcion'"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        for (const w of validWhere) {
+                            if (c === `${sj} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Al tratarse de <strong>3 tablas</strong> (<code>facultades</code>, <code>alumnos</code> e <code>inscripciones</code>), necesitas encadenar <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('facultades.id_facultad') || !norm.includes('alumnos.id_facultad')) return "Falta igualar la relación entre facultades y alumnos: <code>ON facultades.id_facultad = alumnos.id_facultad</code>.";
+                    if (!norm.includes('alumnos.id_alumno') || !norm.includes('inscripciones.id_alumno')) return "Falta igualar la relación entre alumnos e inscripciones: <code>ON alumnos.id_alumno = inscripciones.id_alumno</code>.";
+                    if (!norm.includes("'concepcion'") && !norm.includes("'concepción'") && !norm.includes('"concepcion"')) return "Recuerda filtrar <code>sede = 'Concepcion'</code> encerrando el texto entre comillas simples.";
+                    if (!norm.includes(' and ') || !norm.includes('>= 6')) return "Debes combinar ambas condiciones en el <code>WHERE</code> mediante <code>AND</code> y verificar <code>nota_final &gt;= 6</code>.";
+                    return "Verifica el orden de las columnas (<code>nombre_fac, apellido_alum, nota_final</code>) y las dos uniones <code>INNER JOIN</code>.";
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · ON',
+                canonicalAnswer: "SELECT alumnos.apellido_alum, materias.nombre_mat, inscripciones.nota_final FROM alumnos INNER JOIN inscripciones ON alumnos.id_alumno = inscripciones.id_alumno INNER JOIN materias ON inscripciones.id_materia = materias.id_materia WHERE materias.regimen = 'Cuatrimestral';",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm).replace(/"cuatrimestral"/g, "'cuatrimestral'");
+                    const validSelectAndJoins = [
+                        "select apellido_alum, nombre_mat, nota_final from alumnos inner join inscripciones on alumnos.id_alumno = inscripciones.id_alumno inner join materias on inscripciones.id_materia = materias.id_materia",
+                        "select apellido_alum, nombre_mat, nota_final from inscripciones inner join alumnos on alumnos.id_alumno = inscripciones.id_alumno inner join materias on inscripciones.id_materia = materias.id_materia",
+                        "select apellido_alum, nombre_mat, nota_final from materias inner join inscripciones on inscripciones.id_materia = materias.id_materia inner join alumnos on alumnos.id_alumno = inscripciones.id_alumno"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        if (c === `${sj} where regimen = 'cuatrimestral'`) return true;
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Para unir la relación muchos a muchos entre <code>alumnos</code> y <code>materias</code> debes pasar por la tabla intermedia <code>inscripciones</code> usando <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('alumnos.id_alumno') || !norm.includes('inscripciones.id_alumno')) return "Falta la condición de unión <code>ON alumnos.id_alumno = inscripciones.id_alumno</code>.";
+                    if (!norm.includes('inscripciones.id_materia') || !norm.includes('materias.id_materia')) return "Falta la condición de unión <code>ON inscripciones.id_materia = materias.id_materia</code>.";
+                    if (!norm.includes('where') || !norm.includes("'cuatrimestral'")) return "Falta filtrar en el <code>WHERE</code> por <code>regimen = 'Cuatrimestral'</code>.";
+                    return "Revisa que las columnas seleccionadas sean <code>apellido_alum, nombre_mat, nota_final</code> (en ese orden) y que ambas uniones <code>INNER JOIN</code> estén completas.";
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · MAX',
+                canonicalAnswer: "SELECT MAX(inscripciones.nota_final) FROM inscripciones INNER JOIN materias ON inscripciones.id_materia = materias.id_materia WHERE materias.carga_horaria = 96;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validForms = [
+                        "select max(nota_final) from inscripciones inner join materias on inscripciones.id_materia = materias.id_materia where carga_horaria = 96",
+                        "select max(nota_final) from materias inner join inscripciones on inscripciones.id_materia = materias.id_materia where carga_horaria = 96"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.includes('max(') || !norm.includes('nota_final')) return "Debes utilizar la función de agregación <code>MAX(inscripciones.nota_final)</code> en el <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta unir las tablas <code>inscripciones</code> y <code>materias</code> mediante <code>INNER JOIN</code>.";
+                    if (!norm.includes('inscripciones.id_materia') || !norm.includes('materias.id_materia')) return "La condición de unión debe ser <code>ON inscripciones.id_materia = materias.id_materia</code>.";
+                    if (!norm.includes('carga_horaria = 96')) return "Falta filtrar en el <code>WHERE</code> por <code>carga_horaria = 96</code>.";
+                    return "Verifica la sintaxis general: <code>SELECT MAX(inscripciones.nota_final) FROM inscripciones INNER JOIN materias ON inscripciones.id_materia = materias.id_materia WHERE materias.carga_horaria = 96;</code>.";
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · DELETE',
+                canonicalAnswer: "DELETE FROM inscripciones WHERE id_alumno = 18 AND nota_final < 4;",
+                validate: (norm) => {
+                    const c = norm.replace(/\binscripciones\./g, '').replace(/\s*<\s*/g, ' < ');
+                    return (
+                        c === "delete from inscripciones where id_alumno = 18 and nota_final < 4" ||
+                        c === "delete from inscripciones where nota_final < 4 and id_alumno = 18"
+                    );
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('delete from inscripciones')) return "Para eliminar filas de una tabla debes iniciar con <code>DELETE FROM inscripciones</code>.";
+                    if (!norm.includes('where')) return "Falta la cláusula <code>WHERE</code> para acotar los registros a eliminar.";
+                    if (!norm.includes('id_alumno = 18')) return "Debes incluir la condición <code>id_alumno = 18</code>.";
+                    if (!norm.includes('nota_final') || !norm.includes('4') || !norm.includes(' and ')) return "Debes combinar ambas condiciones con <code>AND</code> y verificar <code>nota_final &lt; 4</code>.";
+                    return "Revisa la estructura: <code>DELETE FROM inscripciones WHERE id_alumno = 18 AND nota_final &lt; 4;</code>.";
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · INNER',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es inválida porque usa <code>WHERE</code> inmediatamente después de <code>INNER JOIN</code> omitiendo la cláusula obligatoria <code>ON</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: produce un error de ambigüedad (<code>Column 'id_facultad' in field list is ambiguous</code>) porque <code>id_facultad</code> existe en ambas tablas y no fue prefijada en el <code>SELECT</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque califica <code>facultades.id_facultad</code> y une con <code>ON</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque declara los alias <code>f</code> y <code>a</code> y los utiliza consistentemente."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · FROM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque igualar <code>alumnos.id_alumno = materias.id_materia</code> compara claves primarias de entidades distintas sin relación directa; la relación N:M exige pasar por la tabla intermedia <code>inscripciones</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>inscripciones</code> permite registrar múltiples combinaciones alumno-materia.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>INNER JOIN</code> descarta los alumnos que no poseen registros asociados en <code>inscripciones</code>.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque conectar <code>facultades</code> con <code>materias</code> requiere recorrer las 4 tablas mediante 3 cláusulas <code>INNER JOIN</code>."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · WHERE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque sin paréntesis alrededor del <code>OR</code>, <code>AND</code> se evalúa primero y traería todos los alumnos de <code>'Parana'</code> sin importar su promedio.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque la condición <code>ON a.id_alumno = f.id_facultad</code> compara la PK del alumno con la PK de la facultad en lugar de usar la FK <code>a.id_facultad</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque encierra la disyunción entre paréntesis y filtra el promedio con <code>BETWEEN 7 AND 10</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une por <code>id_facultad</code> y expresa el rango con <code>&gt;= 7 AND &lt;= 10</code> junto al bloque <code>OR</code> entre paréntesis."
+                }
+            },
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · LIKE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque en el primer <code>INNER JOIN</code> compara <code>a.id_alumno = i.id_inscripcion</code> en vez de usar la clave foránea <code>i.id_alumno</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque <code>LIKE 'Datos%'</code> solo busca al inicio del texto, usa <code>OR</code> en vez de <code>AND</code> y usa <code>&gt; 7</code> excluyendo el 7."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque une las 3 tablas por sus claves correctas y filtra con <code>LIKE '%Datos%' AND i.nota_final &gt;= 7</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une desde <code>materias</code> hacia <code>alumnos</code> pasando por <code>inscripciones</code> con las mismas condiciones."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · COUNT',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque <code>INNER JOIN</code> excluye por completo las 5 materias que no tienen filas asociadas en <code>inscripciones</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>COUNT(*)</code> cuenta las 30 filas resultantes del <code>INNER JOIN</code>.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>COUNT(inscripciones.nota_final)</code> ignora las 2 filas donde <code>nota_final</code> es <code>NULL</code> ($30 - 2 = 28$).",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque <code>MIN(inscripciones.nota_final)</code> obtiene la menor calificación no nula entre las filas unidas."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q11',
+                number: 11,
+                title: 'Ejercicio 11 · SELECT',
+                correctValue: 'A',
+                correctLabel: "Opción A: Arroja un error (Unknown column 'facultades.sede'), porque al definir el alias 'f' es obligatorio usar f.sede.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: una vez declarado un alias para una tabla en el <code>FROM</code>, dicho alias reemplaza al nombre original de la tabla en todas las cláusulas de esa consulta (<code>SELECT</code>, <code>ON</code>, <code>WHERE</code>)."
+                }
+            },
+            {
+                id: 'q12',
+                number: 12,
+                title: 'Ejercicio 12 · INNER',
+                correctValue: 'B',
+                correctLabel: 'Opción B: Encadenar 3 cláusulas INNER JOIN conectando las 4 tablas (facultades ↔ alumnos ↔ inscripciones ↔ materias).',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: no existe clave foránea directa entre <code>facultades</code> y <code>materias</code>; la relación pasa obligatoriamente por <code>alumnos</code> y la tabla intermedia <code>inscripciones</code>."
+                }
+            },
+            {
+                id: 'q13',
+                number: 13,
+                title: 'Ejercicio 13 · BETWEEN',
+                correctValue: 'A',
+                correctLabel: "Opción A: Inscripciones de alumnos cuyo apellido comienza con 'M' y tiene al menos 2 caracteres, con nota_final estrictamente menor a 4 o estrictamente mayor a 7.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: <code>NOT BETWEEN 4 AND 7</code> excluye los extremos 4 y 7 (<code>&lt; 4 OR &gt; 7</code>), y el patrón <code>'M_%'</code> exige que el apellido comience con <code>'M'</code> seguido de al menos un carácter más."
+                }
+            },
+            {
+                id: 'q14',
+                number: 14,
+                title: 'Ejercicio 14 · SUM',
+                correctValue: 'A',
+                correctLabel: 'Opción A: Devuelve 400, porque el INNER JOIN genera 5 filas para la materia 4 y SUM acumula 80 en cada fila.',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: como la materia 4 tiene 5 filas en <code>inscripciones</code>, el resultado del <code>INNER JOIN</code> contiene 5 filas donde se repite su <code>carga_horaria</code> de <code>80</code>, sumando <code>400</code>."
+                }
+            },
+            {
+                id: 'q15',
+                number: 15,
+                title: 'Ejercicio 15 · DROP',
+                correctValue: 'B',
+                correctLabel: 'Opción B: ALTER TABLE materias DROP COLUMN regimen;',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: en DDL de SQL no existe <code>DELETE COLUMN</code> (<code>DELETE</code> se usa solo para filas); para eliminar una columna de la estructura de una tabla se usa <code>DROP COLUMN</code>."
+                }
+            }
+        ];
+
+        /* =========================================================================
+           4. SINCRONIZACIÓN DOM <-> ESTADO Y FUNCIÓN EVALUADORA (ESCALA 10 PUNTOS)
+           ========================================================================= */
+        function syncDOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el) appState.answers[id] = el.value;
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                appState.answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restoreStateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.answers[id] !== undefined) {
+                    el.value = appState.answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                const vals = appState.answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const val = appState.answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncDOMToState();
+
+            let rawUnits = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validate(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+0.67 pts)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    rawUnits += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Parcialmente correcta (25% del ítem: +0.17 pts) — Ver detalle al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: 25% del ejercicio)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            const gradeOutOf10 = Math.round(((rawUnits / 15) * 10) * 100) / 100;
+
+            appState.evaluated = true;
+            saveStateToStorage();
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const perfectBanner = document.getElementById('perfect-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            scoreNumber.textContent = formatScore(gradeOutOf10);
+            scoreSubtitle.textContent = `Nota final: ${formatScore(gradeOutOf10)} / 10 pts (${formatScore(rawUnits)} de 15 ejercicios equivalentes correctos).`;
+
+            if (rawUnits === 15) {
+                scoreTitle.textContent = '¡Calificación Perfecta (10 / 10)!';
+                perfectBanner.style.display = 'block';
+                errorsContainer.innerHTML = '';
+            } else {
+                perfectBanner.style.display = 'none';
+                if (gradeOutOf10 >= 8) {
+                    scoreTitle.textContent = '¡Muy buen desempeño!';
+                } else if (gradeOutOf10 >= 6) {
+                    scoreTitle.textContent = 'Evaluación Aprobada — Revisa las correcciones';
+                } else {
+                    scoreTitle.textContent = 'Necesitas repasar los conceptos de INNER JOIN y SQL';
+                }
+
+                let errorsHTML = '<div class="errors-list">';
+                mistakes.forEach((m) => {
+                    const partialClass = m.isPartial ? 'partial-item' : '';
+                    const icon = m.isPartial ? '◐' : '✗';
+                    errorsHTML += `
+                        <div class="error-item ${partialClass}">
+                            <div class="error-item-header">${icon} ${escapeHTML(m.title)}</div>
+                            <div class="error-comparison">
+                                <div class="ans-box ans-user">
+                                    <strong>Tu respuesta:</strong><br>${escapeHTML(m.userAnswer)}
+                                </div>
+                                <div class="ans-box ans-expected">
+                                    <strong>Respuesta esperada:</strong><br>${escapeHTML(m.correctAnswer)}
+                                </div>
+                            </div>
+                            <p class="error-explanation">
+                                <strong>Por qué estuvo mal:</strong> ${m.explanation}
+                            </p>
+                        </div>
+                    `;
+                });
+                errorsHTML += '</div>';
+                errorsContainer.innerHTML = errorsHTML;
+            }
+
+            resultsPanel.classList.add('visible');
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+
+        document.getElementById('sql-eval-form').addEventListener('input', () => {
+            syncDOMToState();
+        });
+        document.getElementById('sql-eval-form').addEventListener('change', () => {
+            syncDOMToState();
+        });
+
+        // Interacción Hover sobre campos PK y FK para iluminar su par correspondiente
+        (function initKeyHoverHighlight() {
+            const keyRows = document.querySelectorAll('.er-attr-row[data-join-key]');
+
+            function setHighlightByJoinKey(joinKey, isActive) {
+                if (!joinKey) return;
+                document.querySelectorAll(`.er-attr-row[data-join-key="${joinKey}"]`).forEach((row) => {
+                    row.classList.toggle('key-linked-active', isActive);
+                });
+                document.querySelectorAll(`.er-connector-line[data-join-connector="${joinKey}"]`).forEach((conn) => {
+                    conn.classList.toggle('connector-active', isActive);
+                });
+            }
+
+            keyRows.forEach((row) => {
+                const joinKey = row.getAttribute('data-join-key');
+                row.addEventListener('mouseenter', () => setHighlightByJoinKey(joinKey, true));
+                row.addEventListener('mouseleave', () => setHighlightByJoinKey(joinKey, false));
+            });
+        })();
+
+        // Restaurar estado al cargar la página
+        (function bootstrapApp() {
+            const hadSaved = loadStateFromStorage();
+            if (hadSaved) {
+                restoreStateToDOM();
+                if (appState.evaluated) {
+                    evaluarRespuestas(false);
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

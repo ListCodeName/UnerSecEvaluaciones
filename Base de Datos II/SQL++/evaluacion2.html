@@ -1,0 +1,2359 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación SQL++ #2 | Base de Datos II</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark Mobile-First con Paleta Pastel (Bosque Esmeralda & Menta Salvia) */
+            --bg-deep: #07110e;
+            --bg-surface: rgba(13, 28, 23, 0.85);
+            --bg-surface-elevated: rgba(19, 40, 33, 0.92);
+            --bg-code: rgba(6, 15, 12, 0.95);
+
+            --text-primary: #f1f8f5;
+            --text-secondary: #b2cbbe;
+            --text-muted: #759284;
+
+            /* Acentos Pasteles */
+            --pastel-violet: #86efac;
+            --pastel-cyan: #67e8f9;
+            --pastel-mint: #a7f3d0;
+            --pastel-amber: #fef08a;
+            --pastel-rose: #fda4af;
+            --pastel-peach: #fdba74;
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(134, 239, 172, 0.16);
+            --border-focus: rgba(103, 232, 249, 0.6);
+            --shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.5);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 14% 16%, rgba(134, 239, 172, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 86% 26%, rgba(103, 232, 249, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 88%, rgba(253, 186, 116, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas de partículas (Polvo y Luz) */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 1.1rem 0.9rem 3.8rem;
+        }
+
+        /* Cabecera de la Evaluación */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.25rem;
+            margin-bottom: 1.3rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.72rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-violet {
+            background: rgba(134, 239, 172, 0.14);
+            color: var(--pastel-violet);
+            border: 1px solid rgba(134, 239, 172, 0.32);
+        }
+
+        .badge-cyan {
+            background: rgba(103, 232, 249, 0.12);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(103, 232, 249, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(253, 186, 116, 0.12);
+            color: var(--pastel-peach);
+            border: 1px solid rgba(253, 186, 116, 0.28);
+        }
+
+        .badge-amber {
+            background: rgba(254, 240, 138, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan), var(--pastel-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.93rem;
+        }
+
+        /* =========================================================
+           DIAGRAMA GRÁFICO DE TABLAS RELACIONALES (CON PK Y FK)
+           ========================================================= */
+        .er-diagram-section {
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(103, 232, 249, 0.24);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.1rem;
+            margin-bottom: 1.55rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .er-header-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 1.1rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .er-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: var(--pastel-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .er-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .er-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            margin-top: 0.2rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            background: rgba(6, 15, 12, 0.7);
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .key-tag {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.1rem 0.42rem;
+            border-radius: 4px;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        .key-pk {
+            background: rgba(254, 240, 138, 0.18);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.48);
+        }
+
+        .key-fk {
+            background: rgba(103, 232, 249, 0.18);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(103, 232, 249, 0.48);
+        }
+
+        .key-none {
+            width: 2.15rem;
+            display: inline-block;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.18);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        /* Contenedor visual de las 4 tablas con scroll horizontal (en X) */
+        .er-visual-board {
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            gap: 0.6rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.25rem 0.15rem 0.85rem;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(134, 239, 172, 0.45) rgba(6, 15, 12, 0.6);
+        }
+
+        .er-visual-board::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-track {
+            background: rgba(6, 15, 12, 0.65);
+            border-radius: 999px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, rgba(134, 239, 172, 0.5), rgba(103, 232, 249, 0.5));
+            border-radius: 999px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, var(--pastel-violet), var(--pastel-cyan));
+        }
+
+        /* Tarjeta gráfica de Tabla con ancho mínimo acorde a su contenido */
+        .er-table-node {
+            background: var(--bg-code);
+            border: 1px solid rgba(134, 239, 172, 0.26);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+            flex: 0 0 auto;
+            min-width: 268px;
+            width: max-content;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .er-table-node.is-bridge-table {
+            border-color: rgba(253, 186, 116, 0.45);
+            box-shadow: 0 8px 24px rgba(253, 186, 116, 0.09);
+        }
+
+        .er-table-head {
+            background: linear-gradient(135deg, rgba(134, 239, 172, 0.2), rgba(103, 232, 249, 0.14));
+            border-bottom: 1px solid rgba(134, 239, 172, 0.24);
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.85rem;
+        }
+
+        .er-table-node.is-bridge-table .er-table-head {
+            background: linear-gradient(135deg, rgba(253, 186, 116, 0.22), rgba(103, 232, 249, 0.16));
+            border-bottom-color: rgba(253, 186, 116, 0.35);
+        }
+
+        .er-table-name {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--pastel-amber);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            white-space: nowrap;
+        }
+
+        .er-table-tag {
+            font-size: 0.66rem;
+            font-family: var(--font-sans);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            background: rgba(6, 15, 12, 0.6);
+            padding: 0.14rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .er-table-tag.er-nm-tag {
+            color: var(--pastel-peach);
+            border: 1px solid rgba(253, 186, 116, 0.42);
+            background: rgba(253, 186, 116, 0.13);
+            font-weight: 600;
+        }
+
+        .er-attr-list {
+            list-style: none;
+            padding: 0.35rem 0;
+            margin: 0;
+        }
+
+        .er-attr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 0.45rem 0.85rem;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .er-attr-row:last-child {
+            border-bottom: none;
+        }
+
+        .er-attr-row.is-pk-row,
+        .er-attr-row.is-fk-row {
+            cursor: pointer;
+            position: relative;
+            transition: background 0.22s ease, box-shadow 0.22s ease, transform 0.2s ease, border-color 0.22s ease;
+        }
+
+        .er-attr-row.is-pk-row {
+            background: rgba(254, 240, 138, 0.05);
+        }
+
+        .er-attr-row.is-fk-row {
+            background: rgba(103, 232, 249, 0.06);
+        }
+
+        /* Estado activo sincronizado al hacer hover sobre un PK o su FK correspondiente */
+        .er-attr-row.is-pk-row.key-linked-active {
+            background: linear-gradient(90deg, rgba(254, 240, 138, 0.28) 0%, rgba(134, 239, 172, 0.18) 100%);
+            box-shadow: inset 3px 0 0 var(--pastel-amber), 0 0 16px rgba(254, 240, 138, 0.28);
+            transform: translateX(2px);
+        }
+
+        .er-attr-row.is-fk-row.key-linked-active {
+            background: linear-gradient(90deg, rgba(103, 232, 249, 0.28) 0%, rgba(134, 239, 172, 0.2) 100%);
+            box-shadow: inset 3px 0 0 var(--pastel-cyan), 0 0 16px rgba(103, 232, 249, 0.3);
+            transform: translateX(2px);
+        }
+
+        .er-attr-row.key-linked-active .key-pk {
+            background: var(--pastel-amber);
+            color: #07110e;
+            box-shadow: 0 0 10px rgba(254, 240, 138, 0.75);
+        }
+
+        .er-attr-row.key-linked-active .key-fk {
+            background: var(--pastel-cyan);
+            color: #07110e;
+            box-shadow: 0 0 10px rgba(103, 232, 249, 0.75);
+        }
+
+        .er-attr-row.key-linked-active .attr-name {
+            color: #ffffff;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
+        }
+
+        .attr-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+
+        .attr-name {
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .is-pk-row .attr-name {
+            color: var(--pastel-amber);
+            font-weight: 600;
+        }
+
+        .is-fk-row .attr-name {
+            color: var(--pastel-cyan);
+            font-weight: 600;
+        }
+
+        .attr-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .attr-type {
+            color: var(--pastel-peach);
+            font-size: 0.74rem;
+        }
+
+        /* Conector visual entre tablas (1 a N) */
+        .er-connector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0.15rem;
+            color: var(--pastel-cyan);
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            user-select: none;
+            flex: 0 0 auto;
+        }
+
+        .er-connector-line {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(103, 232, 249, 0.1);
+            border: 1px dashed rgba(103, 232, 249, 0.38);
+            padding: 0.3rem 0.65rem;
+            border-radius: 999px;
+            color: var(--pastel-cyan);
+            font-size: 0.74rem;
+            white-space: nowrap;
+            transition: all 0.22s ease;
+        }
+
+        .er-connector-line.connector-active {
+            background: rgba(134, 239, 172, 0.22);
+            border: 1px solid var(--pastel-violet);
+            color: var(--pastel-violet);
+            box-shadow: 0 0 14px rgba(134, 239, 172, 0.38);
+            transform: scale(1.06);
+        }
+
+        .er-cardinality {
+            font-weight: 700;
+            color: var(--pastel-amber);
+        }
+
+        /* =========================================================
+           TARJETAS DE PREGUNTAS (15 EJERCICIOS)
+           ========================================================= */
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease;
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(134, 239, 172, 0.65);
+            background: linear-gradient(180deg, rgba(134, 239, 172, 0.05) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(254, 240, 138, 0.65);
+            background: linear-gradient(180deg, rgba(254, 240, 138, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.7rem;
+            gap: 0.5rem;
+        }
+
+        .q-number {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--pastel-violet);
+            background: rgba(134, 239, 172, 0.12);
+            padding: 0.24rem 0.68rem;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+        }
+
+        .q-points {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .q-prompt {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 0.9rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            background: rgba(134, 239, 172, 0.13);
+            color: var(--pastel-cyan);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+        }
+
+        .sql-snippet {
+            background: var(--bg-code);
+            border-left: 3px solid var(--pastel-violet);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 0.95rem;
+            margin: 0.65rem 0 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--pastel-amber);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .sql-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1px solid rgba(134, 239, 172, 0.26);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 0.95rem;
+            color: var(--pastel-mint);
+            font-family: var(--font-mono);
+            font-size: 0.87rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.65;
+        }
+
+        .sql-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.14);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            background: var(--bg-code);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            padding: 0.8rem 0.95rem;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .option-label:hover {
+            border-color: rgba(134, 239, 172, 0.4);
+            background: rgba(15, 34, 28, 0.92);
+        }
+
+        .option-label input[type="checkbox"],
+        .option-label input[type="radio"] {
+            margin-top: 0.24rem;
+            accent-color: var(--pastel-violet);
+            width: 1.05rem;
+            height: 1.05rem;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .option-label:has(input:checked) {
+            border-color: var(--pastel-violet);
+            background: rgba(134, 239, 172, 0.1);
+            color: var(--text-primary);
+        }
+
+        .option-label code {
+            font-family: var(--font-mono);
+            font-size: 0.82em;
+            color: var(--pastel-amber);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.1rem 0.34rem;
+            border-radius: 4px;
+            word-break: break-word;
+        }
+
+        .item-status {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.48rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .item-status.correct {
+            display: inline-block;
+            background: rgba(134, 239, 172, 0.13);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.32);
+        }
+
+        .item-status.partial {
+            display: inline-block;
+            background: rgba(254, 240, 138, 0.13);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.35);
+        }
+
+        .item-status.wrong {
+            display: inline-block;
+            background: rgba(253, 164, 175, 0.13);
+            color: var(--pastel-rose);
+            border: 1px solid rgba(253, 164, 175, 0.32);
+        }
+
+        /* Acciones y Resultados */
+        .eval-actions {
+            margin-top: 1.7rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .btn-evaluate {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.95rem 1.6rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan));
+            color: #07110e;
+            box-shadow: 0 8px 25px rgba(134, 239, 172, 0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-evaluate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(103, 232, 249, 0.38);
+        }
+
+        .results-panel {
+            display: none;
+            margin-top: 1.8rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.45rem 1.2rem;
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .results-panel.visible {
+            display: block;
+            animation: fadeIn 0.35s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.2rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 122px;
+            height: 122px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(134, 239, 172, 0.16) 0%, rgba(6, 15, 12, 0.92) 75%);
+            border: 2px solid var(--pastel-violet);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 2.15rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1;
+            font-family: var(--font-mono);
+        }
+
+        .score-total {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .score-message {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .score-subtext {
+            font-size: 0.87rem;
+            color: var(--text-secondary);
+        }
+
+        .perfect-banner {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: rgba(134, 239, 172, 0.13);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.38);
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(6, 15, 12, 0.84);
+            border-left: 4px solid var(--pastel-rose);
+            border-radius: var(--radius-md);
+            padding: 0.95rem;
+        }
+
+        .error-item.partial-item {
+            border-left-color: var(--pastel-amber);
+        }
+
+        .error-item-header {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--pastel-rose);
+            margin-bottom: 0.45rem;
+        }
+
+        .error-item.partial-item .error-item-header {
+            color: var(--pastel-amber);
+        }
+
+        .error-comparison {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+
+        .ans-box {
+            padding: 0.5rem 0.7rem;
+            border-radius: var(--radius-sm);
+            word-break: break-word;
+        }
+
+        .ans-user {
+            background: rgba(253, 164, 175, 0.09);
+            border: 1px solid rgba(253, 164, 175, 0.25);
+            color: var(--pastel-rose);
+        }
+
+        .ans-expected {
+            background: rgba(134, 239, 172, 0.09);
+            border: 1px solid rgba(134, 239, 172, 0.25);
+            color: var(--pastel-mint);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .error-explanation code {
+            font-family: var(--font-mono);
+            color: var(--pastel-amber);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.08rem 0.32rem;
+            border-radius: 4px;
+        }
+
+        /* Media Queries Desktop */
+        @media (min-width: 980px) {
+            .page-wrapper {
+                padding: 2rem 1.4rem 4.2rem;
+            }
+
+            .eval-header {
+                padding: 1.85rem 2rem;
+            }
+
+            .eval-title {
+                font-size: 2rem;
+            }
+
+            .er-header-bar {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .question-card {
+                padding: 1.5rem 1.65rem;
+            }
+
+            .error-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo de partículas: Polvo y Luz -->
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <header class="eval-header">
+            <div class="badges-row">
+                <span class="badge badge-violet">Base de Datos II</span>
+                <span class="badge badge-cyan">SQL++ · Evaluación #2</span>
+                <span class="badge badge-mint">15 Ejercicios</span>
+                <span class="badge badge-amber">Calificación: 10 Puntos</span>
+            </div>
+            <h1 class="eval-title">Evaluación SQL++: Recursos Humanos y Proyectos</h1>
+            <p class="eval-subtitle">
+                Resuelva los 15 ejercicios propuestos (5 de desarrollo de sentencias, 5 de selección múltiple y 5 de selección binaria). Contestando correctamente la totalidad de las consignas obtendrá la calificación máxima de <strong>10 puntos</strong>.
+            </p>
+        </header>
+
+        <!-- =================================================================
+             GUÍA GRÁFICA DE 4 TABLAS RELACIONALES (PK, FK Y TABLA INTERMEDIA N:M)
+             ================================================================= -->
+        <section class="er-diagram-section" aria-label="Esquema gráfico relacional de tablas">
+            <div class="er-header-bar">
+                <div>
+                    <h2 class="er-title">🗂️ Esquema Gráfico Relacional: Empleados y Asignación de Proyectos (4 Tablas)</h2>
+                    <p class="er-subtitle">Pase el cursor sobre cualquier atributo <strong>PK</strong> o <strong>FK</strong> para iluminar su par correspondiente. La tabla <strong>asignaciones</strong> resuelve la relación muchos a muchos (<strong>N:M</strong>) entre <strong>empleados</strong> y <strong>proyectos</strong>.</p>
+                </div>
+                <div class="er-legend">
+                    <span class="legend-item">
+                        <span class="key-tag key-pk">PK</span> Clave Primaria (Identificador único)
+                    </span>
+                    <span class="legend-item">
+                        <span class="key-tag key-fk">FK</span> Clave Foránea (Atributo de unión)
+                    </span>
+                </div>
+            </div>
+
+            <div class="er-visual-board">
+                <!-- TABLA 1: departamentos -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🏢 departamentos</span>
+                        <span class="er-table-tag">Tabla 1</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_depto">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_depto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_depto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">presupuesto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(12,2)</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 1: departamentos (1) <-> (N) empleados -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_depto">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 2: empleados -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">👩‍💻 empleados</span>
+                        <span class="er-table-tag">Tabla 2</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_empleado">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_empleado</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">legajo</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">apellido</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">salario</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(10,2)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_depto">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_depto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 2: empleados (1) <-> (N) asignaciones -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_empleado">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 3 (INTERMEDIA N:M): asignaciones -->
+                <article class="er-table-node is-bridge-table">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🗂️ asignaciones</span>
+                        <span class="er-table-tag er-nm-tag">Intermedia N:M</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_asignacion">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_asignacion</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_empleado">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_empleado</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_proyecto">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_proyecto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">horas_semanales</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 3: asignaciones (N) <-> (1) proyectos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_proyecto">
+                        <span class="er-cardinality">∞</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">1</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 4: proyectos -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🚀 proyectos</span>
+                        <span class="er-table-tag">Tabla 4</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_proyecto">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_proyecto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">titulo_proy</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(70)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">cliente</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">prioridad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             FORMULARIO DE 15 EJERCICIOS
+             ================================================================= -->
+        <form id="sql-eval-form" novalidate>
+
+            <!-- 1. Completado (2 Tablas: empleados + departamentos) -->
+            <article class="question-card" id="card-q1">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 1 · INNER</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Escriba la sentencia SQL que muestre las columnas <code>apellido</code> (de <code>empleados</code>) y <code>nombre_depto</code> (de <code>departamentos</code>), en ese orden, uniendo ambas tablas mediante su clave correspondiente para aquellos empleados cuyo <code>salario</code> sea mayor o igual a <code>950000</code>. <em>(No utilice alias de tabla).</em>
+                </p>
+                <input type="text" id="q1-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                <div class="item-status" id="status-q1"></div>
+            </article>
+
+            <!-- 2. Completado (3 Tablas N:M: empleados + asignaciones + proyectos) -->
+            <article class="question-card" id="card-q2">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 2 · JOIN</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Escriba una consulta SQL que obtenga las columnas <code>apellido</code>, <code>horas_semanales</code> y <code>titulo_proy</code> (en ese orden), uniendo las tablas <code>empleados</code>, la tabla intermedia <code>asignaciones</code> y la tabla <code>proyectos</code>, donde el <code>cliente</code> sea exactamente <code>'Mercadolibre'</code> y el <code>apellido</code> del empleado comience con <code>'R'</code>. <em>(No utilice alias de tabla).</em>
+                </p>
+                <input type="text" id="q2-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                <div class="item-status" id="status-q2"></div>
+            </article>
+
+            <!-- 3. Completado (2 Tablas: asignaciones + proyectos con SUM y BETWEEN) -->
+            <article class="question-card" id="card-q3">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 3 · SUM</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Escriba una sentencia SQL que calcule la suma total de <code>horas_semanales</code>, uniendo la tabla intermedia <code>asignaciones</code> con <code>proyectos</code>, para aquellos registros donde las <code>horas_semanales</code> estén entre <code>10</code> y <code>30</code> inclusive y la <code>prioridad</code> del proyecto sea igual a <code>1</code>. <em>(No utilice alias de tabla).</em>
+                </p>
+                <input type="text" id="q3-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                <div class="item-status" id="status-q3"></div>
+            </article>
+
+            <!-- 4. Completado (3 Tablas: departamentos + empleados + asignaciones con COUNT y NOT) -->
+            <article class="question-card" id="card-q4">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 4 · COUNT</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Escriba una consulta SQL que cuente la cantidad total de filas (usando <code>*</code>) al unir las tablas <code>departamentos</code>, <code>empleados</code> y <code>asignaciones</code>, considerando solo los registros donde <code>nombre_depto</code> sea <code>'Sistemas'</code> y las <code>horas_semanales</code> no sean iguales a <code>40</code>. <em>(No utilice alias de tabla).</em>
+                </p>
+                <input type="text" id="q4-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                <div class="item-status" id="status-q4"></div>
+            </article>
+
+            <!-- 5. Completado (1 Tabla: Modificación estructural) -->
+            <article class="question-card" id="card-q5">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 5 · ALTER</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Actuando únicamente sobre la tabla <code>proyectos</code>, escriba la sentencia SQL para agregar una nueva columna llamada <code>fecha_entrega</code> de tipo <code>DATE</code> que no admita valores nulos.
+                </p>
+                <input type="text" id="q5-input" class="sql-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                <div class="item-status" id="status-q5"></div>
+            </article>
+
+            <!-- 6. Selección Múltiple (2 Tablas + Ambigüedad de id_empleado) -->
+            <article class="question-card" id="card-q6">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 6 · ON</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Se desea listar el <code>id_empleado</code>, el <code>apellido</code> y las <code>horas_semanales</code> uniendo <code>empleados</code> y la tabla intermedia <code>asignaciones</code>. Seleccione cuáles de las siguientes consultas son <strong>sintácticamente válidas en MySQL y libres de ambigüedad</strong>:
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="checkbox" name="q6" value="A">
+                        <span><code>SELECT empleados.id_empleado, apellido, horas_semanales FROM empleados INNER JOIN asignaciones ON empleados.id_empleado = asignaciones.id_empleado;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q6" value="B">
+                        <span><code>SELECT id_empleado, apellido, horas_semanales FROM empleados INNER JOIN asignaciones ON empleados.id_empleado = asignaciones.id_empleado;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q6" value="C">
+                        <span><code>SELECT e.id_empleado, e.apellido, a.horas_semanales FROM empleados e INNER JOIN asignaciones a ON e.id_empleado = a.id_empleado;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q6" value="D">
+                        <span><code>SELECT empleados.id_empleado, apellido, horas_semanales FROM empleados INNER JOIN asignaciones WHERE empleados.id_empleado = asignaciones.id_empleado;</code></span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q6"></div>
+            </article>
+
+            <!-- 7. Selección Múltiple (Tabla Intermedia N:M: empleados <-> asignaciones <-> proyectos) -->
+            <article class="question-card" id="card-q7">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 7 · FROM</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Respecto a la tabla intermedia <code>asignaciones</code> que modela la relación muchos a muchos (<strong>N:M</strong>) entre <code>empleados</code> y <code>proyectos</code>, seleccione todas las afirmaciones verdaderas:
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="checkbox" name="q7" value="A">
+                        <span>Un mismo empleado puede aparecer en varias filas de <code>asignaciones</code> vinculado a distintos <code>id_proyecto</code>, y un mismo proyecto puede tener múltiples empleados asignados.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q7" value="B">
+                        <span>Si un proyecto recién creado en <code>proyectos</code> aún no tiene ningún empleado asignado en <code>asignaciones</code>, dicho proyecto no aparecerá al ejecutar un <code>INNER JOIN</code> entre <code>proyectos</code> y <code>asignaciones</code>.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q7" value="C">
+                        <span>Para saber en qué <code>titulo_proy</code> trabaja cada empleado, se puede omitir la tabla <code>asignaciones</code> y escribir <code>empleados INNER JOIN proyectos ON empleados.id_empleado = proyectos.id_proyecto</code>.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q7" value="D">
+                        <span>Para obtener el <code>nombre_depto</code> junto con el <code>titulo_proy</code> de los empleados asignados, es necesario encadenar las 4 tablas del esquema mediante 3 cláusulas <code>INNER JOIN</code>.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q7"></div>
+            </article>
+
+            <!-- 8. Selección Múltiple (Precedencia AND/OR + BETWEEN en INNER JOIN) -->
+            <article class="question-card" id="card-q8">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 8 · WHERE</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Se requiere listar el <code>apellido</code> del empleado y el <code>nombre_depto</code> para aquellos empleados que pertenezcan a los departamentos <code>'Finanzas'</code> o <code>'RRHH'</code>, siempre que su <code>salario</code> se encuentre entre <code>700000</code> y <code>1200000</code> inclusive. ¿Cuáles consultas lo resuelven correctamente?
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="checkbox" name="q8" value="A">
+                        <span><code>SELECT e.apellido, d.nombre_depto FROM empleados e INNER JOIN departamentos d ON e.id_depto = d.id_depto WHERE (d.nombre_depto = 'Finanzas' OR d.nombre_depto = 'RRHH') AND e.salario BETWEEN 700000 AND 1200000;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q8" value="B">
+                        <span><code>SELECT e.apellido, d.nombre_depto FROM empleados e INNER JOIN departamentos d ON e.id_depto = d.id_depto WHERE d.nombre_depto = 'Finanzas' OR d.nombre_depto = 'RRHH' AND e.salario BETWEEN 700000 AND 1200000;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q8" value="C">
+                        <span><code>SELECT empleados.apellido, departamentos.nombre_depto FROM departamentos INNER JOIN empleados ON departamentos.id_depto = empleados.id_depto WHERE empleados.salario &gt;= 700000 AND empleados.salario &lt;= 1200000 AND (departamentos.nombre_depto = 'Finanzas' OR departamentos.nombre_depto = 'RRHH');</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q8" value="D">
+                        <span><code>SELECT e.apellido, d.nombre_depto FROM empleados e INNER JOIN departamentos d ON e.id_empleado = d.id_depto WHERE (d.nombre_depto = 'Finanzas' OR d.nombre_depto = 'RRHH') AND e.salario BETWEEN 700000 AND 1200000;</code></span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q8"></div>
+            </article>
+
+            <!-- 9. Selección Múltiple (Consulta de 3 tablas con LIKE y comparadores) -->
+            <article class="question-card" id="card-q9">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 9 · LIKE</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Se busca mostrar el <code>apellido</code> del empleado, el <code>titulo_proy</code> y las <code>horas_semanales</code> para proyectos cuyo <code>titulo_proy</code> contenga la palabra <code>'Cloud'</code> en cualquier posición y donde las <code>horas_semanales</code> sean mayores o iguales a <code>20</code>. Seleccione las opciones correctas:
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="checkbox" name="q9" value="A">
+                        <span><code>SELECT e.apellido, p.titulo_proy, a.horas_semanales FROM empleados e INNER JOIN asignaciones a ON e.id_empleado = a.id_empleado INNER JOIN proyectos p ON a.id_proyecto = p.id_proyecto WHERE p.titulo_proy LIKE '%Cloud%' AND a.horas_semanales &gt;= 20;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q9" value="B">
+                        <span><code>SELECT e.apellido, p.titulo_proy, a.horas_semanales FROM empleados e INNER JOIN asignaciones a ON e.id_empleado = a.id_asignacion INNER JOIN proyectos p ON a.id_proyecto = p.id_proyecto WHERE p.titulo_proy LIKE '%Cloud%' AND a.horas_semanales &gt;= 20;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q9" value="C">
+                        <span><code>SELECT empleados.apellido, proyectos.titulo_proy, asignaciones.horas_semanales FROM proyectos INNER JOIN asignaciones ON proyectos.id_proyecto = asignaciones.id_proyecto INNER JOIN empleados ON asignaciones.id_empleado = empleados.id_empleado WHERE asignaciones.horas_semanales &gt;= 20 AND proyectos.titulo_proy LIKE '%Cloud%';</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q9" value="D">
+                        <span><code>SELECT e.apellido, p.titulo_proy, a.horas_semanales FROM empleados e INNER JOIN asignaciones a ON e.id_empleado = a.id_empleado INNER JOIN proyectos p ON a.id_proyecto = p.id_proyecto WHERE p.titulo_proy LIKE 'Cloud%' OR a.horas_semanales &gt; 20;</code></span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q9"></div>
+            </article>
+
+            <!-- 10. Selección Múltiple (Agregaciones COUNT y SUM sobre INNER JOIN) -->
+            <article class="question-card" id="card-q10">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 10 · COUNT</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    En la tabla <code>proyectos</code> existen 12 proyectos, pero solo 9 de ellos tienen filas asociadas en <code>asignaciones</code> (sumando en total 25 filas en <code>asignaciones</code>). Si en 2 de esas 25 filas el proyecto asociado tiene <code>cliente</code> en <code>NULL</code>, al ejecutar un <code>INNER JOIN</code> entre <code>proyectos</code> y <code>asignaciones</code> se cumple que:
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="checkbox" name="q10" value="A">
+                        <span><code>SELECT COUNT(*)</code> sobre ese <code>INNER JOIN</code> devolverá <code>25</code>, ya que existen 25 asignaciones vinculadas a proyectos válidos.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q10" value="B">
+                        <span><code>SELECT COUNT(proyectos.cliente)</code> sobre ese <code>INNER JOIN</code> devolverá <code>23</code>, porque descarta las 2 filas donde la columna <code>cliente</code> es <code>NULL</code>.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q10" value="C">
+                        <span>Los 3 proyectos sin asignaciones aportarán 3 filas adicionales al <code>INNER JOIN</code> con <code>horas_semanales</code> en cero.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="checkbox" name="q10" value="D">
+                        <span><code>SELECT SUM(asignaciones.horas_semanales)</code> sumará las horas de las 25 asignaciones que superaron la condición <code>ON</code> del <code>INNER JOIN</code>.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q10"></div>
+            </article>
+
+            <!-- 11. Selección Binaria (Alcance de Alias de Tabla en INNER JOIN) -->
+            <article class="question-card" id="card-q11">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 11 · SELECT</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Observe la siguiente consulta que define los alias <code>e</code> y <code>d</code> en el <code>FROM</code>, pero utiliza <code>departamentos.nombre_depto</code> en la cláusula <code>WHERE</code>:
+                </p>
+                <pre class="sql-snippet">SELECT e.apellido, d.nombre_depto
+FROM empleados e
+INNER JOIN departamentos d ON e.id_depto = d.id_depto
+WHERE departamentos.presupuesto > 5000000;</pre>
+                <p class="q-prompt">¿Qué ocurre al ejecutar esta consulta en MySQL?</p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="radio" name="q11" value="A">
+                        <span><strong>Opción A:</strong> Arroja un error (<code>Unknown column 'departamentos.presupuesto'</code>), porque al haber declarado el alias <code>d</code> para la tabla <code>departamentos</code>, es obligatorio referenciarla como <code>d.presupuesto</code> en toda la consulta.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="radio" name="q11" value="B">
+                        <span><strong>Opción B:</strong> Se ejecuta sin inconvenientes porque el alias <code>d</code> solo es obligatorio en la cláusula <code>SELECT</code> y opcional en el <code>WHERE</code>.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q11"></div>
+            </article>
+
+            <!-- 12. Selección Binaria (Unión de las 4 tablas del esquema) -->
+            <article class="question-card" id="card-q12">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 12 · INNER</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Si se desea conocer qué <code>nombre_depto</code> tiene empleados trabajando en proyectos del <code>cliente = 'YPF'</code>, ¿cuál es el camino relacional correcto utilizando <code>INNER JOIN</code>?
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="radio" name="q12" value="A">
+                        <span><strong>Opción A:</strong> Unir directamente <code>departamentos INNER JOIN proyectos ON departamentos.id_depto = proyectos.id_proyecto</code> porque solo se necesitan columnas de esas dos tablas.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="radio" name="q12" value="B">
+                        <span><strong>Opción B:</strong> Encadenar <strong>3 cláusulas <code>INNER JOIN</code></strong> conectando las 4 tablas (<code>departamentos</code> ↔ <code>empleados</code> ↔ <code>asignaciones</code> ↔ <code>proyectos</code>) mediante sus respectivas claves <code>PK</code> y <code>FK</code>.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q12"></div>
+            </article>
+
+            <!-- 13. Selección Binaria (Lectura de consulta de 3 Tablas con NOT BETWEEN y LIKE) -->
+            <article class="question-card" id="card-q13">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 13 · BETWEEN</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Analice la siguiente sentencia SQL:
+                </p>
+                <pre class="sql-snippet">SELECT e.apellido, p.titulo_proy, a.horas_semanales
+FROM empleados e
+INNER JOIN asignaciones a ON e.id_empleado = a.id_empleado
+INNER JOIN proyectos p ON a.id_proyecto = p.id_proyecto
+WHERE a.horas_semanales NOT BETWEEN 15 AND 35
+  AND e.apellido LIKE '_o%';</pre>
+                <p class="q-prompt">¿Qué filas recupera exactamente esta consulta?</p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="radio" name="q13" value="A">
+                        <span><strong>Opción A:</strong> Empleados cuya segunda letra del apellido sea <code>'o'</code>, con asignaciones a proyectos cuya carga sea estrictamente menor a <code>15</code> o estrictamente mayor a <code>35</code> horas semanales.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="radio" name="q13" value="B">
+                        <span><strong>Opción B:</strong> Empleados cuyo apellido termine en <code>'o'</code>, con asignaciones cuya carga sea menor o igual a <code>15</code> o mayor o igual a <code>35</code> horas semanales.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q13"></div>
+            </article>
+
+            <!-- 14. Selección Binaria (Multiplicidad en SUM al unir empleados con asignaciones) -->
+            <article class="question-card" id="card-q14">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 14 · SUM</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    El empleado con <code>id_empleado = 7</code> percibe un <code>salario</code> de <code>1000000</code> en la tabla <code>empleados</code> y se encuentra asignado simultáneamente a <strong>4 proyectos distintos</strong> en la tabla intermedia <code>asignaciones</code>. ¿Qué resultado arroja la siguiente consulta?
+                </p>
+                <pre class="sql-snippet">SELECT SUM(empleados.salario)
+FROM empleados
+INNER JOIN asignaciones ON empleados.id_empleado = asignaciones.id_empleado
+WHERE empleados.id_empleado = 7;</pre>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="radio" name="q14" value="A">
+                        <span><strong>Opción A:</strong> Devuelve <code>4000000</code>, porque el <code>INNER JOIN</code> con <code>asignaciones</code> genera 4 filas para el empleado 7 (una por cada asignación) y <code>SUM(empleados.salario)</code> suma <code>1000000</code> en cada una de las 4 filas.</span>
+                    </label>
+                    <label class="option-label">
+                        <input type="radio" name="q14" value="B">
+                        <span><strong>Opción B:</strong> Devuelve <code>1000000</code>, porque <code>salario</code> pertenece a la tabla <code>empleados</code> y no se multiplica por la cantidad de filas de la tabla intermedia.</span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q14"></div>
+            </article>
+
+            <!-- 15. Selección Binaria (MODIFY vs CHANGE en MySQL) -->
+            <article class="question-card" id="card-q15">
+                <div class="q-meta">
+                    <span class="q-number">Ejercicio 15 · MODIFY</span>
+                    <span class="q-points">0.67 pts</span>
+                </div>
+                <p class="q-prompt">
+                    Se desea ampliar la longitud de la columna <code>titulo_proy</code> en la tabla <code>proyectos</code> a <code>VARCHAR(120) NOT NULL</code> sin cambiar el nombre de la columna. ¿Cuál de las siguientes sentencias es válida en MySQL?
+                </p>
+                <div class="options-list">
+                    <label class="option-label">
+                        <input type="radio" name="q15" value="A">
+                        <span><strong>Opción A:</strong> <code>ALTER TABLE proyectos CHANGE titulo_proy VARCHAR(120) NOT NULL;</code></span>
+                    </label>
+                    <label class="option-label">
+                        <input type="radio" name="q15" value="B">
+                        <span><strong>Opción B:</strong> <code>ALTER TABLE proyectos MODIFY titulo_proy VARCHAR(120) NOT NULL;</code></span>
+                    </label>
+                </div>
+                <div class="item-status" id="status-q15"></div>
+            </article>
+
+            <!-- Botón de Evaluación -->
+            <div class="eval-actions">
+                <button type="button" id="btn-evaluar" class="btn-evaluate">
+                    Evaluar Respuestas (15 Ejercicios)
+                </button>
+            </div>
+        </form>
+
+        <!-- Panel de Resultados y Diagnóstico Detallado -->
+        <section id="results-panel" class="results-panel" aria-live="polite">
+            <div class="score-summary">
+                <div class="score-circle">
+                    <span class="score-value" id="score-number">0</span>
+                    <span class="score-total">de 10 pts</span>
+                </div>
+                <h3 class="score-message" id="score-title">Resultado de la Evaluación</h3>
+                <p class="score-subtext" id="score-subtitle"></p>
+                <div id="perfect-banner" class="perfect-banner">
+                    🏆 ¡Felicitaciones! Ha respondido correctamente las 15 consignas, alcanzando la calificación máxima de 10 puntos con dominio sobresaliente de INNER JOIN y SQL relacional.
+                </div>
+            </div>
+
+            <div id="errors-container"></div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           0. PERSISTENCIA EN LOCALSTORAGE (SIN ARCHIVOS EXTERNOS)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd2_sqlplusplus_evaluacion2_state_v1';
+
+        let appState = {
+            answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [], q9: [], q10: [],
+                q11: '', q12: '', q13: '', q14: '', q15: ''
+            },
+            evaluated: false
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {}
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && parsed.answers) {
+                    appState.answers = Object.assign({}, appState.answers, parsed.answers);
+                    appState.evaluated = Boolean(parsed.evaluated);
+                    return true;
+                }
+            } catch (e) {
+                return false;
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           1. EFECTO DE PARTÍCULAS: POLVO Y LUZ (CANVAS)
+           ========================================================================= */
+        (function initDustParticles() {
+            const canvas = document.getElementById('dust-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const pastelPalette = [
+                '134, 239, 172',
+                '103, 232, 249',
+                '253, 186, 116',
+                '254, 240, 138',
+                '167, 243, 208'
+            ];
+
+            const particleCount = Math.min(75, Math.floor((width * height) / 16000));
+            const particles = [];
+
+            function createParticle() {
+                const isLightOrb = Math.random() < 0.28;
+                return {
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: isLightOrb ? (Math.random() * 3.2 + 1.8) : (Math.random() * 1.4 + 0.5),
+                    color: pastelPalette[Math.floor(Math.random() * pastelPalette.length)],
+                    vx: (Math.random() - 0.5) * 0.22,
+                    vy: -Math.random() * 0.28 - 0.05,
+                    alpha: Math.random() * 0.55 + 0.15,
+                    pulseSpeed: Math.random() * 0.015 + 0.004,
+                    pulsePhase: Math.random() * Math.PI * 2,
+                    isLightOrb: isLightOrb
+                };
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(createParticle());
+            }
+
+            function drawParticles() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.pulsePhase += p.pulseSpeed;
+
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    const currentAlpha = p.alpha * (0.65 + 0.35 * Math.sin(p.pulsePhase));
+
+                    ctx.beginPath();
+                    if (p.isLightOrb) {
+                        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 4.5);
+                        grad.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
+                        grad.addColorStop(0.4, `rgba(${p.color}, ${currentAlpha * 0.35})`);
+                        grad.addColorStop(1, `rgba(${p.color}, 0)`);
+                        ctx.fillStyle = grad;
+                        ctx.arc(p.x, p.y, p.radius * 4.5, 0, Math.PI * 2);
+                    } else {
+                        ctx.fillStyle = `rgba(${p.color}, ${currentAlpha})`;
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(drawParticles);
+            }
+
+            window.addEventListener('resize', () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            });
+
+            drawParticles();
+        })();
+
+        /* =========================================================================
+           2. NORMALIZACIÓN TOLERANTE DE SQL Y FUNCIONES AUXILIARES DE JOINS
+           ========================================================================= */
+        function normalizeSQL(rawInput) {
+            if (!rawInput) return '';
+            return rawInput
+                .toLowerCase()
+                .trim()
+                .replace(/`/g, '')
+                .replace(/"/g, "'")
+                .replace(/;+\s*$/g, '')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*\(\s*/g, '(')
+                .replace(/\s*\)\s*/g, ')')
+                .replace(/\)(?=[a-z0-9_'])/g, ') ')
+                .replace(/\s*,\s*/g, ', ')
+                .replace(/\s*\.\s*/g, '.')
+                .replace(/\s*(>=|<=|<>|!=|=|>|<)\s*/g, ' $1 ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function canonicalizeJoinQuery(norm) {
+            if (!norm) return '';
+            let s = norm
+                .replace(/\b(?<!inner\s)join\b/g, 'inner join')
+                .replace(/on\(([^()]+)\)/g, 'on $1')
+                .replace(/departamentos\.id_depto\s*=\s*empleados\.id_depto/g, 'empleados.id_depto = departamentos.id_depto')
+                .replace(/asignaciones\.id_empleado\s*=\s*empleados\.id_empleado/g, 'empleados.id_empleado = asignaciones.id_empleado')
+                .replace(/proyectos\.id_proyecto\s*=\s*asignaciones\.id_proyecto/g, 'asignaciones.id_proyecto = proyectos.id_proyecto')
+                .replace(/\b(departamentos|d)\.(nombre_depto|presupuesto)\b/g, '$2')
+                .replace(/\b(empleados|e)\.(legajo|apellido|salario)\b/g, '$2')
+                .replace(/\b(asignaciones|a)\.(horas_semanales)\b/g, '$2')
+                .replace(/\b(proyectos|p)\.(titulo_proy|cliente|prioridad)\b/g, '$2')
+                .replace(/\s+/g, ' ')
+                .trim();
+            return s;
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatScore(num) {
+            return Number.isInteger(num) ? String(num) : num.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        /* =========================================================================
+           3. DEFINICIÓN DE LOS 15 EJERCICIOS (5 COMPLETADO, 5 MÚLTIPLE, 5 BINARIOS)
+           ========================================================================= */
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · INNER',
+                canonicalAnswer: 'SELECT empleados.apellido, departamentos.nombre_depto FROM empleados INNER JOIN departamentos ON empleados.id_depto = departamentos.id_depto WHERE empleados.salario >= 950000;',
+                validate: function (norm) {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validSelectAndJoin = [
+                        'select apellido, nombre_depto from empleados inner join departamentos on empleados.id_depto = departamentos.id_depto',
+                        'select apellido, nombre_depto from departamentos inner join empleados on empleados.id_depto = departamentos.id_depto'
+                    ];
+                    const validWhere = ['where salario >= 950000', 'where(salario >= 950000)'];
+                    for (const sj of validSelectAndJoin) {
+                        for (const w of validWhere) {
+                            if (c === `${sj} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia SQL. Debías construir una consulta con <strong>INNER JOIN</strong> entre <code>empleados</code> y <code>departamentos</code> filtrando por <code>salario &gt;= 950000</code>.';
+                    }
+                    const issues = [];
+                    const c = canonicalizeJoinQuery(norm);
+                    if (!c.startsWith('select apellido, nombre_depto')) {
+                        issues.push('La proyección debe mostrar en orden <code>apellido, nombre_depto</code>.');
+                    }
+                    if (!c.includes('inner join')) {
+                        issues.push('Falta la cláusula <strong>INNER JOIN</strong> para vincular <code>empleados</code> y <code>departamentos</code>.');
+                    }
+                    if (!c.includes('on empleados.id_depto = departamentos.id_depto')) {
+                        issues.push('La condición <code>ON</code> debe igualar <code>empleados.id_depto = departamentos.id_depto</code>.');
+                    }
+                    if (!c.includes('where salario >= 950000') && !c.includes('where(salario >= 950000)')) {
+                        issues.push('Falta o es incorrecto el filtro <code>WHERE empleados.salario &gt;= 950000</code>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Verifica la sintaxis general y no utilizar alias de tabla.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · JOIN',
+                canonicalAnswer: "SELECT empleados.apellido, asignaciones.horas_semanales, proyectos.titulo_proy FROM empleados INNER JOIN asignaciones ON empleados.id_empleado = asignaciones.id_empleado INNER JOIN proyectos ON asignaciones.id_proyecto = proyectos.id_proyecto WHERE proyectos.cliente = 'Mercadolibre' AND empleados.apellido LIKE 'R%';",
+                validate: function (norm) {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validChains = [
+                        'select apellido, horas_semanales, titulo_proy from empleados inner join asignaciones on empleados.id_empleado = asignaciones.id_empleado inner join proyectos on asignaciones.id_proyecto = proyectos.id_proyecto',
+                        'select apellido, horas_semanales, titulo_proy from proyectos inner join asignaciones on asignaciones.id_proyecto = proyectos.id_proyecto inner join empleados on empleados.id_empleado = asignaciones.id_empleado',
+                        'select apellido, horas_semanales, titulo_proy from asignaciones inner join empleados on empleados.id_empleado = asignaciones.id_empleado inner join proyectos on asignaciones.id_proyecto = proyectos.id_proyecto',
+                        'select apellido, horas_semanales, titulo_proy from asignaciones inner join proyectos on asignaciones.id_proyecto = proyectos.id_proyecto inner join empleados on empleados.id_empleado = asignaciones.id_empleado'
+                    ];
+                    const validWheres = [
+                        "where cliente = 'mercadolibre' and apellido like 'r%'",
+                        "where apellido like 'r%' and cliente = 'mercadolibre'",
+                        "where(cliente = 'mercadolibre') and(apellido like 'r%')",
+                        "where(apellido like 'r%') and(cliente = 'mercadolibre')"
+                    ];
+                    for (const ch of validChains) {
+                        for (const w of validWheres) {
+                            if (c === `${ch} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna consulta. Debías unir <code>empleados</code>, <code>asignaciones</code> y <code>proyectos</code> mediante dos <strong>INNER JOIN</strong>.';
+                    }
+                    const issues = [];
+                    const c = canonicalizeJoinQuery(norm);
+                    if (!c.startsWith('select apellido, horas_semanales, titulo_proy')) {
+                        issues.push('El <code>SELECT</code> debe listar en orden: <code>apellido, horas_semanales, titulo_proy</code>.');
+                    }
+                    const joinMatches = c.match(/inner join/g) || [];
+                    if (joinMatches.length < 2) {
+                        issues.push('Necesitas encadenar <strong>dos cláusulas INNER JOIN</strong> pasando por la tabla intermedia <code>asignaciones</code>.');
+                    }
+                    if (!c.includes('on empleados.id_empleado = asignaciones.id_empleado')) {
+                        issues.push('Falta la condición <code>ON empleados.id_empleado = asignaciones.id_empleado</code>.');
+                    }
+                    if (!c.includes('on asignaciones.id_proyecto = proyectos.id_proyecto')) {
+                        issues.push('Falta la condición <code>ON asignaciones.id_proyecto = proyectos.id_proyecto</code>.');
+                    }
+                    if (!c.includes("cliente = 'mercadolibre'")) {
+                        issues.push("Falta filtrar por <code>cliente = 'Mercadolibre'</code>.");
+                    }
+                    if (!c.includes("apellido like 'r%'")) {
+                        issues.push("Falta filtrar que el apellido comience con R mediante <code>apellido LIKE 'R%'</code>.");
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Verifica la estructura de los dos <code>INNER JOIN</code> y que las condiciones del <code>WHERE</code> estén unidas con <code>AND</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · SUM',
+                canonicalAnswer: 'SELECT SUM(asignaciones.horas_semanales) FROM asignaciones INNER JOIN proyectos ON asignaciones.id_proyecto = proyectos.id_proyecto WHERE asignaciones.horas_semanales BETWEEN 10 AND 30 AND proyectos.prioridad = 1;',
+                validate: function (norm) {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validSelectJoin = [
+                        'select sum(horas_semanales) from asignaciones inner join proyectos on asignaciones.id_proyecto = proyectos.id_proyecto',
+                        'select sum(horas_semanales) from proyectos inner join asignaciones on asignaciones.id_proyecto = proyectos.id_proyecto'
+                    ];
+                    const validWheres = [
+                        'where horas_semanales between 10 and 30 and prioridad = 1',
+                        'where(horas_semanales between 10 and 30) and prioridad = 1',
+                        'where(horas_semanales between 10 and 30) and(prioridad = 1)',
+                        'where prioridad = 1 and horas_semanales between 10 and 30',
+                        'where prioridad = 1 and(horas_semanales between 10 and 30)',
+                        'where horas_semanales >= 10 and horas_semanales <= 30 and prioridad = 1',
+                        'where prioridad = 1 and horas_semanales >= 10 and horas_semanales <= 30'
+                    ];
+                    for (const sj of validSelectJoin) {
+                        for (const w of validWheres) {
+                            if (c === `${sj} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías calcular <strong>SELECT SUM(asignaciones.horas_semanales)</strong> uniendo <code>asignaciones</code> y <code>proyectos</code>.';
+                    }
+                    const issues = [];
+                    const c = canonicalizeJoinQuery(norm);
+                    if (!c.startsWith('select sum(horas_semanales)')) {
+                        issues.push('La consulta debe iniciar con <strong>SELECT SUM(horas_semanales)</strong>.');
+                    }
+                    if (!c.includes('on asignaciones.id_proyecto = proyectos.id_proyecto')) {
+                        issues.push('Falta unir <code>asignaciones</code> y <code>proyectos</code> mediante <code>ON asignaciones.id_proyecto = proyectos.id_proyecto</code>.');
+                    }
+                    if (!c.includes('between 10 and 30') && !(c.includes('horas_semanales >= 10') && c.includes('horas_semanales <= 30'))) {
+                        issues.push('Falta el rango <code>horas_semanales BETWEEN 10 AND 30</code>.');
+                    }
+                    if (!c.includes('prioridad = 1')) {
+                        issues.push('Falta la condición <code>prioridad = 1</code>.');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Revisa que las condiciones del <code>WHERE</code> estén conectadas mediante <code>AND</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · COUNT',
+                canonicalAnswer: "SELECT COUNT(*) FROM departamentos INNER JOIN empleados ON departamentos.id_depto = empleados.id_depto INNER JOIN asignaciones ON empleados.id_empleado = asignaciones.id_empleado WHERE departamentos.nombre_depto = 'Sistemas' AND NOT asignaciones.horas_semanales = 40;",
+                validate: function (norm) {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validChains = [
+                        'select count(*) from departamentos inner join empleados on empleados.id_depto = departamentos.id_depto inner join asignaciones on empleados.id_empleado = asignaciones.id_empleado',
+                        'select count(*) from asignaciones inner join empleados on empleados.id_empleado = asignaciones.id_empleado inner join departamentos on empleados.id_depto = departamentos.id_depto',
+                        'select count(*) from empleados inner join departamentos on empleados.id_depto = departamentos.id_depto inner join asignaciones on empleados.id_empleado = asignaciones.id_empleado',
+                        'select count(*) from empleados inner join asignaciones on empleados.id_empleado = asignaciones.id_empleado inner join departamentos on empleados.id_depto = departamentos.id_depto'
+                    ];
+                    const validWheres = [
+                        "where nombre_depto = 'sistemas' and not horas_semanales = 40",
+                        "where nombre_depto = 'sistemas' and not(horas_semanales = 40)",
+                        "where nombre_depto = 'sistemas' and horas_semanales <> 40",
+                        "where nombre_depto = 'sistemas' and horas_semanales != 40",
+                        "where not horas_semanales = 40 and nombre_depto = 'sistemas'",
+                        "where not(horas_semanales = 40) and nombre_depto = 'sistemas'",
+                        "where horas_semanales <> 40 and nombre_depto = 'sistemas'",
+                        "where horas_semanales != 40 and nombre_depto = 'sistemas'"
+                    ];
+                    for (const ch of validChains) {
+                        for (const w of validWheres) {
+                            if (c === `${ch} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'No ingresaste ninguna sentencia. Debías usar <strong>SELECT COUNT(*)</strong> uniendo <code>departamentos</code>, <code>empleados</code> y <code>asignaciones</code>.';
+                    }
+                    const issues = [];
+                    const c = canonicalizeJoinQuery(norm);
+                    if (!c.startsWith('select count(*)')) {
+                        issues.push('La consulta debe iniciar con <strong>SELECT COUNT(*)</strong>.');
+                    }
+                    if (!c.includes('on empleados.id_depto = departamentos.id_depto') || !c.includes('on empleados.id_empleado = asignaciones.id_empleado')) {
+                        issues.push('Debes encadenar los dos <code>INNER JOIN</code> vinculando <code>id_depto</code> e <code>id_empleado</code>.');
+                    }
+                    if (!c.includes("nombre_depto = 'sistemas'")) {
+                        issues.push("Falta filtrar por <code>nombre_depto = 'Sistemas'</code>.");
+                    }
+                    if (!c.includes('40')) {
+                        issues.push('Falta excluir el valor 40 en <code>horas_semanales</code> (usando <code>NOT horas_semanales = 40</code>, <code>&lt;&gt; 40</code> o <code>!= 40</code>).');
+                    }
+                    if (issues.length === 0) {
+                        issues.push('Revisa la sintaxis general de los <code>INNER JOIN</code> y del <code>WHERE</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · ALTER',
+                canonicalAnswer: 'ALTER TABLE proyectos ADD fecha_entrega DATE NOT NULL;',
+                validate: function (norm) {
+                    const valid = [
+                        'alter table proyectos add fecha_entrega date not null',
+                        'alter table proyectos add column fecha_entrega date not null'
+                    ];
+                    return valid.includes(norm);
+                },
+                diagnoseError: function (raw, norm) {
+                    if (!norm) {
+                        return 'Dejaste el campo vacío. Debías usar <strong>ALTER TABLE proyectos ADD fecha_entrega DATE NOT NULL;</strong>.';
+                    }
+                    const issues = [];
+                    if (!norm.startsWith('alter table proyectos')) {
+                        issues.push('La sentencia debe comenzar con <strong>ALTER TABLE proyectos</strong>.');
+                    }
+                    if (!norm.includes('add')) {
+                        issues.push('Para incorporar una nueva columna debes utilizar la cláusula <strong>ADD</strong>.');
+                    }
+                    if (!norm.includes('fecha_entrega') || !norm.includes('date')) {
+                        issues.push('Falta el nombre de la columna <code>fecha_entrega</code> o el tipo <code>DATE</code>.');
+                    }
+                    if (!norm.includes('not null')) {
+                        issues.push('Falta especificar la restricción <code>NOT NULL</code>.');
+                    }
+                    return issues.join(' ');
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · ON',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque <code>id_empleado</code> figura en ambas tablas (como PK en <code>empleados</code> y como FK en <code>asignaciones</code>). Escribir <code>SELECT id_empleado</code> sin calificar genera error de columna ambigua.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque utiliza <code>WHERE</code> inmediatamente después de <code>INNER JOIN</code> omitiendo la cláusula <code>ON</code>, y además no desambigua <code>id_empleado</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque califica <code>empleados.id_empleado</code> y une con <code>ON</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque utiliza los alias <code>e</code> y <code>a</code> de forma consistente en toda la consulta."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · FROM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque igualar <code>empleados.id_empleado = proyectos.id_proyecto</code> compara claves primarias de entidades distintas sin relación directa; la relación N:M exige pasar por la tabla intermedia <code>asignaciones</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>asignaciones</code> permite registrar múltiples combinaciones empleado-proyecto.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>INNER JOIN</code> descarta los proyectos que no poseen registros asociados en <code>asignaciones</code>.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque conectar <code>departamentos</code> con <code>proyectos</code> requiere recorrer las 4 tablas mediante 3 cláusulas <code>INNER JOIN</code>."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · WHERE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque sin paréntesis alrededor del <code>OR</code>, <code>AND</code> se evalúa primero y traería todos los empleados de <code>'Finanzas'</code> sin importar su salario.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque la condición <code>ON e.id_empleado = d.id_depto</code> compara la PK del empleado con la PK del departamento en lugar de usar la FK <code>e.id_depto</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque encierra la disyunción entre paréntesis y filtra el salario con <code>BETWEEN 700000 AND 1200000</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une por <code>id_depto</code> y expresa el rango con <code>&gt;= 700000 AND &lt;= 1200000</code> junto al bloque <code>OR</code> entre paréntesis."
+                }
+            },
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · LIKE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque en el primer <code>INNER JOIN</code> compara <code>e.id_empleado = a.id_asignacion</code> en vez de usar la clave foránea <code>a.id_empleado</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque <code>LIKE 'Cloud%'</code> solo busca al inicio del texto, usa <code>OR</code> en vez de <code>AND</code> y usa <code>&gt; 20</code> excluyendo el 20."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque une las 3 tablas por sus claves correctas y filtra con <code>LIKE '%Cloud%' AND a.horas_semanales &gt;= 20</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une desde <code>proyectos</code> hacia <code>empleados</code> pasando por <code>asignaciones</code> con las mismas condiciones."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · COUNT',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque <code>INNER JOIN</code> excluye por completo los 3 proyectos que no tienen filas en <code>asignaciones</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>COUNT(*)</code> cuenta las 25 filas resultantes del <code>INNER JOIN</code>.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>COUNT(proyectos.cliente)</code> ignora las 2 filas donde <code>cliente</code> es <code>NULL</code> ($25 - 2 = 23$).",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque <code>SUM(asignaciones.horas_semanales)</code> acumula las horas de las 25 filas unidas."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q11',
+                number: 11,
+                title: 'Ejercicio 11 · SELECT',
+                correctValue: 'A',
+                correctLabel: "Opción A: Arroja un error (Unknown column 'departamentos.presupuesto'), porque al definir el alias 'd' es obligatorio usar d.presupuesto.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: una vez que se declara un alias para una tabla en el <code>FROM</code>, dicho alias reemplaza al nombre original de la tabla en todas las cláusulas de esa consulta (<code>SELECT</code>, <code>ON</code>, <code>WHERE</code>)."
+                }
+            },
+            {
+                id: 'q12',
+                number: 12,
+                title: 'Ejercicio 12 · INNER',
+                correctValue: 'B',
+                correctLabel: 'Opción B: Encadenar 3 cláusulas INNER JOIN conectando las 4 tablas (departamentos ↔ empleados ↔ asignaciones ↔ proyectos).',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: no existe clave foránea directa entre <code>departamentos</code> y <code>proyectos</code>; la relación pasa obligatoriamente por <code>empleados</code> y la tabla intermedia <code>asignaciones</code>."
+                }
+            },
+            {
+                id: 'q13',
+                number: 13,
+                title: 'Ejercicio 13 · BETWEEN',
+                correctValue: 'A',
+                correctLabel: "Opción A: Empleados cuya segunda letra del apellido sea 'o', con asignaciones estrictamente menores a 15 o estrictamente mayores a 35 horas.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: <code>NOT BETWEEN 15 AND 35</code> excluye los extremos 15 y 35 (<code>&lt; 15 OR &gt; 35</code>), y el patrón <code>'_o%'</code> exige que la segunda letra sea <code>'o'</code>."
+                }
+            },
+            {
+                id: 'q14',
+                number: 14,
+                title: 'Ejercicio 14 · SUM',
+                correctValue: 'A',
+                correctLabel: 'Opción A: Devuelve 4000000, porque el INNER JOIN genera 4 filas para el empleado 7 y SUM acumula 1000000 en cada fila.',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: como el empleado 7 tiene 4 filas en <code>asignaciones</code>, el resultado del <code>INNER JOIN</code> contiene 4 filas donde se repite su salario de <code>1000000</code>, sumando <code>4000000</code>."
+                }
+            },
+            {
+                id: 'q15',
+                number: 15,
+                title: 'Ejercicio 15 · MODIFY',
+                correctValue: 'B',
+                correctLabel: 'Opción B: ALTER TABLE proyectos MODIFY titulo_proy VARCHAR(120) NOT NULL;',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: la cláusula <code>CHANGE</code> exige indicar dos nombres de columna (el nombre actual y el nuevo nombre) antes del tipo de dato. Para cambiar solo el tipo de dato sin renombrar se usa <code>MODIFY</code>."
+                }
+            }
+        ];
+
+        /* =========================================================================
+           4. SINCRONIZACIÓN DOM <-> ESTADO Y FUNCIÓN EVALUADORA (ESCALA 10 PUNTOS)
+           ========================================================================= */
+        function syncDOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el) appState.answers[id] = el.value;
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                appState.answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restoreStateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.answers[id] !== undefined) {
+                    el.value = appState.answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                const vals = appState.answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const val = appState.answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncDOMToState();
+
+            let rawUnits = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validate(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+0.67 pts)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    rawUnits += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Parcialmente correcta (25% del ítem: +0.17 pts) — Ver detalle al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: 25% del ejercicio)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            const gradeOutOf10 = Math.round(((rawUnits / 15) * 10) * 100) / 100;
+
+            appState.evaluated = true;
+            saveStateToStorage();
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const perfectBanner = document.getElementById('perfect-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            scoreNumber.textContent = formatScore(gradeOutOf10);
+            scoreSubtitle.textContent = `Nota final: ${formatScore(gradeOutOf10)} / 10 pts (${formatScore(rawUnits)} de 15 ejercicios equivalentes correctos).`;
+
+            if (rawUnits === 15) {
+                scoreTitle.textContent = '¡Calificación Perfecta (10 / 10)!';
+                perfectBanner.style.display = 'block';
+                errorsContainer.innerHTML = '';
+            } else {
+                perfectBanner.style.display = 'none';
+                if (gradeOutOf10 >= 8) {
+                    scoreTitle.textContent = '¡Muy buen desempeño!';
+                } else if (gradeOutOf10 >= 6) {
+                    scoreTitle.textContent = 'Evaluación Aprobada — Revisa las correcciones';
+                } else {
+                    scoreTitle.textContent = 'Necesitas repasar los conceptos de INNER JOIN y SQL';
+                }
+
+                let errorsHTML = '<div class="errors-list">';
+                mistakes.forEach((m) => {
+                    const partialClass = m.isPartial ? 'partial-item' : '';
+                    const icon = m.isPartial ? '◐' : '✗';
+                    errorsHTML += `
+                        <div class="error-item ${partialClass}">
+                            <div class="error-item-header">${icon} ${escapeHTML(m.title)}</div>
+                            <div class="error-comparison">
+                                <div class="ans-box ans-user">
+                                    <strong>Tu respuesta:</strong><br>${escapeHTML(m.userAnswer)}
+                                </div>
+                                <div class="ans-box ans-expected">
+                                    <strong>Respuesta esperada:</strong><br>${escapeHTML(m.correctAnswer)}
+                                </div>
+                            </div>
+                            <p class="error-explanation">
+                                <strong>Por qué estuvo mal:</strong> ${m.explanation}
+                            </p>
+                        </div>
+                    `;
+                });
+                errorsHTML += '</div>';
+                errorsContainer.innerHTML = errorsHTML;
+            }
+
+            resultsPanel.classList.add('visible');
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+
+        document.getElementById('sql-eval-form').addEventListener('input', () => {
+            syncDOMToState();
+        });
+        document.getElementById('sql-eval-form').addEventListener('change', () => {
+            syncDOMToState();
+        });
+
+        // Interacción Hover sobre campos PK y FK para iluminar su par correspondiente
+        (function initKeyHoverHighlight() {
+            const keyRows = document.querySelectorAll('.er-attr-row[data-join-key]');
+
+            function setHighlightByJoinKey(joinKey, isActive) {
+                if (!joinKey) return;
+                document.querySelectorAll(`.er-attr-row[data-join-key="${joinKey}"]`).forEach((row) => {
+                    row.classList.toggle('key-linked-active', isActive);
+                });
+                document.querySelectorAll(`.er-connector-line[data-join-connector="${joinKey}"]`).forEach((conn) => {
+                    conn.classList.toggle('connector-active', isActive);
+                });
+            }
+
+            keyRows.forEach((row) => {
+                const joinKey = row.getAttribute('data-join-key');
+                row.addEventListener('mouseenter', () => setHighlightByJoinKey(joinKey, true));
+                row.addEventListener('mouseleave', () => setHighlightByJoinKey(joinKey, false));
+            });
+        })();
+
+        // Restaurar estado al cargar la página
+        (function bootstrapApp() {
+            const hadSaved = loadStateFromStorage();
+            if (hadSaved) {
+                restoreStateToDOM();
+                if (appState.evaluated) {
+                    evaluarRespuestas(false);
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

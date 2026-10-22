@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación SQL++ #5 | Base de Datos II</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Tema Dark Mobile-First con Paleta Pastel (Espresso Bronce & Durazno Dorado / Turquesa) */
+            --bg-deep: #120d0a;
+            --bg-surface: rgba(29, 21, 16, 0.85);
+            --bg-surface-elevated: rgba(42, 30, 23, 0.92);
+            --bg-code: rgba(15, 10, 7, 0.95);
+
+            --text-primary: #fdf7f2;
+            --text-secondary: #d8c4b6;
+            --text-muted: #9a8475;
+
+            /* Acentos Pasteles */
+            --pastel-violet: #fdba74;
+            --pastel-cyan: #5eead4;
+            --pastel-mint: #86efac;
+            --pastel-amber: #fef08a;
+            --pastel-rose: #fda4af;
+            --pastel-peach: #ddd6fe;
+
+            /* Bordes y Sombras */
+            --border-subtle: rgba(253, 186, 116, 0.16);
+            --border-focus: rgba(94, 234, 212, 0.6);
+            --shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.52);
+
+            --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-lg: 16px;
+            --radius-md: 11px;
+            --radius-sm: 7px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            background-image:
+                radial-gradient(circle at 14% 16%, rgba(253, 186, 116, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 86% 26%, rgba(94, 234, 212, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 88%, rgba(221, 214, 254, 0.06) 0%, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            line-height: 1.55;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas de partículas (Polvo y Luz) */
+        #dust-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Contenedor Principal */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 1.1rem 0.9rem 3.8rem;
+        }
+
+        /* Cabecera de la Evaluación */
+        .eval-header {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.4rem 1.25rem;
+            margin-bottom: 1.3rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.72rem;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .badge-violet {
+            background: rgba(253, 186, 116, 0.14);
+            color: var(--pastel-violet);
+            border: 1px solid rgba(253, 186, 116, 0.32);
+        }
+
+        .badge-cyan {
+            background: rgba(94, 234, 212, 0.12);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(94, 234, 212, 0.3);
+        }
+
+        .badge-mint {
+            background: rgba(221, 214, 254, 0.12);
+            color: var(--pastel-peach);
+            border: 1px solid rgba(221, 214, 254, 0.28);
+        }
+
+        .badge-amber {
+            background: rgba(254, 240, 138, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.28);
+        }
+
+        .eval-title {
+            font-size: 1.65rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan), var(--pastel-amber));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .eval-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.93rem;
+        }
+
+        /* =========================================================
+           DIAGRAMA GRÁFICO DE TABLAS RELACIONALES (CON PK Y FK)
+           ========================================================= */
+        .er-diagram-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            margin-bottom: 1.6rem;
+            backdrop-filter: blur(14px);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .er-header-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .er-title {
+            font-size: 1.06rem;
+            font-weight: 700;
+            color: var(--pastel-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .er-subtitle {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+        }
+
+        .er-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.2rem;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.77rem;
+            color: var(--text-secondary);
+            background: rgba(15, 10, 7, 0.65);
+            padding: 0.28rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .key-tag {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.1rem 0.38rem;
+            border-radius: 4px;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+        }
+
+        .key-pk {
+            background: rgba(254, 240, 138, 0.16);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.45);
+        }
+
+        .key-fk {
+            background: rgba(94, 234, 212, 0.15);
+            color: var(--pastel-cyan);
+            border: 1px solid rgba(94, 234, 212, 0.45);
+        }
+
+        .key-none {
+            display: inline-block;
+            width: 26px;
+            text-align: center;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+        }
+
+        .er-visual-board {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            gap: 0.75rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.35rem 0.25rem 0.85rem;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .er-visual-board::-webkit-scrollbar {
+            height: 9px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-track {
+            background: rgba(15, 10, 7, 0.75);
+            border-radius: 999px;
+            border: 1px solid rgba(253, 186, 116, 0.12);
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb {
+            background: linear-gradient(90deg, rgba(253, 186, 116, 0.55), rgba(94, 234, 212, 0.55));
+            border-radius: 999px;
+        }
+
+        .er-visual-board::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(90deg, rgba(253, 186, 116, 0.85), rgba(94, 234, 212, 0.85));
+        }
+
+        .er-table-node {
+            flex: 0 0 auto;
+            min-width: 268px;
+            width: max-content;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(253, 186, 116, 0.26);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .er-table-node:hover {
+            border-color: var(--pastel-cyan);
+        }
+
+        .er-table-head {
+            background: linear-gradient(90deg, rgba(253, 186, 116, 0.18), rgba(94, 234, 212, 0.1));
+            padding: 0.65rem 0.9rem;
+            border-bottom: 1px solid rgba(253, 186, 116, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .er-table-name {
+            font-family: var(--font-mono);
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: var(--pastel-violet);
+            white-space: nowrap;
+        }
+
+        .er-table-tag {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .er-table-node.is-bridge-table {
+            border-color: rgba(221, 214, 254, 0.42);
+        }
+
+        .er-table-node.is-bridge-table .er-table-head {
+            background: linear-gradient(90deg, rgba(221, 214, 254, 0.22), rgba(253, 186, 116, 0.14));
+            border-bottom-color: rgba(221, 214, 254, 0.32);
+        }
+
+        .er-table-node.is-bridge-table .er-table-name {
+            color: var(--pastel-peach);
+        }
+
+        .er-nm-tag {
+            color: var(--pastel-peach);
+            background: rgba(221, 214, 254, 0.14);
+            border: 1px solid rgba(221, 214, 254, 0.35);
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .er-attr-list {
+            list-style: none;
+            padding: 0.35rem 0;
+        }
+
+        .er-attr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 0.42rem 0.9rem;
+            font-size: 0.81rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+            white-space: nowrap;
+        }
+
+        .er-attr-row:last-child {
+            border-bottom: none;
+        }
+
+        .er-attr-row.is-pk-row {
+            background: rgba(254, 240, 138, 0.05);
+        }
+
+        .er-attr-row.is-fk-row {
+            background: rgba(94, 234, 212, 0.05);
+        }
+
+        .er-attr-row[data-join-key] {
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
+        }
+
+        .er-attr-row.is-pk-row.key-linked-active,
+        .er-attr-row.is-fk-row.key-linked-active {
+            background: linear-gradient(90deg, rgba(254, 240, 138, 0.24), rgba(94, 234, 212, 0.24));
+            box-shadow: inset 3px 0 0 var(--pastel-amber), inset -3px 0 0 var(--pastel-cyan), 0 0 14px rgba(94, 234, 212, 0.25);
+        }
+
+        .er-attr-row.key-linked-active .attr-name {
+            color: #ffffff !important;
+            text-shadow: 0 0 8px rgba(94, 234, 212, 0.55);
+        }
+
+        .er-attr-row.key-linked-active .key-tag {
+            transform: scale(1.08);
+            box-shadow: 0 0 10px rgba(254, 240, 138, 0.45);
+        }
+
+        .er-connector-line.connector-active {
+            border-color: var(--pastel-amber);
+            background: rgba(254, 240, 138, 0.16);
+            color: var(--pastel-amber);
+            box-shadow: 0 0 14px rgba(254, 240, 138, 0.35);
+            transform: scale(1.05);
+        }
+
+        .attr-left {
+            display: flex;
+            align-items: center;
+            gap: 0.48rem;
+            flex-shrink: 0;
+        }
+
+        .attr-name {
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .is-pk-row .attr-name {
+            color: var(--pastel-amber);
+        }
+
+        .is-fk-row .attr-name {
+            color: var(--pastel-cyan);
+        }
+
+        .attr-right {
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+            flex-shrink: 0;
+        }
+
+        .attr-type {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            background: rgba(15, 10, 7, 0.7);
+            padding: 0.1rem 0.42rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+
+        /* Conectores visuales de relación entre tablas */
+        .er-connector {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.15rem 0.1rem;
+            color: var(--pastel-cyan);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+        }
+
+        .er-connector-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(15, 10, 7, 0.88);
+            border: 1px dashed rgba(94, 234, 212, 0.42);
+            padding: 0.26rem 0.55rem;
+            border-radius: 999px;
+            color: var(--pastel-cyan);
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .er-cardinality {
+            font-weight: 700;
+            color: var(--pastel-amber);
+        }
+
+        /* =========================================================
+           SECCIÓN DE PREGUNTAS (15 EJERCICIOS)
+           ========================================================= */
+        .questions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        .question-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.15rem;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-soft);
+            transition: border-color 0.25s ease, transform 0.2s ease;
+        }
+
+        .question-card:hover {
+            border-color: rgba(253, 186, 116, 0.32);
+        }
+
+        .question-card.state-correct {
+            border-color: rgba(134, 239, 172, 0.65);
+            background: linear-gradient(180deg, rgba(134, 239, 172, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-partial {
+            border-color: rgba(254, 240, 138, 0.65);
+            background: linear-gradient(180deg, rgba(254, 240, 138, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .question-card.state-wrong {
+            border-color: rgba(253, 164, 175, 0.65);
+            background: linear-gradient(180deg, rgba(253, 164, 175, 0.06) 0%, var(--bg-surface) 100%);
+        }
+
+        .q-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .q-number {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--pastel-violet);
+            background: rgba(253, 186, 116, 0.12);
+            padding: 0.22rem 0.65rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(253, 186, 116, 0.26);
+        }
+
+        .q-prompt {
+            font-size: 0.98rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.85rem;
+        }
+
+        .q-prompt code {
+            font-family: var(--font-mono);
+            font-size: 0.88em;
+            color: var(--pastel-cyan);
+            background: rgba(15, 10, 7, 0.72);
+            padding: 0.12rem 0.38rem;
+            border-radius: 5px;
+            border: 1px solid rgba(94, 234, 212, 0.2);
+        }
+
+        /* Fragmentos de código de referencia */
+        .code-snippet {
+            background: var(--bg-code);
+            border: 1px solid rgba(253, 186, 116, 0.22);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 0.95rem;
+            margin-bottom: 0.9rem;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: #fdf7f2;
+            overflow-x: auto;
+            line-height: 1.55;
+        }
+
+        .code-snippet .kw {
+            color: var(--pastel-violet);
+            font-weight: 600;
+        }
+
+        .code-snippet .fn {
+            color: var(--pastel-cyan);
+        }
+
+        .code-snippet .str {
+            color: var(--pastel-amber);
+        }
+
+        .code-snippet .num {
+            color: var(--pastel-peach);
+        }
+
+        /* Inputs de texto para Completado */
+        .sql-input-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .sql-text-input {
+            width: 100%;
+            background: var(--bg-code);
+            border: 1.5px solid rgba(253, 186, 116, 0.28);
+            border-radius: var(--radius-md);
+            padding: 0.82rem 0.95rem;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.87rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sql-text-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.65;
+        }
+
+        .sql-text-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.14);
+        }
+
+        /* Opciones Multiple Choice y Selección Binaria */
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.58rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.72rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: var(--radius-md);
+            padding: 0.78rem 0.92rem;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            user-select: none;
+        }
+
+        .option-label:hover {
+            background: rgba(56, 40, 30, 0.95);
+            border-color: rgba(253, 186, 116, 0.35);
+        }
+
+        .option-label input[type="checkbox"],
+        .option-label input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 19px;
+            height: 19px;
+            min-width: 19px;
+            border: 2px solid var(--pastel-violet);
+            background: var(--bg-code);
+            margin-top: 0.14rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.18s ease;
+        }
+
+        .option-label input[type="checkbox"] {
+            border-radius: 5px;
+        }
+
+        .option-label input[type="radio"] {
+            border-radius: 50%;
+        }
+
+        .option-label input[type="checkbox"]:checked {
+            background: var(--pastel-violet);
+            border-color: var(--pastel-violet);
+        }
+
+        .option-label input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -52%);
+            color: #120d0a;
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+
+        .option-label input[type="radio"]:checked {
+            border-color: var(--pastel-cyan);
+        }
+
+        .option-label input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--pastel-cyan);
+        }
+
+        .option-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .option-text code {
+            font-family: var(--font-mono);
+            font-size: 0.83rem;
+            color: var(--pastel-amber);
+            background: rgba(15, 10, 7, 0.72);
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        /* Indicador de estado en cada tarjeta */
+        .q-status {
+            display: none;
+            margin-top: 0.75rem;
+            padding: 0.52rem 0.78rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        .q-status.correct {
+            display: block;
+            background: rgba(134, 239, 172, 0.12);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.3);
+        }
+
+        .q-status.partial {
+            display: block;
+            background: rgba(254, 240, 138, 0.12);
+            color: var(--pastel-amber);
+            border: 1px solid rgba(254, 240, 138, 0.32);
+        }
+
+        .q-status.wrong {
+            display: block;
+            background: rgba(253, 164, 175, 0.12);
+            color: var(--pastel-rose);
+            border: 1px solid rgba(253, 164, 175, 0.3);
+        }
+
+        /* Botón Evaluar */
+        .actions-footer {
+            margin-top: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .btn-evaluate {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(135deg, var(--pastel-violet), var(--pastel-cyan));
+            color: #120d0a;
+            font-family: var(--font-sans);
+            font-size: 1.03rem;
+            font-weight: 700;
+            padding: 0.95rem 1.6rem;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(253, 186, 116, 0.28);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .btn-evaluate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(94, 234, 212, 0.38);
+        }
+
+        .btn-evaluate:active {
+            transform: translateY(0);
+        }
+
+        /* Panel de Resultados */
+        #results-panel {
+            display: none;
+            margin-top: 2rem;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 1.45rem 1.2rem;
+            box-shadow: var(--shadow-soft);
+        }
+
+        #results-panel.visible {
+            display: block;
+            animation: fadeInResult 0.35s ease forwards;
+        }
+
+        @keyframes fadeInResult {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .score-summary {
+            text-align: center;
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 1.2rem;
+        }
+
+        .score-circle {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 126px;
+            height: 126px;
+            border-radius: 50%;
+            background: rgba(15, 10, 7, 0.82);
+            border: 2px solid var(--pastel-violet);
+            margin-bottom: 0.75rem;
+        }
+
+        .score-value {
+            font-size: 2.15rem;
+            font-weight: 700;
+            color: var(--pastel-mint);
+            line-height: 1;
+            font-family: var(--font-mono);
+        }
+
+        .score-total {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .score-message {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .score-subtext {
+            font-size: 0.87rem;
+            color: var(--text-secondary);
+        }
+
+        .perfect-banner {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.88rem;
+            font-weight: 600;
+            background: rgba(134, 239, 172, 0.13);
+            color: var(--pastel-mint);
+            border: 1px solid rgba(134, 239, 172, 0.38);
+        }
+
+        .errors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .error-item {
+            background: rgba(15, 10, 7, 0.84);
+            border-left: 4px solid var(--pastel-rose);
+            border-radius: var(--radius-md);
+            padding: 0.95rem;
+        }
+
+        .error-item.partial-item {
+            border-left-color: var(--pastel-amber);
+        }
+
+        .error-item-header {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--pastel-rose);
+            margin-bottom: 0.45rem;
+        }
+
+        .error-item.partial-item .error-item-header {
+            color: var(--pastel-amber);
+        }
+
+        .error-comparison {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.45rem;
+            margin-bottom: 0.65rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+
+        .ans-box {
+            padding: 0.5rem 0.7rem;
+            border-radius: var(--radius-sm);
+            word-break: break-word;
+        }
+
+        .ans-user {
+            background: rgba(253, 164, 175, 0.09);
+            border: 1px solid rgba(253, 164, 175, 0.25);
+            color: var(--pastel-rose);
+        }
+
+        .ans-expected {
+            background: rgba(134, 239, 172, 0.09);
+            border: 1px solid rgba(134, 239, 172, 0.25);
+            color: var(--pastel-mint);
+        }
+
+        .error-explanation {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .error-explanation code {
+            font-family: var(--font-mono);
+            color: var(--pastel-amber);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 0.08rem 0.32rem;
+            border-radius: 4px;
+        }
+
+        /* Media Queries Desktop */
+        @media (min-width: 980px) {
+            .page-wrapper {
+                padding: 2rem 1.4rem 4.2rem;
+            }
+
+            .eval-header {
+                padding: 1.85rem 2rem;
+            }
+
+            .eval-title {
+                font-size: 2rem;
+            }
+
+            .er-header-bar {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .question-card {
+                padding: 1.5rem 1.65rem;
+            }
+
+            .error-comparison {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Fondo de partículas: Polvo y Luz -->
+    <canvas id="dust-canvas" aria-hidden="true"></canvas>
+
+    <main class="page-wrapper">
+        <header class="eval-header">
+            <div class="badges-row">
+                <span class="badge badge-violet">Base de Datos II</span>
+                <span class="badge badge-cyan">SQL++ · Evaluación #5</span>
+                <span class="badge badge-mint">15 Ejercicios</span>
+                <span class="badge badge-amber">Calificación: 10 Puntos</span>
+            </div>
+            <h1 class="eval-title">Evaluación SQL++: Productora Audiovisual, Películas y Elencos</h1>
+            <p class="eval-subtitle">
+                Resuelva los 15 ejercicios propuestos (5 de desarrollo de sentencias, 5 de selección múltiple y 5 de selección binaria). Contestando correctamente la totalidad de las consignas obtendrá la calificación máxima de <strong>10 puntos</strong>.
+            </p>
+        </header>
+
+        <!-- =================================================================
+             GUÍA GRÁFICA DE 5 TABLAS RELACIONALES (PK, FK Y TABLA INTERMEDIA N:M)
+             ================================================================= -->
+        <section class="er-diagram-section" aria-label="Esquema gráfico relacional de tablas">
+            <div class="er-header-bar">
+                <div>
+                    <h2 class="er-title">🗂️ Esquema Gráfico Relacional: Estudios, Directores, Películas y Actores (5 Tablas)</h2>
+                    <p class="er-subtitle">Pase el cursor sobre cualquier atributo <strong>PK</strong> o <strong>FK</strong> para iluminar su par correspondiente. La tabla <strong>repartos</strong> resuelve la relación muchos a muchos (<strong>N:M</strong>) entre <strong>peliculas</strong> y <strong>actores</strong>.</p>
+                </div>
+                <div class="er-legend">
+                    <span class="legend-item">
+                        <span class="key-tag key-pk">PK</span> Clave Primaria (Identificador único)
+                    </span>
+                    <span class="legend-item">
+                        <span class="key-tag key-fk">FK</span> Clave Foránea (Atributo de unión)
+                    </span>
+                </div>
+            </div>
+
+            <div class="er-visual-board">
+                <!-- TABLA 1: estudios -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎬 estudios</span>
+                        <span class="er-table-tag">Tabla 1</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_estudio">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_estudio</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_est</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">pais</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(40)</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 1: estudios (1) <-> (N) directores -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_estudio">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 2: directores -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎥 directores</span>
+                        <span class="er-table-tag">Tabla 2</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_director">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_director</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">apellido_dir</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(50)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">premios</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_estudio">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_estudio</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 2: directores (1) <-> (N) peliculas -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_director">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 3: peliculas -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎞️ peliculas</span>
+                        <span class="er-table-tag">Tabla 3</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_pelicula">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_pelicula</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">titulo_peli</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(70)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">genero</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(35)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">recaudacion</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(12,2)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_director">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_director</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 3: peliculas (1) <-> (N) repartos -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_pelicula">
+                        <span class="er-cardinality">1</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">∞</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 4 (INTERMEDIA N:M): repartos -->
+                <article class="er-table-node is-bridge-table">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🎭 repartos</span>
+                        <span class="er-table-tag er-nm-tag">Intermedia N:M</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_reparto">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_reparto</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_pelicula">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_pelicula</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row is-fk-row" data-join-key="id_actor">
+                            <div class="attr-left">
+                                <span class="key-tag key-fk" title="Foreign Key">FK</span>
+                                <span class="attr-name">id_actor</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">cachet_usd</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">DECIMAL(10,2)</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+
+                <!-- CONECTOR 4: repartos (N) <-> (1) actores -->
+                <div class="er-connector" aria-hidden="true">
+                    <div class="er-connector-line" data-join-connector="id_actor">
+                        <span class="er-cardinality">∞</span>
+                        <span>──</span>
+                        <span>🔗</span>
+                        <span>──</span>
+                        <span class="er-cardinality">1</span>
+                    </div>
+                </div>
+
+                <!-- TABLA 5: actores -->
+                <article class="er-table-node">
+                    <div class="er-table-head">
+                        <span class="er-table-name">🌟 actores</span>
+                        <span class="er-table-tag">Tabla 5</span>
+                    </div>
+                    <ul class="er-attr-list">
+                        <li class="er-attr-row is-pk-row" data-join-key="id_actor">
+                            <div class="attr-left">
+                                <span class="key-tag key-pk" title="Primary Key">PK</span>
+                                <span class="attr-name">id_actor</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nombre_artistico</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(60)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">nacionalidad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">VARCHAR(40)</span>
+                            </div>
+                        </li>
+                        <li class="er-attr-row">
+                            <div class="attr-left">
+                                <span class="key-none">·</span>
+                                <span class="attr-name">edad</span>
+                            </div>
+                            <div class="attr-right">
+                                <span class="attr-type">INT</span>
+                            </div>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+
+        <!-- =================================================================
+             FORMULARIO DE 15 EJERCICIOS (5 COMPLETAR, 5 MULTIPLE, 5 BINARIA)
+             ================================================================= -->
+        <form id="sql-eval-form" novalidate>
+            <div class="questions-list">
+
+                <!-- ===================== 1 AL 5: COMPLETAR ===================== -->
+
+                <!-- EJERCICIO 1 -->
+                <article class="question-card" id="card-q1">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 1 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una <strong>2 tablas</strong> (<code>directores</code> y <code>estudios</code>) mediante su vínculo relacional para mostrar los atributos <code>apellido_dir</code>, <code>premios</code> y <code>nombre_est</code> (en ese orden), filtrando únicamente aquellos directores cuyos <code>premios</code> sean mayores o iguales a <code>3</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q1-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q1"></div>
+                </article>
+
+                <!-- EJERCICIO 2 -->
+                <article class="question-card" id="card-q2">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 2 · JOIN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Redacte una sentencia que una <strong>3 tablas</strong> (<code>estudios</code>, <code>directores</code> y <code>peliculas</code>) para listar <code>nombre_est</code>, <code>apellido_dir</code> y <code>titulo_peli</code> (en ese orden), filtrando los estudios cuyo <code>pais</code> sea <code>'Argentina'</code> y donde la <code>recaudacion</code> de la película sea mayor a <code>500000</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q2-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q2"></div>
+                </article>
+
+                <!-- EJERCICIO 3 -->
+                <article class="question-card" id="card-q3">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 3 · ON</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las <strong>3 tablas de la relación muchos a muchos</strong> (<code>peliculas</code>, la tabla intermedia <code>repartos</code> y <code>actores</code>) para obtener <code>titulo_peli</code>, <code>nombre_artistico</code> y <code>cachet_usd</code> (en ese orden) únicamente para las películas cuyo <code>genero</code> sea <code>'Suspenso'</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q3-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q3"></div>
+                </article>
+
+                <!-- EJERCICIO 4 -->
+                <article class="question-card" id="card-q4">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 4 · SUM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Escriba una consulta que una las tablas <code>repartos</code> y <code>actores</code> para calcular la suma total del atributo <code>cachet_usd</code> correspondiente a los actores cuya <code>nacionalidad</code> sea <code>'Espana'</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q4-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q4"></div>
+                </article>
+
+                <!-- EJERCICIO 5 -->
+                <article class="question-card" id="card-q5">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 5 · INSERT</span>
+                    </div>
+                    <p class="q-prompt">
+                        En una operación sobre <strong>1 sola tabla</strong>, inserte un nuevo registro en la tabla <code>estudios</code> especificando explícitamente las columnas <code>(id_estudio, nombre_est, pais)</code> con los valores <code>(9, 'Pampa Films', 'Argentina')</code>.
+                    </p>
+                    <div class="sql-input-wrapper">
+                        <input type="text" id="q5-input" class="sql-text-input" placeholder="Escriba su respuesta..." autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="q-status" id="status-q5"></div>
+                </article>
+
+                <!-- ================= 6 AL 10: MULTIPLE CHOICE ================= -->
+
+                <!-- EJERCICIO 6 -->
+                <article class="question-card" id="card-q6">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 6 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se desea listar el <code>id_director</code>, el <code>titulo_peli</code> y el <code>apellido_dir</code> uniendo las tablas <code>peliculas</code> y <code>directores</code>. ¿Cuáles de las siguientes consultas son válidas y evitan el error de columna ambigua?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="A">
+                            <span class="option-text"><code>SELECT directores.id_director, peliculas.titulo_peli, directores.apellido_dir FROM peliculas INNER JOIN directores ON peliculas.id_director = directores.id_director;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="B">
+                            <span class="option-text"><code>SELECT d.id_director, p.titulo_peli, d.apellido_dir FROM peliculas p INNER JOIN directores d WHERE p.id_director = d.id_director;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="C">
+                            <span class="option-text"><code>SELECT d.id_director, p.titulo_peli, d.apellido_dir FROM directores d INNER JOIN peliculas p ON d.id_director = p.id_director;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q6" value="D">
+                            <span class="option-text"><code>SELECT id_director, titulo_peli, apellido_dir FROM peliculas INNER JOIN directores ON peliculas.id_director = directores.id_director;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q6"></div>
+                </article>
+
+                <!-- EJERCICIO 7 -->
+                <article class="question-card" id="card-q7">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 7 · FROM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Considerando el esquema de 5 tablas y la tabla intermedia <code>repartos</code> (relación muchos a muchos entre <code>peliculas</code> y <code>actores</code>), seleccione las afirmaciones verdaderas sobre el uso de <code>INNER JOIN</code>:
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="A">
+                            <span class="option-text">La tabla intermedia <code>repartos</code> permite que en una misma película actúen múltiples actores y que un mismo actor participe en distintas películas.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="B">
+                            <span class="option-text">Si un actor registrado en <code>actores</code> todavía no fue convocado a ningún reparto (no figura en <code>repartos</code>), no aparecerá al realizar un <code>INNER JOIN</code> entre <code>actores</code> y <code>repartos</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="C">
+                            <span class="option-text">Para conocer el elenco de cada película basta con ejecutar <code>FROM peliculas INNER JOIN actores ON peliculas.id_pelicula = actores.id_actor</code> sin incluir la tabla <code>repartos</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q7" value="D">
+                            <span class="option-text">Para vincular en una misma consulta el <code>nombre_est</code> de la tabla <code>estudios</code> con el <code>nombre_artistico</code> de la tabla <code>actores</code>, se requiere encadenar 4 cláusulas <code>INNER JOIN</code> recorriendo las 5 tablas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q7"></div>
+                </article>
+
+                <!-- EJERCICIO 8 -->
+                <article class="question-card" id="card-q8">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 8 · WHERE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere listar el <code>titulo_peli</code>, el <code>genero</code> y el <code>apellido_dir</code> uniendo <code>peliculas</code> y <code>directores</code>, filtrando aquellas películas cuyo <code>genero</code> sea <code>'Drama'</code> o <code>'Ciencia Ficcion'</code>, y donde los <code>premios</code> del director estén entre <code>2</code> y <code>6</code> inclusive. ¿Cuáles consultas son correctas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="A">
+                            <span class="option-text"><code>SELECT p.titulo_peli, p.genero, d.apellido_dir FROM peliculas p INNER JOIN directores d ON p.id_director = d.id_director WHERE (p.genero = 'Drama' OR p.genero = 'Ciencia Ficcion') AND d.premios BETWEEN 2 AND 6;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="B">
+                            <span class="option-text"><code>SELECT p.titulo_peli, p.genero, d.apellido_dir FROM peliculas p INNER JOIN directores d ON p.id_director = d.id_director WHERE p.genero = 'Drama' OR p.genero = 'Ciencia Ficcion' AND d.premios BETWEEN 2 AND 6;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="C">
+                            <span class="option-text"><code>SELECT peliculas.titulo_peli, peliculas.genero, directores.apellido_dir FROM directores INNER JOIN peliculas ON directores.id_director = peliculas.id_director WHERE directores.premios &gt;= 2 AND directores.premios &lt;= 6 AND (peliculas.genero = 'Drama' OR peliculas.genero = 'Ciencia Ficcion');</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q8" value="D">
+                            <span class="option-text"><code>SELECT p.titulo_peli, p.genero, d.apellido_dir FROM peliculas p INNER JOIN directores d ON p.id_pelicula = d.id_director WHERE (p.genero = 'Drama' OR p.genero = 'Ciencia Ficcion') AND d.premios BETWEEN 2 AND 6;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q8"></div>
+                </article>
+
+                <!-- EJERCICIO 9 -->
+                <article class="question-card" id="card-q9">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 9 · LIKE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se busca obtener el <code>titulo_peli</code> y el <code>nombre_artistico</code> uniendo <code>peliculas</code>, <code>repartos</code> y <code>actores</code>, filtrando aquellos actores cuyo <code>nombre_artistico</code> comience con <code>'Dar'</code> y cuyo <code>cachet_usd</code> sea mayor o igual a <code>80000</code>. ¿Cuáles consultas lo resuelven correctamente?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="A">
+                            <span class="option-text"><code>SELECT p.titulo_peli, a.nombre_artistico FROM peliculas p INNER JOIN repartos r ON p.id_pelicula = r.id_pelicula INNER JOIN actores a ON r.id_actor = a.id_actor WHERE a.nombre_artistico LIKE 'Dar%' AND r.cachet_usd &gt;= 80000;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="B">
+                            <span class="option-text"><code>SELECT p.titulo_peli, a.nombre_artistico FROM peliculas p INNER JOIN repartos r ON p.id_pelicula = r.id_reparto INNER JOIN actores a ON r.id_actor = a.id_actor WHERE a.nombre_artistico LIKE 'Dar%' AND r.cachet_usd &gt;= 80000;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="C">
+                            <span class="option-text"><code>SELECT peliculas.titulo_peli, actores.nombre_artistico FROM actores INNER JOIN repartos ON actores.id_actor = repartos.id_actor INNER JOIN peliculas ON repartos.id_pelicula = peliculas.id_pelicula WHERE actores.nombre_artistico LIKE 'Dar%' AND repartos.cachet_usd &gt;= 80000;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q9" value="D">
+                            <span class="option-text"><code>SELECT p.titulo_peli, a.nombre_artistico FROM peliculas p INNER JOIN repartos r ON p.id_pelicula = r.id_pelicula INNER JOIN actores a ON r.id_actor = a.id_actor WHERE a.nombre_artistico LIKE '%Dar' OR r.cachet_usd &gt; 80000;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q9"></div>
+                </article>
+
+                <!-- EJERCICIO 10 -->
+                <article class="question-card" id="card-q10">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 10 · COUNT</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que en <code>repartos</code> existen <strong>35 filas</strong> válidamente vinculadas a películas en <code>peliculas</code>, que en <strong>3 de esas 35 filas</strong> la película asociada tiene el atributo <code>genero</code> en <code>NULL</code>, y que existen además <strong>4 películas en preproducción</strong> en <code>peliculas</code> sin actores asignados aún en <code>repartos</code>. Al ejecutar una consulta con <code>FROM peliculas INNER JOIN repartos ON peliculas.id_pelicula = repartos.id_pelicula</code>, ¿cuáles afirmaciones son verdaderas?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="A">
+                            <span class="option-text"><code>SELECT COUNT(*)</code> sobre ese <code>INNER JOIN</code> devolverá <code>35</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="B">
+                            <span class="option-text"><code>SELECT COUNT(peliculas.genero)</code> sobre ese <code>INNER JOIN</code> devolverá <code>32</code> porque ignora los valores <code>NULL</code> de esa columna.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="C">
+                            <span class="option-text">Las 4 películas en preproducción sin filas en <code>repartos</code> se incluyen igualmente en el resultado del <code>INNER JOIN</code> con <code>cachet_usd</code> igual a cero.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="checkbox" name="q10" value="D">
+                            <span class="option-text"><code>SELECT MAX(repartos.cachet_usd)</code> devolverá el cachet más alto entre las 35 contrataciones vinculadas.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q10"></div>
+                </article>
+
+                <!-- ================ 11 AL 15: SELECCIÓN BINARIA ================ -->
+
+                <!-- EJERCICIO 11 -->
+                <article class="question-card" id="card-q11">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 11 · SELECT</span>
+                    </div>
+                    <p class="q-prompt">
+                        Observe la siguiente sentencia con alias de tablas:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> e.nombre_est, estudios.pais, d.apellido_dir
+<span class="kw">FROM</span> estudios e
+<span class="kw">INNER JOIN</span> directores d <span class="kw">ON</span> e.id_estudio = d.id_estudio;</pre>
+                    <p class="q-prompt">
+                        ¿Qué resultado produce la ejecución de esta sentencia en MySQL / MariaDB?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="A">
+                            <span class="option-text">Arroja un error (<code>Unknown column 'estudios.pais'</code>), porque al asignarle el alias <code>e</code> a la tabla <code>estudios</code> en el <code>FROM</code>, es obligatorio utilizar <code>e.pais</code> en toda la consulta.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q11" value="B">
+                            <span class="option-text">Se ejecuta normalmente porque el alias <code>e</code> es opcional y puede combinarse con el nombre completo <code>estudios</code> en el <code>SELECT</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q11"></div>
+                </article>
+
+                <!-- EJERCICIO 12 -->
+                <article class="question-card" id="card-q12">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 12 · INNER</span>
+                    </div>
+                    <p class="q-prompt">
+                        Según el diagrama relacional de 5 tablas, si se desea obtener en una misma consulta el <code>nombre_est</code> (tabla <code>estudios</code>) junto con el <code>nombre_artistico</code> (tabla <code>actores</code>) de los actores contratados en películas dirigidas por directores de ese estudio, ¿cuál es el procedimiento relacional correcto?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="A">
+                            <span class="option-text">Realizar un único <code>INNER JOIN</code> directo entre <code>estudios</code> y <code>actores</code> igualando <code>estudios.id_estudio = actores.id_actor</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q12" value="B">
+                            <span class="option-text">Encadenar 4 cláusulas <code>INNER JOIN</code> recorriendo el camino relacional completo entre las 5 tablas (<code>estudios</code> ↔ <code>directores</code> ↔ <code>peliculas</code> ↔ <code>repartos</code> ↔ <code>actores</code>).</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q12"></div>
+                </article>
+
+                <!-- EJERCICIO 13 -->
+                <article class="question-card" id="card-q13">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 13 · BETWEEN</span>
+                    </div>
+                    <p class="q-prompt">
+                        Analice la siguiente consulta sobre <code>actores</code> y <code>repartos</code>:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> a.nombre_artistico, a.edad, r.cachet_usd
+<span class="kw">FROM</span> actores a
+<span class="kw">INNER JOIN</span> repartos r <span class="kw">ON</span> a.id_actor = r.id_actor
+<span class="kw">WHERE</span> a.nombre_artistico <span class="kw">LIKE</span> <span class="str">'%n'</span>
+  <span class="kw">AND</span> a.edad <span class="kw">NOT BETWEEN</span> <span class="num">25</span> <span class="kw">AND</span> <span class="num">50</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué filas recuperará exactamente esta consulta?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="A">
+                            <span class="option-text">Contrataciones de actores cuyo nombre artístico termina con la letra <code>'n'</code> y cuya edad sea estrictamente menor a <code>25</code> o estrictamente mayor a <code>50</code>.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q13" value="B">
+                            <span class="option-text">Contrataciones de actores cuyo nombre artístico comienza con la letra <code>'n'</code> y cuya edad sea menor o igual a <code>25</code> o mayor o igual a <code>50</code>.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q13"></div>
+                </article>
+
+                <!-- EJERCICIO 14 -->
+                <article class="question-card" id="card-q14">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 14 · SUM</span>
+                    </div>
+                    <p class="q-prompt">
+                        Suponga que la película con <code>id_pelicula = 11</code> tiene en la tabla <code>peliculas</code> una <code>recaudacion = 3000000</code>, y que dicha película cuenta con <strong>4 actores contratados</strong> en la tabla intermedia <code>repartos</code> (4 filas con <code>id_pelicula = 11</code>). Si se ejecuta:
+                    </p>
+                    <pre class="code-snippet"><span class="kw">SELECT</span> <span class="fn">SUM</span>(peliculas.recaudacion)
+<span class="kw">FROM</span> peliculas
+<span class="kw">INNER JOIN</span> repartos <span class="kw">ON</span> peliculas.id_pelicula = repartos.id_pelicula
+<span class="kw">WHERE</span> peliculas.id_pelicula = <span class="num">11</span>;</pre>
+                    <p class="q-prompt">
+                        ¿Qué valor numérico retorna la consulta y por qué?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="A">
+                            <span class="option-text">Retorna <code>12000000</code>, porque el <code>INNER JOIN</code> con las 4 filas de <code>repartos</code> genera 4 filas para la película 11 y <code>SUM(peliculas.recaudacion)</code> acumula <code>3000000</code> en cada una de las 4 filas.</span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q14" value="B">
+                            <span class="option-text">Retorna <code>3000000</code>, porque <code>SUM</code> detecta que <code>recaudacion</code> pertenece a la tabla principal <code>peliculas</code> y evita duplicar el valor.</span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q14"></div>
+                </article>
+
+                <!-- EJERCICIO 15 -->
+                <article class="question-card" id="card-q15">
+                    <div class="q-header">
+                        <span class="q-number">Ejercicio 15 · CHANGE</span>
+                    </div>
+                    <p class="q-prompt">
+                        Se requiere renombrar la columna <code>genero</code> de la tabla <code>peliculas</code> para que pase a llamarse <code>categoria_peli</code>, conservando su tipo <code>VARCHAR(35) NOT NULL</code>. ¿Cuál de las siguientes sentencias es válida en MySQL / MariaDB?
+                    </p>
+                    <div class="options-grid">
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="A">
+                            <span class="option-text"><code>ALTER TABLE peliculas MODIFY genero categoria_peli VARCHAR(35) NOT NULL;</code></span>
+                        </label>
+                        <label class="option-label">
+                            <input type="radio" name="q15" value="B">
+                            <span class="option-text"><code>ALTER TABLE peliculas CHANGE genero categoria_peli VARCHAR(35) NOT NULL;</code></span>
+                        </label>
+                    </div>
+                    <div class="q-status" id="status-q15"></div>
+                </article>
+
+            </div>
+
+            <div class="actions-footer">
+                <button type="button" id="btn-evaluar" class="btn-evaluate">Evaluar Respuestas</button>
+            </div>
+        </form>
+
+        <!-- =================================================================
+             PANEL DE RESULTADOS Y DIAGNÓSTICO DETALLADO
+             ================================================================= -->
+        <section id="results-panel" aria-live="polite">
+            <div class="score-summary">
+                <div class="score-circle">
+                    <span class="score-value" id="score-number">0</span>
+                    <span class="score-total">/ 10 PUNTOS</span>
+                </div>
+                <h2 class="score-message" id="score-title">Resultado de la Evaluación</h2>
+                <p class="score-subtext" id="score-subtitle"></p>
+                <div class="perfect-banner" id="perfect-banner">
+                    🌟 ¡Felicitaciones! Has resuelto correctamente los 15 ejercicios de SQL++ con INNER JOIN sobre el esquema de 5 tablas, alcanzando la calificación máxima de 10 puntos.
+                </div>
+            </div>
+
+            <div id="errors-container"></div>
+        </section>
+    </main>
+
+    <script>
+        /* =========================================================================
+           1. ANIMACIÓN DE PARTÍCULAS "POLVO Y LUZ" (CANVAS)
+           ========================================================================= */
+        (function initDustCanvas() {
+            const canvas = document.getElementById('dust-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const palette = [
+                'rgba(253, 186, 116, 0.36)',
+                'rgba(94, 234, 212, 0.32)',
+                'rgba(254, 240, 138, 0.28)',
+                'rgba(221, 214, 254, 0.28)'
+            ];
+
+            const particles = Array.from({ length: 46 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.1 + 0.6,
+                vx: (Math.random() - 0.5) * 0.24,
+                vy: -Math.random() * 0.32 - 0.08,
+                color: palette[Math.floor(Math.random() * palette.length)],
+                alpha: Math.random() * 0.65 + 0.25
+            }));
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+
+            function render() {
+                ctx.clearRect(0, 0, width, height);
+                for (const p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y < -10) p.y = height + 10;
+                    if (p.x < -10) p.x = width + 10;
+                    if (p.x > width + 10) p.x = -10;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                }
+                requestAnimationFrame(render);
+            }
+            render();
+        })();
+
+        /* =========================================================================
+           2. PERSISTENCIA EN LOCALSTORAGE (SIN ARCHIVOS EXTERNOS)
+           ========================================================================= */
+        const STORAGE_KEY = 'uner_bd2_sqlplusplus_evaluacion5_state_v1';
+
+        const appState = {
+            answers: {
+                q1: '', q2: '', q3: '', q4: '', q5: '',
+                q6: [], q7: [], q8: [], q9: [], q10: [],
+                q11: '', q12: '', q13: '', q14: '', q15: ''
+            },
+            evaluated: false
+        };
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('No se pudo guardar en localStorage:', e);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && parsed.answers) {
+                    appState.answers = Object.assign(appState.answers, parsed.answers);
+                    appState.evaluated = Boolean(parsed.evaluated);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('No se pudo restaurar desde localStorage:', e);
+            }
+            return false;
+        }
+
+        /* =========================================================================
+           3. NORMALIZACIÓN DE SQL Y REGLAS DE EVALUACIÓN (15 EJERCICIOS = 10 PUNTOS)
+           ========================================================================= */
+        function normalizeSQL(raw) {
+            if (!raw) return '';
+            let s = raw.trim().toLowerCase();
+            s = s.replace(/\s+/g, ' ');
+            s = s.replace(/\s*;\s*$/, '');
+            s = s.replace(/\s*,\s*/g, ', ');
+            s = s.replace(/\s*=\s*/g, ' = ');
+            s = s.replace(/\s*>=\s*/g, ' >= ');
+            s = s.replace(/\s*<=\s*/g, ' <= ');
+            s = s.replace(/\s*!=\s*/g, ' != ');
+            s = s.replace(/\s*<>\s*/g, ' <> ');
+            s = s.replace(/\(\s+/g, '(');
+            s = s.replace(/\s+\)/g, ')');
+            s = s.replace(/\s+/g, ' ').trim();
+            return s;
+        }
+
+        // Normaliza equivalencias en consultas con INNER JOIN (con o sin prefijo de tabla en columnas no ambiguas, JOIN vs INNER JOIN y orden del ON)
+        function canonicalizeJoinQuery(norm) {
+            let c = norm;
+            // Aceptar "join" como "inner join" cuando no tiene left/right/cross/full antes
+            c = c.replace(/(^|\s)(?<!inner\s)(?<!left\s)(?<!right\s)(?<!cross\s)(?<!full\s)join\s+/g, '$1inner join ');
+            // Estandarizar igualdad ON id_estudio
+            c = c.replace(/estudios\.id_estudio\s*=\s*directores\.id_estudio/g, 'directores.id_estudio = estudios.id_estudio');
+            // Estandarizar igualdad ON id_director
+            c = c.replace(/peliculas\.id_director\s*=\s*directores\.id_director/g, 'directores.id_director = peliculas.id_director');
+            // Estandarizar igualdad ON id_pelicula
+            c = c.replace(/repartos\.id_pelicula\s*=\s*peliculas\.id_pelicula/g, 'peliculas.id_pelicula = repartos.id_pelicula');
+            // Estandarizar igualdad ON id_actor
+            c = c.replace(/actores\.id_actor\s*=\s*repartos\.id_actor/g, 'repartos.id_actor = actores.id_actor');
+            // Quitar prefijos de tabla en atributos que no son ambiguos para aceptar tanto tabla.campo como campo directo
+            c = c.replace(/\b(estudios|directores|peliculas|repartos|actores)\.(nombre_est|pais|apellido_dir|premios|titulo_peli|genero|recaudacion|cachet_usd|nombre_artistico|nacionalidad|edad)\b/g, '$2');
+            return c.replace(/\s+/g, ' ').trim();
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatScore(num) {
+            const rounded = Math.round(num * 100) / 100;
+            return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2).replace(/\.?0+$/, '');
+        }
+
+        const completionQuestions = [
+            {
+                id: 'q1',
+                number: 1,
+                title: 'Ejercicio 1 · INNER',
+                canonicalAnswer: "SELECT directores.apellido_dir, directores.premios, estudios.nombre_est FROM directores INNER JOIN estudios ON directores.id_estudio = estudios.id_estudio WHERE directores.premios >= 3;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm);
+                    const validForms = [
+                        "select apellido_dir, premios, nombre_est from directores inner join estudios on directores.id_estudio = estudios.id_estudio where premios >= 3",
+                        "select apellido_dir, premios, nombre_est from estudios inner join directores on directores.id_estudio = estudios.id_estudio where premios >= 3"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('select ')) return "La consulta debe iniciar con la cláusula <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta la cláusula <code>INNER JOIN</code> para vincular las tablas <code>directores</code> y <code>estudios</code>.";
+                    if (!norm.includes(' on ')) return "Falta la palabra clave <code>ON</code> para indicar la condición de unión.";
+                    if (!norm.includes('directores.id_estudio') || !norm.includes('estudios.id_estudio')) return "En el <code>ON</code> debes igualar <code>directores.id_estudio = estudios.id_estudio</code>.";
+                    if (!norm.includes('where')) return "Falta la cláusula <code>WHERE</code> para filtrar por <code>premios &gt;= 3</code>.";
+                    if (!norm.includes('>= 3')) return "Para 'mayor o igual a 3' debes utilizar el operador <code>&gt;= 3</code> sobre el atributo <code>premios</code>.";
+                    return "Revisa que los atributos en el <code>SELECT</code> sean exactamente <code>apellido_dir, premios, nombre_est</code> y que las tablas unidas sean <code>directores</code> y <code>estudios</code>.";
+                }
+            },
+            {
+                id: 'q2',
+                number: 2,
+                title: 'Ejercicio 2 · JOIN',
+                canonicalAnswer: "SELECT estudios.nombre_est, directores.apellido_dir, peliculas.titulo_peli FROM estudios INNER JOIN directores ON estudios.id_estudio = directores.id_estudio INNER JOIN peliculas ON directores.id_director = peliculas.id_director WHERE estudios.pais = 'Argentina' AND peliculas.recaudacion > 500000;",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm).replace(/"argentina"/g, "'argentina'");
+                    const validSelectAndJoins = [
+                        "select nombre_est, apellido_dir, titulo_peli from estudios inner join directores on directores.id_estudio = estudios.id_estudio inner join peliculas on directores.id_director = peliculas.id_director",
+                        "select nombre_est, apellido_dir, titulo_peli from directores inner join estudios on directores.id_estudio = estudios.id_estudio inner join peliculas on directores.id_director = peliculas.id_director",
+                        "select nombre_est, apellido_dir, titulo_peli from peliculas inner join directores on directores.id_director = peliculas.id_director inner join estudios on directores.id_estudio = estudios.id_estudio"
+                    ];
+                    const validWhere = [
+                        "where pais = 'argentina' and recaudacion > 500000",
+                        "where recaudacion > 500000 and pais = 'argentina'"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        for (const w of validWhere) {
+                            if (c === `${sj} ${w}`) return true;
+                        }
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Al tratarse de <strong>3 tablas</strong> (<code>estudios</code>, <code>directores</code> y <code>peliculas</code>), necesitas encadenar <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('estudios.id_estudio') || !norm.includes('directores.id_estudio')) return "Falta igualar la relación entre estudios y directores: <code>ON estudios.id_estudio = directores.id_estudio</code>.";
+                    if (!norm.includes('directores.id_director') || !norm.includes('peliculas.id_director')) return "Falta igualar la relación entre directores y películas: <code>ON directores.id_director = peliculas.id_director</code>.";
+                    if (!norm.includes("'argentina'") && !norm.includes('"argentina"')) return "Recuerda filtrar <code>pais = 'Argentina'</code> encerrando el texto entre comillas simples.";
+                    if (!norm.includes(' and ') || !norm.includes('> 500000')) return "Debes combinar ambas condiciones en el <code>WHERE</code> mediante <code>AND</code> y verificar <code>recaudacion &gt; 500000</code>.";
+                    return "Verifica el orden de las columnas (<code>nombre_est, apellido_dir, titulo_peli</code>) y las dos uniones <code>INNER JOIN</code>.";
+                }
+            },
+            {
+                id: 'q3',
+                number: 3,
+                title: 'Ejercicio 3 · ON',
+                canonicalAnswer: "SELECT peliculas.titulo_peli, actores.nombre_artistico, repartos.cachet_usd FROM peliculas INNER JOIN repartos ON peliculas.id_pelicula = repartos.id_pelicula INNER JOIN actores ON repartos.id_actor = actores.id_actor WHERE peliculas.genero = 'Suspenso';",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm).replace(/"suspenso"/g, "'suspenso'");
+                    const validSelectAndJoins = [
+                        "select titulo_peli, nombre_artistico, cachet_usd from peliculas inner join repartos on peliculas.id_pelicula = repartos.id_pelicula inner join actores on repartos.id_actor = actores.id_actor",
+                        "select titulo_peli, nombre_artistico, cachet_usd from repartos inner join peliculas on peliculas.id_pelicula = repartos.id_pelicula inner join actores on repartos.id_actor = actores.id_actor",
+                        "select titulo_peli, nombre_artistico, cachet_usd from actores inner join repartos on repartos.id_actor = actores.id_actor inner join peliculas on peliculas.id_pelicula = repartos.id_pelicula"
+                    ];
+                    for (const sj of validSelectAndJoins) {
+                        if (c === `${sj} where genero = 'suspenso'`) return true;
+                    }
+                    return false;
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    const joinCount = (norm.match(/join/g) || []).length;
+                    if (joinCount < 2) return "Para unir la relación muchos a muchos entre <code>peliculas</code> y <code>actores</code> debes pasar por la tabla intermedia <code>repartos</code> usando <strong>2 cláusulas INNER JOIN</strong>.";
+                    if (!norm.includes('peliculas.id_pelicula') || !norm.includes('repartos.id_pelicula')) return "Falta la condición de unión <code>ON peliculas.id_pelicula = repartos.id_pelicula</code>.";
+                    if (!norm.includes('repartos.id_actor') || !norm.includes('actores.id_actor')) return "Falta la condición de unión <code>ON repartos.id_actor = actores.id_actor</code>.";
+                    if (!norm.includes('where') || !norm.includes("'suspenso'")) return "Falta filtrar en el <code>WHERE</code> por <code>genero = 'Suspenso'</code>.";
+                    return "Revisa que las columnas seleccionadas sean <code>titulo_peli, nombre_artistico, cachet_usd</code> (en ese orden) y que ambas uniones <code>INNER JOIN</code> estén completas.";
+                }
+            },
+            {
+                id: 'q4',
+                number: 4,
+                title: 'Ejercicio 4 · SUM',
+                canonicalAnswer: "SELECT SUM(repartos.cachet_usd) FROM repartos INNER JOIN actores ON repartos.id_actor = actores.id_actor WHERE actores.nacionalidad = 'Espana';",
+                validate: (norm) => {
+                    const c = canonicalizeJoinQuery(norm)
+                        .replace(/['"]espa[nñ]a['"]/g, "'espana'");
+                    const validForms = [
+                        "select sum(cachet_usd) from repartos inner join actores on repartos.id_actor = actores.id_actor where nacionalidad = 'espana'",
+                        "select sum(cachet_usd) from actores inner join repartos on repartos.id_actor = actores.id_actor where nacionalidad = 'espana'"
+                    ];
+                    return validForms.includes(c);
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.includes('sum(') || !norm.includes('cachet_usd')) return "Debes utilizar la función de agregación <code>SUM(repartos.cachet_usd)</code> en el <code>SELECT</code>.";
+                    if (!norm.includes('join')) return "Falta unir las tablas <code>repartos</code> y <code>actores</code> mediante <code>INNER JOIN</code>.";
+                    if (!norm.includes('repartos.id_actor') || !norm.includes('actores.id_actor')) return "La condición de unión debe ser <code>ON repartos.id_actor = actores.id_actor</code>.";
+                    if (!norm.includes("'espana'") && !norm.includes("'españa'")) return "Falta filtrar en el <code>WHERE</code> por <code>nacionalidad = 'Espana'</code>.";
+                    return "Verifica la sintaxis general: <code>SELECT SUM(repartos.cachet_usd) FROM repartos INNER JOIN actores ON repartos.id_actor = actores.id_actor WHERE actores.nacionalidad = 'Espana';</code>.";
+                }
+            },
+            {
+                id: 'q5',
+                number: 5,
+                title: 'Ejercicio 5 · INSERT',
+                canonicalAnswer: "INSERT INTO estudios (id_estudio, nombre_est, pais) VALUES (9, 'Pampa Films', 'Argentina');",
+                validate: (norm) => {
+                    const c = norm
+                        .replace(/"pampa films"/g, "'pampa films'")
+                        .replace(/"argentina"/g, "'argentina'")
+                        .replace(/\s*\(\s*/g, ' (')
+                        .replace(/\s*\)\s*/g, ') ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    return c === "insert into estudios (id_estudio, nombre_est, pais) values (9, 'pampa films', 'argentina')";
+                },
+                diagnoseError: (raw, norm) => {
+                    if (!norm) return "No escribiste ninguna sentencia SQL.";
+                    if (!norm.startsWith('insert into estudios')) return "Para insertar un registro debes iniciar con <code>INSERT INTO estudios</code>.";
+                    if (!norm.includes('(id_estudio, nombre_est, pais)')) return "Debes declarar explícitamente las columnas <code>(id_estudio, nombre_est, pais)</code>.";
+                    if (!norm.includes('values')) return "Falta la palabra clave <code>VALUES</code> antes de la tupla de valores.";
+                    if (!norm.includes("'pampa films'") || !norm.includes("'argentina'")) return "Los valores de texto <code>'Pampa Films'</code> y <code>'Argentina'</code> deben ir entre comillas simples.";
+                    return "Revisa la estructura: <code>INSERT INTO estudios (id_estudio, nombre_est, pais) VALUES (9, 'Pampa Films', 'Argentina');</code>.";
+                }
+            }
+        ];
+
+        const multiSelectQuestions = [
+            {
+                id: 'q6',
+                number: 6,
+                title: 'Ejercicio 6 · INNER',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es inválida porque emplea <code>WHERE</code> inmediatamente después de <code>INNER JOIN</code> omitiendo la cláusula obligatoria <code>ON</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: provoca un error de ambigüedad (<code>Column 'id_director' in field list is ambiguous</code>) porque <code>id_director</code> existe tanto en <code>peliculas</code> como en <code>directores</code> y no fue prefijada en el <code>SELECT</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque califica <code>directores.id_director</code> y une con <code>ON</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque utiliza los alias <code>d</code> y <code>p</code> de forma consistente."
+                }
+            },
+            {
+                id: 'q7',
+                number: 7,
+                title: 'Ejercicio 7 · FROM',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque igualar <code>peliculas.id_pelicula = actores.id_actor</code> compara claves primarias de entidades distintas sin vínculo directo; la relación N:M exige pasar por la tabla intermedia <code>repartos</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>repartos</code> resuelve la relación muchos a muchos entre películas y actores.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>INNER JOIN</code> descarta los actores que no tienen filas asociadas en <code>repartos</code>.",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque conectar <code>estudios</code> con <code>actores</code> requiere recorrer las 5 tablas mediante 4 cláusulas <code>INNER JOIN</code>."
+                }
+            },
+            {
+                id: 'q8',
+                number: 8,
+                title: 'Ejercicio 8 · WHERE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque sin paréntesis alrededor del <code>OR</code>, el operador <code>AND</code> se evalúa primero y traería todas las películas de <code>'Drama'</code> sin importar los premios del director.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque la condición <code>ON p.id_pelicula = d.id_director</code> compara la PK de la película con la PK del director en lugar de usar la FK <code>p.id_director</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque encierra la disyunción entre paréntesis y filtra los premios con <code>BETWEEN 2 AND 6</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une por <code>id_director</code> y expresa el rango con <code>&gt;= 2 AND &lt;= 6</code> junto al bloque <code>OR</code> entre paréntesis."
+                }
+            },
+            {
+                id: 'q9',
+                number: 9,
+                title: 'Ejercicio 9 · LIKE',
+                correctValues: ['A', 'C'],
+                correctLabel: 'Opciones A y C',
+                whyInvalid: {
+                    'B': "Marcaste la <strong>Opción B</strong>: es incorrecta porque en el primer <code>INNER JOIN</code> iguala <code>p.id_pelicula = r.id_reparto</code> en lugar de usar la clave foránea <code>r.id_pelicula</code>.",
+                    'D': "Marcaste la <strong>Opción D</strong>: es incorrecta porque <code>LIKE '%Dar'</code> busca nombres que terminen en Dar (en vez de comenzar con Dar), usa <code>OR</code> en vez de <code>AND</code> y usa <code>&gt; 80000</code> excluyendo el 80000."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era válida porque une las 3 tablas por sus claves correctas y filtra con <code>LIKE 'Dar%' AND r.cachet_usd &gt;= 80000</code>.",
+                    'C': "Omitiste marcar la <strong>Opción C</strong>: era válida porque une desde <code>actores</code> hacia <code>peliculas</code> pasando por <code>repartos</code> con las mismas condiciones."
+                }
+            },
+            {
+                id: 'q10',
+                number: 10,
+                title: 'Ejercicio 10 · COUNT',
+                correctValues: ['A', 'B', 'D'],
+                correctLabel: 'Opciones A, B y D',
+                whyInvalid: {
+                    'C': "Marcaste la <strong>Opción C</strong>: es falsa porque <code>INNER JOIN</code> excluye por completo las 4 películas que no tienen filas asociadas en <code>repartos</code>."
+                },
+                whyValidOmitted: {
+                    'A': "Omitiste marcar la <strong>Opción A</strong>: era verdadera porque <code>COUNT(*)</code> cuenta las 35 filas resultantes del <code>INNER JOIN</code>.",
+                    'B': "Omitiste marcar la <strong>Opción B</strong>: era verdadera porque <code>COUNT(peliculas.genero)</code> ignora las 3 filas donde <code>genero</code> es <code>NULL</code> ($35 - 3 = 32$).",
+                    'D': "Omitiste marcar la <strong>Opción D</strong>: era verdadera porque <code>MAX(repartos.cachet_usd)</code> obtiene el mayor cachet entre las 35 filas vinculadas."
+                }
+            }
+        ];
+
+        const binaryQuestions = [
+            {
+                id: 'q11',
+                number: 11,
+                title: 'Ejercicio 11 · SELECT',
+                correctValue: 'A',
+                correctLabel: "Opción A: Arroja un error (Unknown column 'estudios.pais'), porque al definir el alias 'e' es obligatorio usar e.pais.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: una vez declarado un alias para una tabla en el <code>FROM</code>, dicho alias reemplaza al nombre original de la tabla en todas las cláusulas de esa consulta (<code>SELECT</code>, <code>ON</code>, <code>WHERE</code>)."
+                }
+            },
+            {
+                id: 'q12',
+                number: 12,
+                title: 'Ejercicio 12 · INNER',
+                correctValue: 'B',
+                correctLabel: 'Opción B: Encadenar 4 cláusulas INNER JOIN recorriendo las 5 tablas (estudios ↔ directores ↔ peliculas ↔ repartos ↔ actores).',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: no existe relación directa entre <code>estudios</code> y <code>actores</code>; es obligatorio recorrer la cadena relacional a través de <code>directores</code>, <code>peliculas</code> y <code>repartos</code>."
+                }
+            },
+            {
+                id: 'q13',
+                number: 13,
+                title: 'Ejercicio 13 · BETWEEN',
+                correctValue: 'A',
+                correctLabel: "Opción A: Contrataciones de actores cuyo nombre artístico termina con 'n' y cuya edad sea estrictamente menor a 25 o estrictamente mayor a 50.",
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: el comodín <code>'%n'</code> exige que el texto termine en <code>'n'</code>, y <code>NOT BETWEEN 25 AND 50</code> excluye los extremos 25 y 50 (equivale a <code>&lt; 25 OR &gt; 50</code>)."
+                }
+            },
+            {
+                id: 'q14',
+                number: 14,
+                title: 'Ejercicio 14 · SUM',
+                correctValue: 'A',
+                correctLabel: 'Opción A: Retorna 12000000, porque el INNER JOIN genera 4 filas para la película 11 y SUM acumula 3000000 en cada fila.',
+                optionExplanations: {
+                    'B': "Elegiste la <strong>Opción B</strong>, pero es incorrecta: como la película 11 tiene 4 filas en <code>repartos</code>, el resultado del <code>INNER JOIN</code> contiene 4 filas donde se repite su <code>recaudacion</code> de <code>3000000</code>, sumando <code>12000000</code>."
+                }
+            },
+            {
+                id: 'q15',
+                number: 15,
+                title: 'Ejercicio 15 · CHANGE',
+                correctValue: 'B',
+                correctLabel: 'Opción B: ALTER TABLE peliculas CHANGE genero categoria_peli VARCHAR(35) NOT NULL;',
+                optionExplanations: {
+                    'A': "Elegiste la <strong>Opción A</strong>, pero es incorrecta: la cláusula <code>MODIFY</code> solo permite cambiar el tipo de dato o restricciones de una columna manteniendo su mismo nombre; para renombrarla y definir su tipo se utiliza <code>CHANGE nombre_actual nombre_nuevo TIPO</code>."
+                }
+            }
+        ];
+
+        /* =========================================================================
+           4. SINCRONIZACIÓN DOM <-> ESTADO Y FUNCIÓN EVALUADORA (ESCALA 10 PUNTOS)
+           ========================================================================= */
+        function syncDOMToState() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el) appState.answers[id] = el.value;
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                appState.answers[id] = Array.from(document.querySelectorAll(`input[name="${id}"]:checked`)).map((el) => el.value);
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const checked = document.querySelector(`input[name="${id}"]:checked`);
+                appState.answers[id] = checked ? checked.value : '';
+            });
+            saveStateToStorage();
+        }
+
+        function restoreStateToDOM() {
+            ['q1', 'q2', 'q3', 'q4', 'q5'].forEach((id) => {
+                const el = document.getElementById(`${id}-input`);
+                if (el && appState.answers[id] !== undefined) {
+                    el.value = appState.answers[id];
+                }
+            });
+            ['q6', 'q7', 'q8', 'q9', 'q10'].forEach((id) => {
+                const vals = appState.answers[id] || [];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((cb) => {
+                    cb.checked = vals.includes(cb.value);
+                });
+            });
+            ['q11', 'q12', 'q13', 'q14', 'q15'].forEach((id) => {
+                const val = appState.answers[id];
+                document.querySelectorAll(`input[name="${id}"]`).forEach((rb) => {
+                    rb.checked = (rb.value === val);
+                });
+            });
+        }
+
+        function evaluarRespuestas(shouldScroll = true) {
+            syncDOMToState();
+
+            let rawUnits = 0;
+            const mistakes = [];
+
+            completionQuestions.forEach((q) => {
+                const inputEl = document.getElementById(`${q.id}-input`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                const rawVal = inputEl.value;
+                const normVal = normalizeSQL(rawVal);
+                const isCorrect = q.validate(normVal);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                if (isCorrect) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: rawVal.trim() ? rawVal.trim() : '(Sin responder)',
+                        correctAnswer: q.canonicalAnswer,
+                        explanation: q.diagnoseError(rawVal, normVal)
+                    });
+                }
+            });
+
+            multiSelectQuestions.forEach((q) => {
+                const checkedBoxes = Array.from(document.querySelectorAll(`input[name="${q.id}"]:checked`));
+                const selectedValues = checkedBoxes.map((cb) => cb.value);
+
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const correctHits = selectedValues.filter((v) => q.correctValues.includes(v));
+                const wrongPicks = selectedValues.filter((v) => !q.correctValues.includes(v));
+                const omittedValid = q.correctValues.filter((v) => !selectedValues.includes(v));
+
+                const isExactMatch = (correctHits.length === q.correctValues.length) && (wrongPicks.length === 0);
+
+                if (isExactMatch) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta exacta! (+0.67 pts)';
+                } else if (selectedValues.length === 0) {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Sin responder (0 pts) — Ver explicación al final.';
+                    const details = omittedValid.map((v) => q.whyValidOmitted[v]).join(' ');
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: `No seleccionaste ninguna opción. ${details}`
+                    });
+                } else if (correctHits.length > 0) {
+                    rawUnits += 0.25;
+                    cardEl.classList.add('state-partial');
+                    statusEl.classList.add('partial');
+                    statusEl.textContent = '◐ Parcialmente correcta (25% del ítem: +0.17 pts) — Ver detalle al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: true,
+                        title: `${q.title} (Puntaje parcial: 25% del ejercicio)`,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationParts = [];
+                    wrongPicks.forEach((v) => {
+                        if (q.whyInvalid[v]) explanationParts.push(q.whyInvalid[v]);
+                    });
+                    omittedValid.forEach((v) => {
+                        if (q.whyValidOmitted[v]) explanationParts.push(q.whyValidOmitted[v]);
+                    });
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: `Opciones seleccionadas: ${selectedValues.join(', ')}`,
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationParts.join(' ')
+                    });
+                }
+            });
+
+            binaryQuestions.forEach((q) => {
+                const selectedRadio = document.querySelector(`input[name="${q.id}"]:checked`);
+                const cardEl = document.getElementById(`card-${q.id}`);
+                const statusEl = document.getElementById(`status-${q.id}`);
+
+                cardEl.classList.remove('state-correct', 'state-partial', 'state-wrong');
+                statusEl.classList.remove('correct', 'partial', 'wrong');
+
+                const userVal = selectedRadio ? selectedRadio.value : null;
+
+                if (userVal === q.correctValue) {
+                    rawUnits += 1;
+                    cardEl.classList.add('state-correct');
+                    statusEl.classList.add('correct');
+                    statusEl.textContent = '✓ ¡Respuesta correcta! (+0.67 pts)';
+                } else {
+                    cardEl.classList.add('state-wrong');
+                    statusEl.classList.add('wrong');
+                    statusEl.textContent = '✗ Respuesta incorrecta (0 pts) — Ver explicación al final.';
+
+                    const explanationText = !userVal
+                        ? `No seleccionaste ninguna opción. La respuesta correcta era la <strong>Opción ${q.correctValue}</strong>.`
+                        : q.optionExplanations[userVal];
+
+                    mistakes.push({
+                        isPartial: false,
+                        title: q.title,
+                        userAnswer: userVal ? `Opción ${userVal}` : '(Sin responder)',
+                        correctAnswer: q.correctLabel,
+                        explanation: explanationText
+                    });
+                }
+            });
+
+            const gradeOutOf10 = Math.round(((rawUnits / 15) * 10) * 100) / 100;
+
+            appState.evaluated = true;
+            saveStateToStorage();
+
+            const resultsPanel = document.getElementById('results-panel');
+            const scoreNumber = document.getElementById('score-number');
+            const scoreTitle = document.getElementById('score-title');
+            const scoreSubtitle = document.getElementById('score-subtitle');
+            const perfectBanner = document.getElementById('perfect-banner');
+            const errorsContainer = document.getElementById('errors-container');
+
+            scoreNumber.textContent = formatScore(gradeOutOf10);
+            scoreSubtitle.textContent = `Nota final: ${formatScore(gradeOutOf10)} / 10 pts (${formatScore(rawUnits)} de 15 ejercicios equivalentes correctos).`;
+
+            if (rawUnits === 15) {
+                scoreTitle.textContent = '¡Calificación Perfecta (10 / 10)!';
+                perfectBanner.style.display = 'block';
+                errorsContainer.innerHTML = '';
+            } else {
+                perfectBanner.style.display = 'none';
+                if (gradeOutOf10 >= 8) {
+                    scoreTitle.textContent = '¡Muy buen desempeño!';
+                } else if (gradeOutOf10 >= 6) {
+                    scoreTitle.textContent = 'Evaluación Aprobada — Revisa las correcciones';
+                } else {
+                    scoreTitle.textContent = 'Necesitas repasar los conceptos de INNER JOIN y SQL';
+                }
+
+                let errorsHTML = '<div class="errors-list">';
+                mistakes.forEach((m) => {
+                    const partialClass = m.isPartial ? 'partial-item' : '';
+                    const icon = m.isPartial ? '◐' : '✗';
+                    errorsHTML += `
+                        <div class="error-item ${partialClass}">
+                            <div class="error-item-header">${icon} ${escapeHTML(m.title)}</div>
+                            <div class="error-comparison">
+                                <div class="ans-box ans-user">
+                                    <strong>Tu respuesta:</strong><br>${escapeHTML(m.userAnswer)}
+                                </div>
+                                <div class="ans-box ans-expected">
+                                    <strong>Respuesta esperada:</strong><br>${escapeHTML(m.correctAnswer)}
+                                </div>
+                            </div>
+                            <p class="error-explanation">
+                                <strong>Por qué estuvo mal:</strong> ${m.explanation}
+                            </p>
+                        </div>
+                    `;
+                });
+                errorsHTML += '</div>';
+                errorsContainer.innerHTML = errorsHTML;
+            }
+
+            resultsPanel.classList.add('visible');
+            if (shouldScroll) {
+                resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        document.getElementById('btn-evaluar').addEventListener('click', () => evaluarRespuestas(true));
+
+        document.getElementById('sql-eval-form').addEventListener('input', () => {
+            syncDOMToState();
+        });
+        document.getElementById('sql-eval-form').addEventListener('change', () => {
+            syncDOMToState();
+        });
+
+        // Interacción Hover sobre campos PK y FK para iluminar su par correspondiente
+        (function initKeyHoverHighlight() {
+            const keyRows = document.querySelectorAll('.er-attr-row[data-join-key]');
+
+            function setHighlightByJoinKey(joinKey, isActive) {
+                if (!joinKey) return;
+                document.querySelectorAll(`.er-attr-row[data-join-key="${joinKey}"]`).forEach((row) => {
+                    row.classList.toggle('key-linked-active', isActive);
+                });
+                document.querySelectorAll(`.er-connector-line[data-join-connector="${joinKey}"]`).forEach((conn) => {
+                    conn.classList.toggle('connector-active', isActive);
+                });
+            }
+
+            keyRows.forEach((row) => {
+                const joinKey = row.getAttribute('data-join-key');
+                row.addEventListener('mouseenter', () => setHighlightByJoinKey(joinKey, true));
+                row.addEventListener('mouseleave', () => setHighlightByJoinKey(joinKey, false));
+            });
+        })();
+
+        // Restaurar estado al cargar la página
+        (function bootstrapApp() {
+            const hadSaved = loadStateFromStorage();
+            if (hadSaved) {
+                restoreStateToDOM();
+                if (appState.evaluated) {
+                    evaluarRespuestas(false);
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>
